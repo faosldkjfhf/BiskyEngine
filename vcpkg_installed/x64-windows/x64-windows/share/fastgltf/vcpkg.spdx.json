@@ -1,0 +1,160 @@
+{
+  "$schema": "https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.1/schemas/spdx-schema.json",
+  "spdxVersion": "SPDX-2.2",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "documentNamespace": "https://spdx.org/spdxdocs/fastgltf-x64-windows-0.8.0-33c6d8b2-a662-43c2-9140-a84a8152f7e9",
+  "name": "fastgltf:x64-windows@0.8.0 6dd711cc12377f7178efcfddba7253c8d1444ac31ed34a10edd00dae820a18fe",
+  "creationInfo": {
+    "creators": [
+      "Tool: vcpkg-2025-04-16-f9b6c6917b23c1ccf16c1a9f015ebabf8f615045"
+    ],
+    "created": "2025-05-19T03:04:12Z"
+  },
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "GENERATES",
+      "relatedSpdxElement": "SPDXRef-binary"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-0"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-1"
+    },
+    {
+      "spdxElementId": "SPDXRef-binary",
+      "relationshipType": "GENERATED_FROM",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-0",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-1",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-1",
+      "relationshipType": "DEPENDENCY_MANIFEST_OF",
+      "relatedSpdxElement": "SPDXRef-port"
+    }
+  ],
+  "packages": [
+    {
+      "name": "fastgltf",
+      "SPDXID": "SPDXRef-port",
+      "versionInfo": "0.8.0",
+      "downloadLocation": "git+https://github.com/microsoft/vcpkg@004b3a844521c72dd3699e70c91ff1e095b96b45",
+      "homepage": "https://github.com/spnda/fastgltf",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "description": "A modern C++17 glTF 2.0 library focused on speed, correctness, and usability",
+      "comment": "This is the port (recipe) consumed by vcpkg."
+    },
+    {
+      "name": "fastgltf:x64-windows",
+      "SPDXID": "SPDXRef-binary",
+      "versionInfo": "6dd711cc12377f7178efcfddba7253c8d1444ac31ed34a10edd00dae820a18fe",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "comment": "This is a binary package built by vcpkg."
+    },
+    {
+      "SPDXID": "SPDXRef-resource-0",
+      "name": "spnda/fastgltf",
+      "downloadLocation": "git+https://github.com/spnda/fastgltf@v0.8.0",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "7fbc479e03b26ef246625abd86b005ed1dde84e607346e890b71abffc2b26cf7b59880ab286526da5b811dd1f74cff9a6d44d65e128154fcd0f1c540dc11f1f5"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-resource-1",
+      "name": "spnda-fastgltf-v0.8.0-e42df8b70d42f62fa9c678c23213e9cb649b9060.patch",
+      "packageFileName": "spnda-fastgltf-v0.8.0-e42df8b70d42f62fa9c678c23213e9cb649b9060.patch",
+      "downloadLocation": "https://github.com/spnda/fastgltf/commit/e42df8b70d42f62fa9c678c23213e9cb649b9060.patch?full_index=1",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "1f205aef9fa5658f7139304002528db612e5f6d74b8281a568c52a0bcd94830c113c9875ea887374785ad041139ee336a66de1881179b0317900249a1140f537"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-resource-2",
+      "name": "spnda-fastgltf-v0.8.0-279d960eee4c85690c90df92ce0bdc121a6233f4.patch",
+      "packageFileName": "spnda-fastgltf-v0.8.0-279d960eee4c85690c90df92ce0bdc121a6233f4.patch",
+      "downloadLocation": "https://github.com/spnda/fastgltf/commit/279d960eee4c85690c90df92ce0bdc121a6233f4.patch?full_index=1",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "4f837e03c9b3ee3333a09b675e2395b300fff8e8231962a26da18e32d84cc9099bf231c174ca100c324e45beb0891fb5aeea40f35d71881350d845e6e2c95cd6"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-resource-3",
+      "name": "spnda-fastgltf-v0.8.0-5278229d48e06d4770ecfea97402bbe1c8380038.patch",
+      "packageFileName": "spnda-fastgltf-v0.8.0-5278229d48e06d4770ecfea97402bbe1c8380038.patch",
+      "downloadLocation": "https://github.com/spnda/fastgltf/commit/5278229d48e06d4770ecfea97402bbe1c8380038.patch?full_index=1",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "2521859f6126d0602ac9d641553ab502ad21ccc6f9227cf23da16ae7ae6df77f53b9a2b883c52a9ae191476a57a07e0008aa42f00c61cef09cc5d7145586e729"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "./portfile.cmake",
+      "SPDXID": "SPDXRef-file-0",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6b103cd5be7e5e2636af398f9e29bb13c05146d854964913a4b27f5a5cb1f58a"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./vcpkg.json",
+      "SPDXID": "SPDXRef-file-1",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e4b7d47e511f4876c1d6bd3c453ca9c1db1a03bc1eee2fcf9d191ce7ca7122bd"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    }
+  ]
+}

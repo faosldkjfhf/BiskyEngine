@@ -1,0 +1,101 @@
+Package: vcpkg-cmake-config
+Version: 2024-05-23
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 216364a3d0d266947abc0d8981dc134b6f04de9b9cf7374c0e6b7ae5867c31ff
+Status: install ok installed
+
+Package: vcpkg-cmake
+Version: 2024-04-23
+Architecture: x64-windows
+Multi-Arch: same
+Abi: ce2db1e66b3d622e2ad2ae02d0d7d563fdb72eec54f895b8c5ace26ab73d24b3
+Status: install ok installed
+
+Package: fmt
+Version: 11.0.2
+Port-Version: 1
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 0fff4eae324af16b7dbcdc511723da52e6d1004da5689e41fe11c3051f272f40
+Description: {fmt} is an open-source formatting library providing a fast and safe alternative to C stdio and C++ iostreams.
+Status: install ok installed
+
+Package: simdjson
+Version: 3.12.2
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: a04280f7c13145a3942a7ad9a186ca76669dfd733d13b8fc156cefbce0eff44a
+Description: An extremely fast JSON library that can parse gigabytes of JSON per second
+Default-Features: deprecated, exceptions, threads, utf8-validation
+Status: install ok installed
+
+Package: simdjson
+Feature: deprecated
+Architecture: x64-windows
+Multi-Arch: same
+Description: Enable deprecated APIs
+Status: install ok installed
+
+Package: simdjson
+Feature: exceptions
+Architecture: x64-windows
+Multi-Arch: same
+Description: Enable exception-throwing interface
+Status: install ok installed
+
+Package: simdjson
+Feature: threads
+Architecture: x64-windows
+Multi-Arch: same
+Description: Link with thread support
+Status: install ok installed
+
+Package: simdjson
+Feature: utf8-validation
+Architecture: x64-windows
+Multi-Arch: same
+Description: Enable UTF-8 validation
+Status: install ok installed
+
+Package: fastgltf
+Version: 0.8.0
+Depends: simdjson, vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 6dd711cc12377f7178efcfddba7253c8d1444ac31ed34a10edd00dae820a18fe
+Description: A modern C++17 glTF 2.0 library focused on speed, correctness, and usability
+Status: install ok installed
+
+Package: imgui
+Version: 1.91.9
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 283497f81272634179f308b4733c7f40b3e337adad0ceb732012ce8cd7c5e736
+Description: Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies.
+Status: install ok installed
+
+Package: imgui
+Feature: docking-experimental
+Architecture: x64-windows
+Multi-Arch: same
+Description: Build with docking support
+Status: install ok installed
+
+Package: imgui
+Feature: dx12-binding
+Architecture: x64-windows
+Multi-Arch: same
+Description: Make available DirectX12 binding
+Status: install ok installed
+
+Package: imgui
+Feature: win32-binding
+Architecture: x64-windows
+Multi-Arch: same
+Description: Make available Win32 binding
+Status: install ok installed
+
