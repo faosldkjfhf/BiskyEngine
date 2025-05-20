@@ -1,8 +1,0 @@
-C:/Users/kliu0/source/repos/BiskyEngine/Engine/vcpkg_installed/x64-windows/vcpkg/blds/fmt/x64-windows-dbg/CMakeFiles/fmt.dir
-C:/Users/kliu0/source/repos/BiskyEngine/Engine/vcpkg_installed/x64-windows/vcpkg/blds/fmt/x64-windows-dbg/CMakeFiles/package.dir
-C:/Users/kliu0/source/repos/BiskyEngine/Engine/vcpkg_installed/x64-windows/vcpkg/blds/fmt/x64-windows-dbg/CMakeFiles/package_source.dir
-C:/Users/kliu0/source/repos/BiskyEngine/Engine/vcpkg_installed/x64-windows/vcpkg/blds/fmt/x64-windows-dbg/CMakeFiles/edit_cache.dir
-C:/Users/kliu0/source/repos/BiskyEngine/Engine/vcpkg_installed/x64-windows/vcpkg/blds/fmt/x64-windows-dbg/CMakeFiles/rebuild_cache.dir
-C:/Users/kliu0/source/repos/BiskyEngine/Engine/vcpkg_installed/x64-windows/vcpkg/blds/fmt/x64-windows-dbg/CMakeFiles/list_install_components.dir
-C:/Users/kliu0/source/repos/BiskyEngine/Engine/vcpkg_installed/x64-windows/vcpkg/blds/fmt/x64-windows-dbg/CMakeFiles/install.dir
-C:/Users/kliu0/source/repos/BiskyEngine/Engine/vcpkg_installed/x64-windows/vcpkg/blds/fmt/x64-windows-dbg/CMakeFiles/install/local.dir
