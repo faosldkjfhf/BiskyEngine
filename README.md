@@ -1,6 +1,8 @@
 # BiskyEngine
 
-A D3D12 Renderer/Engine. Currently a work in progress.
+A D3D12 Renderer/Engine. 
+
+Currently a work in progress and for me to learn and play with D3D12.
 
 # Features
 
