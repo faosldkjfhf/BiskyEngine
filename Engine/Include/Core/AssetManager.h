@@ -23,7 +23,8 @@ public:
   void SetShaderDirectory(const std::filesystem::path &path);
   void SetModelDirectory(const std::filesystem::path &path);
 
-  Error LoadGLTF(const std::filesystem::path &filename, ID3D12GraphicsCommandList10 *cmdList);
+  Error LoadGLTF(const std::filesystem::path &filename, ID3D12GraphicsCommandList10 *cmdList,
+                 fastgltf::Options flags = fastgltf::Options::None);
   ComPtr<ID3DBlob> LoadBinary(const std::filesystem::path &filename);
   ComPtr<ID3DBlob> CompileShader(const std::filesystem::path &filename, const D3D_SHADER_MACRO *defines, LPCSTR target,
                                  LPCSTR entryPoint = "main");

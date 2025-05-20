@@ -119,6 +119,8 @@ void ForwardRenderer::InitPipelineStateObjects()
   // TODO: Load the shaders
   ComPtr<ID3DBlob> vs = Core::AssetManager::Get().CompileShader("BlinnPhong/Vertex.hlsl", nullptr, "vs_5_1");
   ComPtr<ID3DBlob> ps = Core::AssetManager::Get().CompileShader("BlinnPhong/Pixel.hlsl", nullptr, "ps_5_1");
+  ComPtr<ID3DBlob> lightVS = Core::AssetManager::Get().CompileShader("Lights/Vertex.hlsl", nullptr, "vs_5_1");
+  ComPtr<ID3DBlob> lightPS = Core::AssetManager::Get().CompileShader("Lights/Pixel.hlsl", nullptr, "ps_5_1");
 
   D3D12_INPUT_ELEMENT_DESC vertexLayout[] = {
       {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Core::Vertex, Position),
@@ -182,6 +184,13 @@ void ForwardRenderer::InitPipelineStateObjects()
   gfx.NodeMask = 0;
   gfx.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
   DX12::Context::Get().Device()->CreateGraphicsPipelineState(&gfx, IID_PPV_ARGS(&mPipelineStateObjects["opaque"]));
+
+  D3D12_GRAPHICS_PIPELINE_STATE_DESC lights = gfx;
+  lights.VS.pShaderBytecode = reinterpret_cast<BYTE *>(lightVS->GetBufferPointer());
+  lights.VS.BytecodeLength = lightVS->GetBufferSize();
+  lights.PS.pShaderBytecode = reinterpret_cast<BYTE *>(lightPS->GetBufferPointer());
+  lights.PS.BytecodeLength = lightPS->GetBufferSize();
+  DX12::Context::Get().Device()->CreateGraphicsPipelineState(&lights, IID_PPV_ARGS(&mPipelineStateObjects["lights"]));
 }
 
 } // namespace Renderer

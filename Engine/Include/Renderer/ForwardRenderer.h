@@ -57,7 +57,7 @@ private:
 
   Owner<DX12::DescriptorHeap> mDepthStencilHeap;
   ComPtr<ID3D12Resource> mDepthStencilBuffer;
-  D3D12_CPU_DESCRIPTOR_HANDLE mDepthStencilHandle;
+  D3D12_CPU_DESCRIPTOR_HANDLE mDepthStencilHandle = {};
   DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
   std::unordered_map<std::string_view, ComPtr<ID3D12PipelineState>> mPipelineStateObjects;

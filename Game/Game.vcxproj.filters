@@ -22,10 +22,16 @@
   <ItemGroup>
     <FxCompile Include="Assets\Shaders\BlinnPhong\Pixel.hlsl" />
     <FxCompile Include="Assets\Shaders\BlinnPhong\Vertex.hlsl" />
+    <FxCompile Include="Assets\Shaders\Lights\Pixel.hlsl" />
+    <FxCompile Include="Assets\Shaders\Lights\Vertex.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Models\Box.glb" />
-    <None Include="Assets\Models\cube.glb" />
     <None Include="imgui.ini" />
+    <None Include="Assets\Models\sphere.gltf" />
+    <None Include="Assets\Models\sphere.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include=".clang-format" />
   </ItemGroup>
 </Project>

@@ -21,9 +21,10 @@ struct PassConstants
 
 ConstantBuffer<ObjectConstants> gObject : register(b0);
 ConstantBuffer<PassConstants> gPass : register(b1);
-    
+
+// FIXME: Pass in lights through pass constants
 float4 main(VOutput input) : SV_Target {
-    float3 lightPos = float3(0.0, 0.0, 3.0);
+    float3 lightPos = float3(0.0, 3.0, 3.0);
     float3 lightStrength = float3(1.0, 1.0, 1.0);
     float3 material = float3(1.0, 0.5, 0.0);
     float4 finalColor = float4(0.0, 0.0, 0.0, 1.0);

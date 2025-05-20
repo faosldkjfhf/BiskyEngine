@@ -45,7 +45,8 @@ void AssetManager::SetModelDirectory(const std::filesystem::path &path)
   LOG_INFO("Set model directory to " + mModelDirectory.string());
 }
 
-AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename, ID3D12GraphicsCommandList10 *cmdList)
+AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename, ID3D12GraphicsCommandList10 *cmdList,
+                                           fastgltf::Options flags)
 {
   std::filesystem::path modelPath = mModelDirectory / filename;
   std::string strPath = modelPath.string();
@@ -58,7 +59,7 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
   }
 
   fastgltf::Parser parser;
-  auto asset = parser.loadGltf(data.get(), modelPath.parent_path(), fastgltf::Options::None);
+  auto asset = parser.loadGltf(data.get(), modelPath.parent_path(), flags);
   if (auto error = asset.error(); error != fastgltf::Error::None)
   {
     LOG_WARNING("Failed to parse " + strPath);
@@ -73,6 +74,10 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
   {
     Core::MeshGeometry newMesh{};
     newMesh.Name = mesh.name;
+    if (newMesh.Name == "")
+    {
+      newMesh.Name = filename.string();
+    }
 
     vertices.clear();
     indices.clear();

@@ -188,6 +188,7 @@
     <ClInclude Include="Include\Core\GlobalCamera.h" />
     <ClInclude Include="Include\Core\Logger.h" />
     <ClInclude Include="Include\Core\Material.h" />
+    <ClInclude Include="Include\Core\MathHelpers.h" />
     <ClInclude Include="Include\Core\MeshGeometry.h" />
     <ClInclude Include="Include\Core\Vertex.h" />
     <ClInclude Include="Include\Core\Camera.h" />
