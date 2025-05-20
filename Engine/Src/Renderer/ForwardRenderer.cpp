@@ -116,11 +116,10 @@ void ForwardRenderer::InitRootSignatures()
 
 void ForwardRenderer::InitPipelineStateObjects()
 {
-  // TODO: Load the shaders
-  ComPtr<ID3DBlob> vs = Core::AssetManager::Get().CompileShader("BlinnPhong/Vertex.hlsl", nullptr, "vs_5_1");
-  ComPtr<ID3DBlob> ps = Core::AssetManager::Get().CompileShader("BlinnPhong/Pixel.hlsl", nullptr, "ps_5_1");
-  ComPtr<ID3DBlob> lightVS = Core::AssetManager::Get().CompileShader("Lights/Vertex.hlsl", nullptr, "vs_5_1");
-  ComPtr<ID3DBlob> lightPS = Core::AssetManager::Get().CompileShader("Lights/Pixel.hlsl", nullptr, "ps_5_1");
+  ComPtr<ID3DBlob> vs = Core::AssetManager::Get().LoadBinary("BlinnPhong\\Vertex.cso");
+  ComPtr<ID3DBlob> ps = Core::AssetManager::Get().LoadBinary("BlinnPhong\\Pixel.cso");
+  ComPtr<ID3DBlob> lightVS = Core::AssetManager::Get().LoadBinary("Lights\\Vertex.cso");
+  ComPtr<ID3DBlob> lightPS = Core::AssetManager::Get().LoadBinary("Lights\\Pixel.cso");
 
   D3D12_INPUT_ELEMENT_DESC vertexLayout[] = {
       {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Core::Vertex, Position),
@@ -158,7 +157,7 @@ void ForwardRenderer::InitPipelineStateObjects()
   gfx.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
   gfx.RasterizerState.MultisampleEnable = FALSE;
   gfx.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-  gfx.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+  gfx.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
   gfx.RasterizerState.FrontCounterClockwise = FALSE;
   gfx.RasterizerState.DepthClipEnable = TRUE;
   gfx.RasterizerState.DepthBias = 0;

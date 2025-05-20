@@ -33,5 +33,10 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include=".clang-format" />
+    <None Include="Assets\Shaders\Include\Common.hlsli" />
+    <None Include="Assets\Shaders\Lights\Vertex.cso" />
+    <None Include="Assets\Shaders\Lights\Pixel.cso" />
+    <None Include="Assets\Shaders\BlinnPhong\Vertex.cso" />
+    <None Include="Assets\Shaders\BlinnPhong\Pixel.cso" />
   </ItemGroup>
 </Project>

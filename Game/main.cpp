@@ -124,9 +124,12 @@ int main()
       ImGui::Begin("Scene");
       if (ImGui::CollapsingHeader("Global Camera"))
       {
+        ImGui::SeparatorText("Position");
         XMFLOAT3 pos;
         XMStoreFloat3(&pos, Core::GlobalCamera::Get().Position());
-        if (ImGui::SliderFloat3("Position", (float *)&pos, -10.0f, 10.0f))
+        if (ImGui::SliderFloat("X", (float *)&pos.x, -10.0f, 10.0f) ||
+            ImGui::SliderFloat("Y", (float *)&pos.y, -10.0f, 10.0f) ||
+            ImGui::SliderFloat("Z", (float *)&pos.z, -10.0f, 10.0f))
         {
           Core::GlobalCamera::Get().SetPosition(XMLoadFloat3(&pos));
           XMStoreFloat4x4(&gPassConstants.View, Core::GlobalCamera::Get().ViewMatrix());
@@ -215,12 +218,15 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
 {
   Core::GlobalCamera::Get().SetPosition(FXMVECTOR{3.0f, 3.0f, 3.0f});
 
+  // render items
   {
     auto *ri = gRenderItems.emplace_back(MakeOwner<DX12::RenderItem>()).get();
     ri->ConstantBufferIndex = 0;
     ri->Geometry = Core::AssetManager::Get().GetModel("Mesh");
     XMStoreFloat4x4(&ri->World, XMMatrixScaling(2.0f, 2.0f, 2.0f));
   }
+
+  // lights
   {
     auto *ri = gLights.emplace_back(MakeOwner<DX12::RenderItem>()).get();
     ri->ConstantBufferIndex = static_cast<UINT>(gRenderItems.size()) + 0;

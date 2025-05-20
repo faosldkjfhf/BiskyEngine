@@ -186,6 +186,7 @@
     <ClInclude Include="Include\Core\Constants.h" />
     <ClInclude Include="Include\Core\GameTimer.h" />
     <ClInclude Include="Include\Core\GlobalCamera.h" />
+    <ClInclude Include="Include\Core\Light.h" />
     <ClInclude Include="Include\Core\Logger.h" />
     <ClInclude Include="Include\Core\Material.h" />
     <ClInclude Include="Include\Core\MathHelpers.h" />

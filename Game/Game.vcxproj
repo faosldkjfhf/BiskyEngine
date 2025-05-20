@@ -121,6 +121,8 @@
     </Link>
     <FxCompile>
       <ShaderModel>6.6</ShaderModel>
+      <ObjectFileOutput>%(RelativeDir)%(Filename).cso</ObjectFileOutput>
+      <AdditionalIncludeDirectories>%(ProjectDir)Assets\Assets\Shaders\Include\</AdditionalIncludeDirectories>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -150,16 +152,21 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Assets\Shaders\BlinnPhong\Pixel.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RelativeDir)%(Filename).cso</ObjectFileOutput>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="Assets\Shaders\BlinnPhong\Vertex.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="Assets\Shaders\Lights\Pixel.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="Assets\Shaders\Lights\Vertex.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
@@ -167,6 +174,11 @@
     <None Include="Assets\Models\Box.glb" />
     <None Include="Assets\Models\sphere.bin" />
     <None Include="Assets\Models\sphere.gltf" />
+    <None Include="Assets\Shaders\BlinnPhong\Pixel.cso" />
+    <None Include="Assets\Shaders\BlinnPhong\Vertex.cso" />
+    <None Include="Assets\Shaders\Include\Common.hlsli" />
+    <None Include="Assets\Shaders\Lights\Pixel.cso" />
+    <None Include="Assets\Shaders\Lights\Vertex.cso" />
     <None Include="imgui.ini" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
