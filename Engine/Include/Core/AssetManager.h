@@ -53,6 +53,7 @@ public:
 
 private:
   bool LoadImageFromDisk(const std::filesystem::path &filepath, DX12::Texture::ImageData &data);
+  bool LoadImageFromMemory(unsigned char *bytes, size_t byteOffset, size_t bufferSize, DX12::Texture::ImageData &data);
 
   std::filesystem::path mCurrentWorkingDirectory = std::filesystem::absolute(__FILE__).parent_path();
   std::filesystem::path mShaderDirectory = mCurrentWorkingDirectory / "Shaders";
@@ -62,7 +63,10 @@ private:
   std::unordered_map<std::string_view, Ref<Core::MeshGeometry>> mGeometries{};
   std::unordered_map<std::string_view, Ref<Core::Material>> mMaterials{};
   std::unordered_map<std::string_view, Ref<DX12::Texture>> mTextures{};
+
+  // FIXME: Change the names
   static const std::vector<DX12::Texture::GUIDToDXGI> mLookupTable;
+  static const std::vector<DX12::Texture::GUIDToGUID> mFixLookupTable;
 
 public:
   AssetManager(const AssetManager &) = delete;

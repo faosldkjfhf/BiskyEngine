@@ -194,6 +194,7 @@
     <ClInclude Include="Include\Core\MeshGeometry.h" />
     <ClInclude Include="Include\Core\Vertex.h" />
     <ClInclude Include="Include\Core\Camera.h" />
+    <ClInclude Include="Include\DX12\Backend.h" />
     <ClInclude Include="Include\DX12\Context.h" />
     <ClInclude Include="Include\DX12\DebugLayer.h" />
     <ClInclude Include="Include\DX12\DescriptorHeap.h" />

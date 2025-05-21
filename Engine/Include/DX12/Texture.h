@@ -14,6 +14,15 @@ public:
     DXGI_FORMAT Format;
   };
 
+  /*
+   * Converts Source to Target
+   */
+  struct GUIDToGUID
+  {
+    GUID Source;
+    GUID Target;
+  };
+
   struct ImageData
   {
     std::vector<char *> Data;

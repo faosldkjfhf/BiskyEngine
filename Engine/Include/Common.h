@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <fstream>
+#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <vector>

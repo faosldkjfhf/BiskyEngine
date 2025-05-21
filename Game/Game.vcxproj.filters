@@ -43,13 +43,6 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Assets\Models\Cube.gltf" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Assets\Textures\Cube_BaseColor.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Assets\Textures\Cube_MetallicRoughness.png">
-      <Filter>Resource Files</Filter>
-    </Image>
+    <None Include="Assets\Models\DamagedHelmet.glb" />
   </ItemGroup>
 </Project>

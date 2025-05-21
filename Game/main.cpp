@@ -5,6 +5,7 @@
 #include "Core/Logger.h"
 #include "Core/MeshGeometry.h"
 #include "Core/Vertex.h"
+#include "DX12/Backend.h"
 #include "DX12/Context.h"
 #include "DX12/DebugLayer.h"
 #include "DX12/FrameResource.h"
@@ -81,23 +82,18 @@ int main()
   Editor::GUI::Get().Init();
 
   // TODO: Make a function that can handle all the command list stuff and have us pass in a lambda?
-  auto *cmdList = Context::Get().ResetCommandList();
+  Backend::ImmediateSubmit([&](ID3D12GraphicsCommandList10 *cmdList) {
+    Core::AssetManager::Get().LoadGLTF("sphere.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
+    Core::AssetManager::Get().LoadGLTF("Cube.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
+    Core::AssetManager::Get().LoadGLTF("DamagedHelmet.glb", cmdList);
+  });
 
-  Core::AssetManager::Get().LoadGLTF("Box.glb", cmdList);
-  Core::AssetManager::Get().LoadGLTF("sphere.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
-  Core::AssetManager::Get().LoadGLTF("Cube.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
+  Backend::ImmediateSubmit([&](ID3D12GraphicsCommandList10 *cmdList) {
+    InitScene(cmdList);
+    InitFrameResources();
+    InitConstants();
+  });
 
-  Context::Get().ExecuteCommandList(cmdList);
-  Context::Get().FlushCommandQueue();
-
-  cmdList = Context::Get().ResetCommandList();
-
-  InitScene(cmdList);
-  InitFrameResources();
-  InitConstants();
-
-  Context::Get().ExecuteCommandList(cmdList);
-  Context::Get().FlushCommandQueue();
   Core::AssetManager::Get().DisposeUploaders();
 
   while (!Window::Get().ShouldClose())
@@ -211,7 +207,7 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
   // materials
   {
     auto mat = Core::AssetManager::Get().AddMaterial("orange");
-    mat->DiffuseMapHeapIndex = Core::AssetManager::Get().GetTexture("Cube_BaseColor.png")->HeapIndex;
+    mat->DiffuseMapHeapIndex = Core::AssetManager::Get().GetTexture("Material 2")->HeapIndex;
     mat->NoTexture = false;
     XMStoreFloat3(&mat->Diffuse, FXMVECTOR{1.0f, 0.5f, 0.0f});
   }
@@ -224,7 +220,7 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
   {
     auto *ri = gRenderItems.emplace_back(MakeOwner<DX12::RenderItem>()).get();
     ri->ConstantBufferIndex = 0;
-    ri->Geometry = Core::AssetManager::Get().GetModel("Cube");
+    ri->Geometry = Core::AssetManager::Get().GetModel("mesh_helmet_LP_13930damagedHelmet");
     ri->Material = Core::AssetManager::Get().GetMaterial("orange");
     XMStoreFloat4x4(&ri->World, XMMatrixScaling(1.0f, 1.0f, 1.0f));
   }

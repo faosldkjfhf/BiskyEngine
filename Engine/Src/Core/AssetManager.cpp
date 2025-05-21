@@ -13,15 +13,17 @@ namespace Core
 
 const std::vector<DX12::Texture::GUIDToDXGI> AssetManager::mLookupTable = {
     {GUID_WICPixelFormat32bppBGRA, DXGI_FORMAT_B8G8R8A8_UNORM},
-    {GUID_WICPixelFormat32bppRGBA, DXGI_FORMAT_R8G8B8A8_UNORM},
-    {GUID_WICPixelFormat1bppIndexed, DXGI_FORMAT_R8G8B8A8_UNORM}};
+    {GUID_WICPixelFormat32bppRGBA, DXGI_FORMAT_R8G8B8A8_UNORM}};
+
+const std::vector<DX12::Texture::GUIDToGUID> AssetManager::mFixLookupTable = {
+    {GUID_WICPixelFormat24bppBGR, GUID_WICPixelFormat32bppRGBA}};
 
 void AssetManager::Shutdown()
 {
   for (auto &[_, geometry] : mGeometries)
   {
     geometry.reset();
-  }
+  } // namespace Core
 
   for (auto &[_, material] : mMaterials)
   {
@@ -220,10 +222,29 @@ void AssetManager::LoadImage(ID3D12GraphicsCommandList10 *cmdList, fastgltf::Ass
 
                                  LOG_INFO("Loaded " + path);
                                },
-                               [&](fastgltf::sources::Vector &vector) {},
+                               [&](fastgltf::sources::Vector &vector) { LOG_INFO("hi"); },
                                [&](fastgltf::sources::BufferView &view) {
                                  auto &bufferView = asset.bufferViews[view.bufferViewIndex];
                                  auto &buffer = asset.buffers[bufferView.bufferIndex];
+
+                                 std::visit(fastgltf::visitor(
+                                                [](auto &arg) {},
+                                                [&](fastgltf::sources::Array &array) {
+                                                  DX12::Texture::ImageData data;
+                                                  if (!LoadImageFromMemory(
+                                                          reinterpret_cast<unsigned char *>(array.bytes.data()),
+                                                          bufferView.byteOffset, bufferView.byteLength, data))
+                                                  {
+                                                    LOG_WARNING("Failed to load buffer from memory");
+                                                    return;
+                                                  }
+                                                  texture = DX12::CreateTexture(cmdList, data);
+                                                  texture->CreateView();
+                                                  texture->Name = "Material " + std::to_string(texture->HeapIndex);
+                                                  mTextures[texture->Name] = texture;
+                                                  LOG_INFO("Loaded " + texture->Name);
+                                                }),
+                                            buffer.data);
                                }),
              image.data);
 
@@ -378,6 +399,83 @@ bool AssetManager::LoadImageFromDisk(const std::filesystem::path &filepath, DX12
   {
     return false;
   }
+  data.Format = it->Format;
+
+  UINT32 stride = ((data.BitsPerPixel + 7) / 8) * data.Width;
+  UINT32 size = stride * data.Height;
+  data.Data.resize(size);
+
+  WICRect copyRect{};
+  copyRect.X = 0;
+  copyRect.Y = 0;
+  copyRect.Width = data.Width;
+  copyRect.Height = data.Height;
+
+  wicFrameDecode->CopyPixels(&copyRect, stride, size, (BYTE *)data.Data.data());
+
+  return true;
+}
+
+bool AssetManager::LoadImageFromMemory(unsigned char *bytes, size_t byteOffset, size_t bufferSize,
+                                       DX12::Texture::ImageData &data)
+{
+  // Factory
+  ComPtr<IWICImagingFactory> wicFactory;
+  HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&wicFactory));
+  if (FAILED(hr))
+  {
+    LOG_ERROR("Failed to create WIC Factory");
+    return false;
+  }
+
+  // Load image
+  ComPtr<IWICStream> wicStream;
+  wicFactory->CreateStream(&wicStream);
+
+  if (FAILED(wicStream->InitializeFromMemory(bytes + byteOffset, (DWORD)bufferSize)))
+  {
+    return false;
+  }
+
+  // Decode the image
+  ComPtr<IWICBitmapDecoder> wicDecoder;
+  wicFactory->CreateDecoderFromStream(wicStream.Get(), nullptr, WICDecodeMetadataCacheOnDemand, &wicDecoder);
+  ComPtr<IWICBitmapFrameDecode> wicFrameDecode;
+  wicDecoder->GetFrame(0, &wicFrameDecode);
+
+  wicFrameDecode->GetSize(&data.Width, &data.Height);
+  wicFrameDecode->GetPixelFormat(&data.PixelFormat);
+
+  auto it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const DX12::Texture::GUIDToDXGI &entry) {
+    return memcmp(&entry.GUID, &data.PixelFormat, sizeof(GUID)) == 0;
+  });
+  if (it == mLookupTable.end())
+  {
+    auto fix =
+        std::find_if(mFixLookupTable.begin(), mFixLookupTable.end(), [&](const DX12::Texture::GUIDToGUID &entry) {
+          return memcmp(&entry.Source, &data.PixelFormat, sizeof(GUID)) == 0;
+        });
+    if (fix == mFixLookupTable.end())
+    {
+      LOG_WARNING("Failed to find suitable DXGI conversion format");
+      return false;
+    }
+
+    data.PixelFormat = fix->Target;
+  }
+
+  ComPtr<IWICComponentInfo> componentInfo;
+  wicFactory->CreateComponentInfo(data.PixelFormat, &componentInfo);
+
+  ComPtr<IWICPixelFormatInfo> pixelFormat;
+  componentInfo->QueryInterface(IID_PPV_ARGS(&pixelFormat));
+  pixelFormat->GetBitsPerPixel(&data.BitsPerPixel);
+  pixelFormat->GetChannelCount(&data.ChannelCount);
+
+  // Should be guaranteed to work now that we are converting incorrect types to a valid one
+  it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const DX12::Texture::GUIDToDXGI &entry) {
+    return memcmp(&entry.GUID, &data.PixelFormat, sizeof(GUID)) == 0;
+  });
   data.Format = it->Format;
 
   UINT32 stride = ((data.BitsPerPixel + 7) / 8) * data.Width;
