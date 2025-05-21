@@ -17,6 +17,11 @@ void AssetManager::Shutdown()
   {
     geometry.reset();
   }
+
+  for (auto &[_, material] : mMaterials)
+  {
+    material.reset();
+  }
 }
 
 void AssetManager::DisposeUploaders()
@@ -43,6 +48,12 @@ void AssetManager::SetModelDirectory(const std::filesystem::path &path)
 {
   mModelDirectory = mCurrentWorkingDirectory / path;
   LOG_INFO("Set model directory to " + mModelDirectory.string());
+}
+
+void AssetManager::SetTextureDirectory(const std::filesystem::path &path)
+{
+  mTextureDirectory = mCurrentWorkingDirectory / path;
+  LOG_INFO("Set texture directory to " + mModelDirectory.string());
 }
 
 AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename, ID3D12GraphicsCommandList10 *cmdList,
@@ -146,6 +157,19 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
   return None;
 }
 
+Ref<Core::MeshGeometry> AssetManager::GetModel(std::string_view name)
+{
+  auto it = mGeometries.find(name);
+  if (it == mGeometries.end())
+  {
+    LOG_ERROR("Couldn't find " + std::string(name) + ". Was it loaded?");
+    return nullptr;
+  }
+
+  LOG_INFO("Returning " + std::string(name));
+  return it->second;
+}
+
 ComPtr<ID3DBlob> AssetManager::LoadBinary(const std::filesystem::path &filename)
 {
   std::filesystem::path shaderPath = mShaderDirectory / filename;
@@ -171,6 +195,7 @@ ComPtr<ID3DBlob> AssetManager::LoadBinary(const std::filesystem::path &filename)
 
   fin.read((char *)blob->GetBufferPointer(), size);
   fin.close();
+  LOG_INFO("Loaded " + shaderPath.string());
   return blob;
 }
 
@@ -201,17 +226,32 @@ ComPtr<ID3DBlob> AssetManager::CompileShader(const std::filesystem::path &filena
   return shader;
 }
 
-Ref<Core::MeshGeometry> AssetManager::GetModel(std::string_view name)
+Ref<Core::Material> AssetManager::AddMaterial(std::string_view name)
 {
-  auto it = mGeometries.find(name);
-  if (it == mGeometries.end())
+  auto it = mMaterials.find(name);
+  if (it != mMaterials.end())
   {
-    LOG_ERROR("Couldn't find " + std::string(name) + ". Was it loaded?");
+    LOG_WARNING("Found existing material named " + std::string(name));
+    return it->second;
+  }
+
+  LOG_INFO("Added material " + std::string(name));
+
+  mMaterials[name] = MakeRef<Core::Material>();
+  mMaterials[name]->ConstantBufferIndex = static_cast<UINT>(mMaterials.size()) - 1;
+  return mMaterials[name];
+}
+
+Ref<Core::Material> AssetManager::GetMaterial(std::string_view name)
+{
+  auto it = mMaterials.find(name);
+  if (it == mMaterials.end())
+  {
+    LOG_ERROR("Failed to find material " + std::string(name));
     return nullptr;
   }
 
-  LOG_INFO("Returning " + std::string(name));
-  return it->second;
+  return mMaterials[name];
 }
 
 } // namespace Core

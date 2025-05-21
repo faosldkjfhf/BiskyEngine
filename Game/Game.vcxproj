@@ -122,7 +122,7 @@
     <FxCompile>
       <ShaderModel>6.6</ShaderModel>
       <ObjectFileOutput>%(RelativeDir)%(Filename).cso</ObjectFileOutput>
-      <AdditionalIncludeDirectories>%(ProjectDir)Assets\Assets\Shaders\Include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\Assets\Shaders\Include\</AdditionalIncludeDirectories>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -180,6 +180,7 @@
     <None Include="Assets\Shaders\Lights\Pixel.cso" />
     <None Include="Assets\Shaders\Lights\Vertex.cso" />
     <None Include="imgui.ini" />
+    <None Include="shadertoolsconfig.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

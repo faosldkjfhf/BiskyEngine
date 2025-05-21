@@ -38,5 +38,6 @@
     <None Include="Assets\Shaders\Lights\Pixel.cso" />
     <None Include="Assets\Shaders\BlinnPhong\Vertex.cso" />
     <None Include="Assets\Shaders\BlinnPhong\Pixel.cso" />
+    <None Include="shadertoolsconfig.json" />
   </ItemGroup>
 </Project>

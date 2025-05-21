@@ -1,3 +1,5 @@
+#include "Common.hlsli"
+
 struct VInput
 {
     float3 Position : POSITION;
@@ -11,29 +13,9 @@ struct VOutput
     float3 Color : COLOR;
 };
 
-struct ObjectConstants
-{
-    float4x4 World;
-    float4x4 InverseWorld;
-    float4x4 NormalMatrix;
-};
-
-struct Light
-{
-    float4 Position;
-    float4 Strength;
-};
-
-struct PassConstants
-{
-    float4x4 View;
-    float4x4 Projection;
-    float4 ViewPosition;
-    Light Lights[1];
-};
-
 ConstantBuffer<ObjectConstants> gObject : register(b0);
-ConstantBuffer<PassConstants> gPass : register(b1);
+ConstantBuffer<MaterialConstants> gMaterial : register(b1);
+ConstantBuffer<PassConstants> gPass : register(b2);
 
 VOutput main(VInput input)
 {

@@ -62,9 +62,16 @@ void ForwardRenderer::Draw(ID3D12GraphicsCommandList10 *cmdList, DX12::FrameReso
     cmdList->IASetIndexBuffer(&ibv);
     cmdList->IASetPrimitiveTopology(ri->PrimitiveTopology);
 
-    auto handle = frameResource->ObjectConstants->Resource()->GetGPUVirtualAddress();
-    handle += ri->ConstantBufferIndex * DX12::ConstantBufferByteSize(sizeof(Core::ObjectConstants));
-    cmdList->SetGraphicsRootConstantBufferView(0, handle);
+    {
+      auto handle = frameResource->ObjectConstants->Resource()->GetGPUVirtualAddress();
+      handle += ri->ConstantBufferIndex * DX12::ConstantBufferByteSize(sizeof(Core::ObjectConstants));
+      cmdList->SetGraphicsRootConstantBufferView(0, handle);
+    }
+    {
+      auto handle = frameResource->MaterialConstants->Resource()->GetGPUVirtualAddress();
+      handle += ri->Material->ConstantBufferIndex * DX12::ConstantBufferByteSize(sizeof(Core::MaterialConstants));
+      cmdList->SetGraphicsRootConstantBufferView(1, handle);
+    }
 
     for (auto &submesh : ri->Geometry->DrawArgs)
     {
@@ -111,6 +118,7 @@ void ForwardRenderer::InitRootSignatures()
   DX12::RootParameters p{};
   p.AddDescriptor(0, D3D12_ROOT_PARAMETER_TYPE_CBV);
   p.AddDescriptor(1, D3D12_ROOT_PARAMETER_TYPE_CBV);
+  p.AddDescriptor(2, D3D12_ROOT_PARAMETER_TYPE_CBV);
   mRootSignatures["opaque"] = DX12::CreateRootSignature(p);
 }
 

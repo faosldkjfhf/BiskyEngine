@@ -140,6 +140,40 @@ int main()
           }
         }
       }
+      if (ImGui::CollapsingHeader("Materials"))
+      {
+      }
+      if (ImGui::CollapsingHeader("Lights"))
+      {
+        for (auto &light : gPassConstants.Lights)
+        {
+          if (ImGui::TreeNode("Light"))
+          {
+            ImGui::Unindent();
+            auto oldPos = light.Position;
+            ImGui::SeparatorText("Position");
+            if (ImGui::SliderFloat("X", (float *)&light.Position.x, -10.0f, 10.0f) ||
+                ImGui::SliderFloat("Y", (float *)&light.Position.y, -10.0f, 10.0f) ||
+                ImGui::SliderFloat("Z", (float *)&light.Position.z, -10.0f, 10.0f))
+            {
+              // FIXME: Update light positions
+              auto diff = XMVectorSubtract(XMLoadFloat4(&light.Position), XMLoadFloat4(&oldPos));
+              XMFLOAT4 translation;
+              XMStoreFloat4(&translation, diff);
+              XMStoreFloat4x4(&gLights[0]->World, XMLoadFloat4x4(&gLights[0]->World) *
+                                                      XMMatrixTranslation(translation.x, translation.y, translation.z));
+              gLights[0]->NumFramesDirty = DX12::Window::FrameResourceCount;
+
+              for (auto &frameResource : gFrameResources)
+              {
+                frameResource->PassConstants->CopyData(0, gPassConstants);
+              }
+            }
+            ImGui::Indent();
+            ImGui::TreePop();
+          }
+        }
+      }
       ImGui::End();
     });
 
@@ -166,8 +200,7 @@ int main()
     cmdList->SetGraphicsRootSignature(gRenderer->RootSignature("opaque"));
 
     // set the pass constants
-    auto handle = frameResource->PassConstants->Resource()->GetGPUVirtualAddress();
-    cmdList->SetGraphicsRootConstantBufferView(1, handle);
+    cmdList->SetGraphicsRootConstantBufferView(2, frameResource->PassConstants->Resource()->GetGPUVirtualAddress());
 
     // draw using our renderer
     gRenderer->Draw(cmdList, frameResource, gRenderItems);
@@ -218,11 +251,22 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
 {
   Core::GlobalCamera::Get().SetPosition(FXMVECTOR{3.0f, 3.0f, 3.0f});
 
+  // materials
+  {
+    auto mat = Core::AssetManager::Get().AddMaterial("orange");
+    XMStoreFloat3(&mat->Diffuse, FXMVECTOR{1.0f, 0.5f, 0.0f});
+  }
+  {
+    auto mat = Core::AssetManager::Get().AddMaterial("white");
+    XMStoreFloat3(&mat->Diffuse, FXMVECTOR{1.0f, 1.0f, 1.0f});
+  }
+
   // render items
   {
     auto *ri = gRenderItems.emplace_back(MakeOwner<DX12::RenderItem>()).get();
     ri->ConstantBufferIndex = 0;
     ri->Geometry = Core::AssetManager::Get().GetModel("Mesh");
+    ri->Material = Core::AssetManager::Get().GetMaterial("orange");
     XMStoreFloat4x4(&ri->World, XMMatrixScaling(2.0f, 2.0f, 2.0f));
   }
 
@@ -231,6 +275,7 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
     auto *ri = gLights.emplace_back(MakeOwner<DX12::RenderItem>()).get();
     ri->ConstantBufferIndex = static_cast<UINT>(gRenderItems.size()) + 0;
     ri->Geometry = Core::AssetManager::Get().GetModel("sphere.gltf");
+    ri->Material = Core::AssetManager::Get().GetMaterial("white");
     XMStoreFloat4x4(&ri->World, XMMatrixScaling(0.1f, 0.1f, 0.1f) * XMMatrixTranslation(0.0f, 3.0f, 3.0f));
   }
 }
@@ -239,13 +284,16 @@ void InitFrameResources()
 {
   XMStoreFloat4x4(&gPassConstants.View, Core::GlobalCamera::Get().ViewMatrix());
   XMStoreFloat4x4(&gPassConstants.Projection, Core::GlobalCamera::Get().ProjectionMatrix());
+  XMStoreFloat4(&gPassConstants.Lights[0].Position, FXMVECTOR{0.0f, 3.0f, 3.0f});
+  XMStoreFloat4(&gPassConstants.Lights[0].Strength, FXMVECTOR{1.0f, 1.0f, 1.0f});
 
   auto pos = Core::GlobalCamera::Get().Position();
   XMStoreFloat4(&gPassConstants.ViewPosition, pos);
 
   for (auto &frameResource : gFrameResources)
   {
-    frameResource = MakeOwner<DX12::FrameResource>(static_cast<UINT>(gRenderItems.size() + gLights.size()), 0);
+    frameResource = MakeOwner<DX12::FrameResource>(static_cast<UINT>(gRenderItems.size() + gLights.size()),
+                                                   Core::AssetManager::Get().NumMaterials());
     frameResource->PassConstants->CopyData(0, gPassConstants);
   }
 }
@@ -268,6 +316,35 @@ void InitConstants()
       DX12::Context::Get().Device()->CreateConstantBufferView(&cbv, cpuHandle);
       cbAddress += objectCBSize;
     }
+  }
+
+  auto materialCBSize = DX12::ConstantBufferByteSize(sizeof(Core::MaterialConstants));
+  for (UINT i = 0; i < DX12::Window::FrameResourceCount; i++)
+  {
+    auto handle = DX12::Context::Get().ConstantBufferHeap()->CPUDescriptorHandle();
+    UINT idx = DX12::Context::Get().ConstantBufferHeap()->AddDescriptor();
+    handle.ptr += idx * DX12::Context::Get().CbvSrvUavDescriptorSize();
+
+    auto cbAddress = gFrameResources[i]->MaterialConstants->Resource()->GetGPUVirtualAddress();
+    for (size_t j = 0; j < Core::AssetManager::Get().NumMaterials(); j++)
+    {
+      D3D12_CONSTANT_BUFFER_VIEW_DESC cbv{};
+      cbv.BufferLocation = cbAddress;
+      cbv.SizeInBytes = materialCBSize;
+      DX12::Context::Get().Device()->CreateConstantBufferView(&cbv, handle);
+      cbAddress += materialCBSize;
+    }
+  }
+
+  for (UINT i = 0; i < DX12::Window::FrameResourceCount; i++)
+  {
+    auto handle = DX12::Context::Get().ConstantBufferHeap()->CPUDescriptorHandle();
+    UINT idx = DX12::Context::Get().ConstantBufferHeap()->AddDescriptor();
+    handle.ptr += idx * DX12::Context::Get().CbvSrvUavDescriptorSize();
+    D3D12_CONSTANT_BUFFER_VIEW_DESC cbv{};
+    cbv.BufferLocation = gFrameResources[i]->PassConstants->Resource()->GetGPUVirtualAddress();
+    cbv.SizeInBytes = DX12::ConstantBufferByteSize(sizeof(Core::PassConstants));
+    DX12::Context::Get().Device()->CreateConstantBufferView(&cbv, handle);
   }
 }
 
@@ -302,8 +379,20 @@ void UpdateConstants()
       XMStoreFloat4x4(&constants.World, world);
       XMStoreFloat4x4(&constants.InverseWorld, XMMatrixInverse(nullptr, world));
       XMStoreFloat4x4(&constants.NormalMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, world)));
-      frameResource->ObjectConstants->CopyData(static_cast<UINT>(ri->ConstantBufferIndex), constants);
+      frameResource->ObjectConstants->CopyData(ri->ConstantBufferIndex, constants);
       ri->NumFramesDirty--;
+    }
+  }
+
+  auto &materials = Core::AssetManager::Get().Materials();
+  for (auto &[_, material] : materials)
+  {
+    if (material->NumFramesDirty > 0)
+    {
+      Core::MaterialConstants mat{};
+      mat.Diffuse = material->Diffuse;
+      frameResource->MaterialConstants->CopyData(material->ConstantBufferIndex, mat);
+      material->NumFramesDirty--;
     }
   }
 }
