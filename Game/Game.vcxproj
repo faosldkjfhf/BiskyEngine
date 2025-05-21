@@ -172,6 +172,8 @@
   <ItemGroup>
     <None Include=".clang-format" />
     <None Include="Assets\Models\Box.glb" />
+    <None Include="Assets\Models\Cube.bin" />
+    <None Include="Assets\Models\Cube.gltf" />
     <None Include="Assets\Models\sphere.bin" />
     <None Include="Assets\Models\sphere.gltf" />
     <None Include="Assets\Shaders\BlinnPhong\Pixel.cso" />

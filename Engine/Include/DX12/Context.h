@@ -23,6 +23,8 @@ public:
   UINT64 AdvanceFence();
 
 private:
+  void InitSamplers();
+
   ComPtr<ID3D12Device10> mDevice;
   ComPtr<IDXGIFactory7> mFactory;
 
@@ -40,6 +42,8 @@ private:
   UINT mSamplerDescriptorSize = 0;
 
   Owner<DescriptorHeap> mConstantBufferHeap;
+  Owner<DescriptorHeap> mShaderResourceHeap;
+  std::vector<D3D12_STATIC_SAMPLER_DESC> mStaticSamplers;
 
 public:
   Context(const Context &) = delete;
@@ -93,6 +97,16 @@ public:
   inline DescriptorHeap *ConstantBufferHeap()
   {
     return mConstantBufferHeap.get();
+  }
+
+  inline DescriptorHeap *ShaderResourceHeap()
+  {
+    return mShaderResourceHeap.get();
+  }
+
+  inline const std::vector<D3D12_STATIC_SAMPLER_DESC> &StaticSamplers()
+  {
+    return mStaticSamplers;
   }
 
 private:

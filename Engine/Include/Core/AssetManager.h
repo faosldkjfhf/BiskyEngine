@@ -3,6 +3,7 @@
 #include "Common.h"
 #include "Core/Material.h"
 #include "Core/MeshGeometry.h"
+#include "DX12/Texture.h"
 
 namespace Core
 {
@@ -29,6 +30,8 @@ public:
   Error LoadGLTF(const std::filesystem::path &filename, ID3D12GraphicsCommandList10 *cmdList,
                  fastgltf::Options flags = fastgltf::Options::None);
   Ref<Core::MeshGeometry> GetModel(std::string_view name);
+  void LoadImage(ID3D12GraphicsCommandList10 *cmdList, fastgltf::Asset &asset, fastgltf::Image &image);
+  Ref<DX12::Texture> GetTexture(std::string_view name);
 
   // Shaders
   ComPtr<ID3DBlob> LoadBinary(const std::filesystem::path &filename);
@@ -49,6 +52,8 @@ public:
   }
 
 private:
+  bool LoadImageFromDisk(const std::filesystem::path &filepath, DX12::Texture::ImageData &data);
+
   std::filesystem::path mCurrentWorkingDirectory = std::filesystem::absolute(__FILE__).parent_path();
   std::filesystem::path mShaderDirectory = mCurrentWorkingDirectory / "Shaders";
   std::filesystem::path mTextureDirectory = mCurrentWorkingDirectory / "Textures";
@@ -56,6 +61,8 @@ private:
 
   std::unordered_map<std::string_view, Ref<Core::MeshGeometry>> mGeometries{};
   std::unordered_map<std::string_view, Ref<Core::Material>> mMaterials{};
+  std::unordered_map<std::string_view, Ref<DX12::Texture>> mTextures{};
+  static const std::vector<DX12::Texture::GUIDToDXGI> mLookupTable;
 
 public:
   AssetManager(const AssetManager &) = delete;

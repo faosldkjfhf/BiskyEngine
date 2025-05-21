@@ -1,5 +1,12 @@
 #define NUM_LIGHTS 1
 
+struct VInput
+{
+    float3 Position : POSITION;
+    float3 Normal : NORMAL;
+    float2 TexCoord : TEXCOORD0;
+};
+
 struct ObjectConstants
 {
     float4x4 World;
@@ -26,3 +33,5 @@ struct MaterialConstants
     float3 Diffuse;
     bool UseMaterial;
 };
+
+SamplerState gLinearSampler : register(s0);

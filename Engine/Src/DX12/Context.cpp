@@ -27,6 +27,9 @@ Context::Error Context::Init()
   mDevice->CreateCommandList1(0, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS(&mCmdList));
 
   mConstantBufferHeap = MakeOwner<DescriptorHeap>(DescriptorType::ConstantBuffer, 64, DescriptorFlags::ShaderVisible);
+  mShaderResourceHeap = MakeOwner<DescriptorHeap>(DescriptorType::ShaderResource, 64, DescriptorFlags::ShaderVisible);
+
+  InitSamplers();
 
   LOG_INFO("D3D12 Initialized");
   return Error::None;
@@ -34,6 +37,7 @@ Context::Error Context::Init()
 
 void Context::Shutdown()
 {
+  mShaderResourceHeap.reset();
   mConstantBufferHeap.reset();
   mCmdList.Reset();
   mCmdListAlloc.Reset();
@@ -94,6 +98,25 @@ void Context::WaitForFence(UINT64 fence)
 UINT64 Context::AdvanceFence()
 {
   return ++mFenceValue;
+}
+
+void Context::InitSamplers()
+{
+  D3D12_STATIC_SAMPLER_DESC linear{};
+  linear.ShaderRegister = 0;
+  linear.RegisterSpace = 0;
+  linear.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+  linear.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+  linear.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+  linear.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+  linear.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+  linear.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+  linear.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+  linear.MipLODBias = 0.0f;
+  linear.MaxAnisotropy = 1;
+  linear.MinLOD = 0.0f;
+  linear.MaxLOD = D3D12_FLOAT32_MAX;
+  mStaticSamplers.push_back(linear);
 }
 
 } // namespace DX12

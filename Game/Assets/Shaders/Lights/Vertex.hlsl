@@ -1,12 +1,5 @@
 #include "Common.hlsli"
 
-struct VInput
-{
-    float3 Position : POSITION;
-    float3 Normal : NORMAL;
-    float2 TexCoord : TEXCOORD;
-};
-
 struct VOutput
 {
     float4 Position : SV_Position;

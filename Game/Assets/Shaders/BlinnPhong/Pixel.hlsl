@@ -5,6 +5,7 @@ struct VOutput
     float4 Position : SV_Position;
     float3 FragPosition : POSITION;
     float3 Normal : NORMAL;
+    float2 TexCoord : TEXCOORD0;
 };
 
 Texture2D gTexture : register(t0);
@@ -15,6 +16,7 @@ ConstantBuffer<PassConstants> gPass : register(b2);
 // FIXME: Pass in lights through pass constants
 float4 main(VOutput input) : SV_Target {
     float4 finalColor = float4(0.0, 0.0, 0.0, 1.0);
+    float3 color = gMaterial.UseMaterial ? gMaterial.Diffuse : gTexture.Sample(gLinearSampler, input.TexCoord).xyz;
     for (int i = 0; i < NUM_LIGHTS; i++)
     {
         Light light = gPass.Lights[i];
@@ -31,8 +33,8 @@ float4 main(VOutput input) : SV_Target {
         float spec = pow(max(dot(halfwayDir, normal), 0.0), 8);
         float3 specular = spec * light.Strength.xyz;
         
-        float3 color = (ambient + diffuse + specular) * gMaterial.Diffuse;
-        finalColor += float4(color, 0.0);
+        float3 result = (ambient + diffuse + specular) * color;
+        finalColor += float4(result, 0.0);
     }
     
     return finalColor;

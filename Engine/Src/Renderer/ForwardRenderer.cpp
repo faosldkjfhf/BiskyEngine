@@ -72,6 +72,11 @@ void ForwardRenderer::Draw(ID3D12GraphicsCommandList10 *cmdList, DX12::FrameReso
       handle += ri->Material->ConstantBufferIndex * DX12::ConstantBufferByteSize(sizeof(Core::MaterialConstants));
       cmdList->SetGraphicsRootConstantBufferView(2, handle);
     }
+    {
+      auto handle = DX12::Context::Get().ShaderResourceHeap()->GPUDescriptorHandle();
+      handle.ptr += ri->Material->DiffuseMapHeapIndex * DX12::Context::Get().CbvSrvUavDescriptorSize();
+      cmdList->SetGraphicsRootDescriptorTable(0, handle);
+    }
 
     for (auto &submesh : ri->Geometry->DrawArgs)
     {

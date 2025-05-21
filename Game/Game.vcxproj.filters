@@ -39,5 +39,17 @@
     <None Include="Assets\Shaders\BlinnPhong\Vertex.cso" />
     <None Include="Assets\Shaders\BlinnPhong\Pixel.cso" />
     <None Include="shadertoolsconfig.json" />
+    <None Include="Assets\Models\Cube.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Assets\Models\Cube.gltf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\Textures\Cube_BaseColor.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Cube_MetallicRoughness.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

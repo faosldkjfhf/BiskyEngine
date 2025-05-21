@@ -39,6 +39,24 @@ const D3D12_RESOURCE_DESC &ResourceDesc::Buffer(UINT byteSize)
   rd.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
   rd.MipLevels = 1;
   rd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+  rd.Format = DXGI_FORMAT_UNKNOWN;
+  rd.Flags = D3D12_RESOURCE_FLAG_NONE;
+  return rd;
+}
+
+const D3D12_RESOURCE_DESC &ResourceDesc::Texture2D(UINT width, UINT height, DXGI_FORMAT format)
+{
+  ZeroMemory(&rd, sizeof(D3D12_RESOURCE_DESC));
+  rd.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+  rd.Width = width;
+  rd.Height = height;
+  rd.DepthOrArraySize = 1;
+  rd.SampleDesc.Count = 1;
+  rd.SampleDesc.Quality = 0;
+  rd.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+  rd.MipLevels = 1;
+  rd.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+  rd.Format = format;
   rd.Flags = D3D12_RESOURCE_FLAG_NONE;
   return rd;
 }

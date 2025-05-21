@@ -71,6 +71,7 @@ int main()
   Core::AssetManager::Get().SetCurrentWorkingDirectory(std::filesystem::absolute(__FILE__).parent_path());
   Core::AssetManager::Get().SetShaderDirectory("Assets/Shaders");
   Core::AssetManager::Get().SetModelDirectory("Assets/Models");
+  Core::AssetManager::Get().SetTextureDirectory("Assets/Textures");
 
   DebugLayer::Get().Init();
   Context::Get().Init();
@@ -84,6 +85,12 @@ int main()
 
   Core::AssetManager::Get().LoadGLTF("Box.glb", cmdList);
   Core::AssetManager::Get().LoadGLTF("sphere.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
+  Core::AssetManager::Get().LoadGLTF("Cube.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
+
+  Context::Get().ExecuteCommandList(cmdList);
+  Context::Get().FlushCommandQueue();
+
+  cmdList = Context::Get().ResetCommandList();
 
   InitScene(cmdList);
   InitFrameResources();
@@ -139,6 +146,10 @@ int main()
 
     // set the root signature
     cmdList->SetGraphicsRootSignature(gRenderer->RootSignature("opaque"));
+
+    // set descriptor heaps
+    ID3D12DescriptorHeap *heaps[] = {Context::Get().ShaderResourceHeap()->Resource()};
+    cmdList->SetDescriptorHeaps(_countof(heaps), heaps);
 
     // set the pass constants
     cmdList->SetGraphicsRootConstantBufferView(3, frameResource->PassConstants->Resource()->GetGPUVirtualAddress());
@@ -200,6 +211,8 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
   // materials
   {
     auto mat = Core::AssetManager::Get().AddMaterial("orange");
+    mat->DiffuseMapHeapIndex = Core::AssetManager::Get().GetTexture("Cube_BaseColor.png")->HeapIndex;
+    mat->NoTexture = false;
     XMStoreFloat3(&mat->Diffuse, FXMVECTOR{1.0f, 0.5f, 0.0f});
   }
   {
@@ -211,9 +224,9 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
   {
     auto *ri = gRenderItems.emplace_back(MakeOwner<DX12::RenderItem>()).get();
     ri->ConstantBufferIndex = 0;
-    ri->Geometry = Core::AssetManager::Get().GetModel("Mesh");
+    ri->Geometry = Core::AssetManager::Get().GetModel("Cube");
     ri->Material = Core::AssetManager::Get().GetMaterial("orange");
-    XMStoreFloat4x4(&ri->World, XMMatrixScaling(2.0f, 2.0f, 2.0f));
+    XMStoreFloat4x4(&ri->World, XMMatrixScaling(1.0f, 1.0f, 1.0f));
   }
 
   // lights
@@ -238,8 +251,7 @@ void InitFrameResources()
 
   for (auto &frameResource : gFrameResources)
   {
-    frameResource = MakeOwner<DX12::FrameResource>(static_cast<UINT>(gRenderItems.size() + gLights.size()),
-                                                   Core::AssetManager::Get().NumMaterials());
+    frameResource = MakeOwner<DX12::FrameResource>(64, 64);
     frameResource->PassConstants->CopyData(0, gPassConstants);
   }
 }
@@ -337,6 +349,7 @@ void UpdateConstants()
     {
       Core::MaterialConstants mat{};
       mat.Diffuse = material->Diffuse;
+      mat.UseMaterial = material->NoTexture;
       frameResource->MaterialConstants->CopyData(material->ConstantBufferIndex, mat);
       material->NumFramesDirty--;
     }

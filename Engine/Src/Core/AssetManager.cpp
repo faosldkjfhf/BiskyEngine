@@ -11,6 +11,11 @@
 namespace Core
 {
 
+const std::vector<DX12::Texture::GUIDToDXGI> AssetManager::mLookupTable = {
+    {GUID_WICPixelFormat32bppBGRA, DXGI_FORMAT_B8G8R8A8_UNORM},
+    {GUID_WICPixelFormat32bppRGBA, DXGI_FORMAT_R8G8B8A8_UNORM},
+    {GUID_WICPixelFormat1bppIndexed, DXGI_FORMAT_R8G8B8A8_UNORM}};
+
 void AssetManager::Shutdown()
 {
   for (auto &[_, geometry] : mGeometries)
@@ -22,6 +27,11 @@ void AssetManager::Shutdown()
   {
     material.reset();
   }
+
+  for (auto &[_, texture] : mTextures)
+  {
+    texture.reset();
+  }
 }
 
 void AssetManager::DisposeUploaders()
@@ -29,6 +39,11 @@ void AssetManager::DisposeUploaders()
   for (auto &[_, geometry] : mGeometries)
   {
     geometry->DisposeUploaders();
+  }
+
+  for (auto &[_, texture] : mTextures)
+  {
+    texture->DisposeUploader();
   }
 }
 
@@ -53,7 +68,7 @@ void AssetManager::SetModelDirectory(const std::filesystem::path &path)
 void AssetManager::SetTextureDirectory(const std::filesystem::path &path)
 {
   mTextureDirectory = mCurrentWorkingDirectory / path;
-  LOG_INFO("Set texture directory to " + mModelDirectory.string());
+  LOG_INFO("Set texture directory to " + mTextureDirectory.string());
 }
 
 AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename, ID3D12GraphicsCommandList10 *cmdList,
@@ -98,7 +113,6 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
       submesh.StartIndexLocation = (UINT)indices.size();
       submesh.BaseVertexLocation = (UINT)vertices.size();
       submesh.IndexCount = (UINT)asset->accessors[p.indicesAccessor.value()].count;
-
       size_t initialVtx = vertices.size();
 
       {
@@ -114,6 +128,7 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
           Core::Vertex vertex;
           vertex.Position = pos;
           vertex.Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+          vertex.TexCoord = XMFLOAT2(0.0f, 0.0f);
           vertices[index + initialVtx] = vertex;
         });
       }
@@ -128,7 +143,21 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
         });
       }
 
+      auto texcoords = p.findAttribute("TEXCOORD_0");
+      if (texcoords != p.attributes.end())
+      {
+        auto &accessor = asset->accessors[texcoords->accessorIndex];
+        fastgltf::iterateAccessorWithIndex<XMFLOAT2>(asset.get(), accessor, [&](XMFLOAT2 texcoord, size_t index) {
+          vertices[index + initialVtx].TexCoord = texcoord;
+        });
+      }
+
       newMesh.DrawArgs.push_back(submesh);
+    }
+
+    for (auto &image : asset->images)
+    {
+      LoadImage(cmdList, asset.get(), image);
     }
 
     newMesh.VertexBufferByteSize = static_cast<UINT>(vertices.size() * sizeof(Core::Vertex));
@@ -168,6 +197,53 @@ Ref<Core::MeshGeometry> AssetManager::GetModel(std::string_view name)
 
   LOG_INFO("Returning " + std::string(name));
   return it->second;
+}
+
+void AssetManager::LoadImage(ID3D12GraphicsCommandList10 *cmdList, fastgltf::Asset &asset, fastgltf::Image &image)
+{
+  Ref<DX12::Texture> texture = nullptr;
+  std::visit(fastgltf::visitor([](auto &arg) {},
+                               [&](fastgltf::sources::URI &filepath) {
+                                 const std::string path(filepath.uri.path().begin(), filepath.uri.path().end());
+
+                                 DX12::Texture::ImageData data;
+                                 if (!LoadImageFromDisk(path, data))
+                                 {
+                                   LOG_WARNING("Failed to load " + path);
+                                   return;
+                                 }
+
+                                 texture = DX12::CreateTexture(cmdList, data);
+                                 texture->Name = path;
+                                 texture->CreateView();
+                                 mTextures[texture->Name] = texture;
+
+                                 LOG_INFO("Loaded " + path);
+                               },
+                               [&](fastgltf::sources::Vector &vector) {},
+                               [&](fastgltf::sources::BufferView &view) {
+                                 auto &bufferView = asset.bufferViews[view.bufferViewIndex];
+                                 auto &buffer = asset.buffers[bufferView.bufferIndex];
+                               }),
+             image.data);
+
+  if (texture == nullptr)
+  {
+    LOG_WARNING("Failed to load texture");
+  }
+}
+
+Ref<DX12::Texture> AssetManager::GetTexture(std::string_view name)
+{
+  auto it = mTextures.find(name);
+  if (it == mTextures.end())
+  {
+    LOG_ERROR("Failed to find texture " + std::string(name));
+    return nullptr;
+  }
+
+  LOG_INFO("Returning texture " + std::string(name));
+  return mTextures[name];
 }
 
 ComPtr<ID3DBlob> AssetManager::LoadBinary(const std::filesystem::path &filename)
@@ -252,6 +328,71 @@ Ref<Core::Material> AssetManager::GetMaterial(std::string_view name)
   }
 
   return mMaterials[name];
+}
+
+bool AssetManager::LoadImageFromDisk(const std::filesystem::path &filepath, DX12::Texture::ImageData &data)
+{
+  std::filesystem::path texturePath = mTextureDirectory / filepath;
+
+  // Factory
+  ComPtr<IWICImagingFactory> wicFactory;
+  HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&wicFactory));
+  if (FAILED(hr))
+  {
+    LOG_ERROR("Failed to create WIC Factory");
+    return false;
+  }
+
+  // Load image
+  ComPtr<IWICStream> wicFileStream;
+  wicFactory->CreateStream(&wicFileStream);
+
+  // Initialize stream
+  if (FAILED(wicFileStream->InitializeFromFilename(texturePath.wstring().c_str(), GENERIC_READ)))
+  {
+    LOG_ERROR("Failed to load " + texturePath.string());
+    return false;
+  }
+
+  // Decode the image
+  ComPtr<IWICBitmapDecoder> wicDecoder;
+  wicFactory->CreateDecoderFromStream(wicFileStream.Get(), nullptr, WICDecodeMetadataCacheOnDemand, &wicDecoder);
+  ComPtr<IWICBitmapFrameDecode> wicFrameDecode;
+  wicDecoder->GetFrame(0, &wicFrameDecode);
+
+  wicFrameDecode->GetSize(&data.Width, &data.Height);
+  wicFrameDecode->GetPixelFormat(&data.PixelFormat);
+
+  ComPtr<IWICComponentInfo> componentInfo;
+  wicFactory->CreateComponentInfo(data.PixelFormat, &componentInfo);
+
+  ComPtr<IWICPixelFormatInfo> pixelFormat;
+  componentInfo->QueryInterface(IID_PPV_ARGS(&pixelFormat));
+  pixelFormat->GetBitsPerPixel(&data.BitsPerPixel);
+  pixelFormat->GetChannelCount(&data.ChannelCount);
+
+  auto it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const DX12::Texture::GUIDToDXGI &entry) {
+    return memcmp(&entry.GUID, &data.PixelFormat, sizeof(GUID)) == 0;
+  });
+  if (it == mLookupTable.end())
+  {
+    return false;
+  }
+  data.Format = it->Format;
+
+  UINT32 stride = ((data.BitsPerPixel + 7) / 8) * data.Width;
+  UINT32 size = stride * data.Height;
+  data.Data.resize(size);
+
+  WICRect copyRect{};
+  copyRect.X = 0;
+  copyRect.Y = 0;
+  copyRect.Width = data.Width;
+  copyRect.Height = data.Height;
+
+  wicFrameDecode->CopyPixels(&copyRect, stride, size, (BYTE *)data.Data.data());
+
+  return true;
 }
 
 } // namespace Core
