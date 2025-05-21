@@ -58,6 +58,7 @@ void InitFrameResources();
 void InitConstants();
 void UpdateConstants();
 void CalculateFrameStats();
+void GUICommands();
 
 int main()
 {
@@ -115,67 +116,7 @@ int main()
     CalculateFrameStats();
 
     // begin GUI frame
-    Editor::GUI::Get().NewFrame([&]() {
-      ImGui::Begin("Debug");
-      ImGui::Text("FPS: %f", gFps);
-      ImGui::Text("msPF: %f", gMspf);
-      ImGui::End();
-
-      ImGui::Begin("Scene");
-      if (ImGui::CollapsingHeader("Global Camera"))
-      {
-        ImGui::SeparatorText("Position");
-        XMFLOAT3 pos;
-        XMStoreFloat3(&pos, Core::GlobalCamera::Get().Position());
-        if (ImGui::SliderFloat("X", (float *)&pos.x, -10.0f, 10.0f) ||
-            ImGui::SliderFloat("Y", (float *)&pos.y, -10.0f, 10.0f) ||
-            ImGui::SliderFloat("Z", (float *)&pos.z, -10.0f, 10.0f))
-        {
-          Core::GlobalCamera::Get().SetPosition(XMLoadFloat3(&pos));
-          XMStoreFloat4x4(&gPassConstants.View, Core::GlobalCamera::Get().ViewMatrix());
-          XMStoreFloat4(&gPassConstants.ViewPosition, Core::GlobalCamera::Get().Position());
-          for (auto &frameResource : gFrameResources)
-          {
-            frameResource->PassConstants->CopyData(0, gPassConstants);
-          }
-        }
-      }
-      if (ImGui::CollapsingHeader("Materials"))
-      {
-      }
-      if (ImGui::CollapsingHeader("Lights"))
-      {
-        for (auto &light : gPassConstants.Lights)
-        {
-          if (ImGui::TreeNode("Light"))
-          {
-            ImGui::Unindent();
-            auto oldPos = light.Position;
-            ImGui::SeparatorText("Position");
-            if (ImGui::SliderFloat("X", (float *)&light.Position.x, -10.0f, 10.0f) ||
-                ImGui::SliderFloat("Y", (float *)&light.Position.y, -10.0f, 10.0f) ||
-                ImGui::SliderFloat("Z", (float *)&light.Position.z, -10.0f, 10.0f))
-            {
-              // FIXME: Update light positions
-              auto diff = XMVectorSubtract(XMLoadFloat4(&light.Position), XMLoadFloat4(&oldPos));
-              XMFLOAT4 translation;
-              XMStoreFloat4(&translation, diff);
-              XMStoreFloat4x4(&gLights[0]->World, XMLoadFloat4x4(&gLights[0]->World) *
-                                                      XMMatrixTranslation(translation.x, translation.y, translation.z));
-              gLights[0]->NumFramesDirty = DX12::Window::FrameResourceCount;
-
-              for (auto &frameResource : gFrameResources)
-              {
-                frameResource->PassConstants->CopyData(0, gPassConstants);
-              }
-            }
-            ImGui::Indent();
-            ImGui::TreePop();
-          }
-        }
-      }
-      ImGui::End();
-    });
+    Editor::GUI::Get().NewFrame([&]() { GUICommands(); });
 
     // reset command list
     auto *cmdList = Context::Get().ResetCommandList(frameResource->CommandAllocator.Get(),
@@ -200,7 +141,7 @@ int main()
     cmdList->SetGraphicsRootSignature(gRenderer->RootSignature("opaque"));
 
     // set the pass constants
-    cmdList->SetGraphicsRootConstantBufferView(2, frameResource->PassConstants->Resource()->GetGPUVirtualAddress());
+    cmdList->SetGraphicsRootConstantBufferView(3, frameResource->PassConstants->Resource()->GetGPUVirtualAddress());
 
     // draw using our renderer
     gRenderer->Draw(cmdList, frameResource, gRenderItems);
@@ -230,6 +171,11 @@ int main()
   for (auto &ri : gRenderItems)
   {
     ri.reset();
+  }
+
+  for (auto &light : gLights)
+  {
+    light.reset();
   }
 
   for (auto &fr : gFrameResources)
@@ -411,4 +357,76 @@ void CalculateFrameStats()
     frameCount = 0;
     timeElapsed += 1.0f;
   }
+}
+
+void GUICommands()
+{
+  ImGui::Begin("Debug");
+  ImGui::Text("FPS: %f", gFps);
+  ImGui::Text("msPF: %f", gMspf);
+  ImGui::End();
+
+  ImGui::Begin("Scene");
+  if (ImGui::CollapsingHeader("Global Camera"))
+  {
+    XMFLOAT3 pos;
+    XMStoreFloat3(&pos, Core::GlobalCamera::Get().Position());
+    if (ImGui::SliderFloat3("Position", (float *)&pos.x, -10.0f, 10.0f))
+    {
+      Core::GlobalCamera::Get().SetPosition(XMLoadFloat3(&pos));
+      XMStoreFloat4x4(&gPassConstants.View, Core::GlobalCamera::Get().ViewMatrix());
+      XMStoreFloat4(&gPassConstants.ViewPosition, Core::GlobalCamera::Get().Position());
+      for (auto &frameResource : gFrameResources)
+      {
+        frameResource->PassConstants->CopyData(0, gPassConstants);
+      }
+    }
+  }
+  if (ImGui::CollapsingHeader("Materials"))
+  {
+    for (auto &[key, material] : Core::AssetManager::Get().Materials())
+    {
+      auto name = std::string(key);
+      if (ImGui::TreeNode(name.c_str()))
+      {
+        ImGui::Unindent();
+        ImGui::SeparatorText("Diffuse");
+        if (ImGui::ColorEdit3("Diffuse", (float *)&material->Diffuse,
+                              ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_InputRGB))
+        {
+          material->NumFramesDirty = DX12::Window::FrameResourceCount;
+        }
+        ImGui::Indent();
+        ImGui::TreePop();
+      }
+    }
+  }
+  if (ImGui::CollapsingHeader("Lights"))
+  {
+    for (auto &light : gPassConstants.Lights)
+    {
+      if (ImGui::TreeNode("Light"))
+      {
+        ImGui::Unindent();
+        auto oldPos = light.Position;
+        if (ImGui::SliderFloat3("Position", (float *)&light.Position, -10.0f, 10.0f))
+        {
+          auto diff = XMVectorSubtract(XMLoadFloat4(&light.Position), XMLoadFloat4(&oldPos));
+          XMFLOAT4 translation;
+          XMStoreFloat4(&translation, diff);
+          XMStoreFloat4x4(&gLights[0]->World, XMLoadFloat4x4(&gLights[0]->World) *
+                                                  XMMatrixTranslation(translation.x, translation.y, translation.z));
+          gLights[0]->NumFramesDirty = DX12::Window::FrameResourceCount;
+
+          for (auto &frameResource : gFrameResources)
+          {
+            frameResource->PassConstants->CopyData(0, gPassConstants);
+          }
+        }
+        ImGui::Indent();
+        ImGui::TreePop();
+      }
+    }
+  }
+  ImGui::End();
 }

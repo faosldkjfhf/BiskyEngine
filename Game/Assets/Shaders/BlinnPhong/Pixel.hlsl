@@ -7,6 +7,7 @@ struct VOutput
     float3 Normal : NORMAL;
 };
 
+Texture2D gTexture : register(t0);
 ConstantBuffer<ObjectConstants> gObject : register(b0);
 ConstantBuffer<MaterialConstants> gMaterial : register(b1);
 ConstantBuffer<PassConstants> gPass : register(b2);

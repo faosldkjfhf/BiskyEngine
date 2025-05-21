@@ -5,6 +5,17 @@
 namespace DX12
 {
 
+void DescriptorRange::InitAsShaderResource(UINT baseShaderRegister, UINT numDescriptors, UINT registerSpace,
+                                           UINT offsetFromTableStart)
+{
+  ZeroMemory(&Range, sizeof(D3D12_DESCRIPTOR_RANGE));
+  Range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+  Range.BaseShaderRegister = baseShaderRegister;
+  Range.NumDescriptors = numDescriptors;
+  Range.RegisterSpace = registerSpace;
+  Range.OffsetInDescriptorsFromTableStart = offsetFromTableStart;
+}
+
 void RootParameters::AddDescriptor(UINT shaderRegister, D3D12_ROOT_PARAMETER_TYPE type, UINT registerSpace,
                                    D3D12_SHADER_VISIBILITY shaderVisibility)
 {

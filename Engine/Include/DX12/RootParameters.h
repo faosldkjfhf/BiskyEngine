@@ -7,8 +7,8 @@ namespace DX12
 
 struct DescriptorRange
 {
-  // void InitAsShaderResource(UINT baseShaderRegister, UINT numDescriptors, UINT registerSpace = 0,
-  //                           UINT offsetFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND);
+  void InitAsShaderResource(UINT baseShaderRegister, UINT numDescriptors, UINT registerSpace = 0,
+                            UINT offsetFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND);
 
   D3D12_DESCRIPTOR_RANGE Range;
 };
