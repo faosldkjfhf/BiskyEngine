@@ -351,6 +351,9 @@ Ref<Core::Material> AssetManager::GetMaterial(std::string_view name)
   return mMaterials[name];
 }
 
+// FIXME: Code's a little messy - fixed
+// TODO: Clean up this holy moly
+// Right now, seems it was decoded as 24bit but it needs to be decoded as 32bit
 bool AssetManager::LoadImageFromDisk(const std::filesystem::path &filepath, DX12::Texture::ImageData &data)
 {
   std::filesystem::path texturePath = mTextureDirectory / filepath;
@@ -382,36 +385,81 @@ bool AssetManager::LoadImageFromDisk(const std::filesystem::path &filepath, DX12
   wicDecoder->GetFrame(0, &wicFrameDecode);
 
   wicFrameDecode->GetSize(&data.Width, &data.Height);
-  wicFrameDecode->GetPixelFormat(&data.PixelFormat);
 
-  ComPtr<IWICComponentInfo> componentInfo;
-  wicFactory->CreateComponentInfo(data.PixelFormat, &componentInfo);
+  // this is the original pixel format that we found
+  GUID pixelFormat;
+  wicFrameDecode->GetPixelFormat(&pixelFormat);
 
-  ComPtr<IWICPixelFormatInfo> pixelFormat;
-  componentInfo->QueryInterface(IID_PPV_ARGS(&pixelFormat));
-  pixelFormat->GetBitsPerPixel(&data.BitsPerPixel);
-  pixelFormat->GetChannelCount(&data.ChannelCount);
+  // this is eventually what we want to convert to
+  GUID convertGUID;
+  memcpy(&convertGUID, &pixelFormat, sizeof(GUID));
 
   auto it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const DX12::Texture::GUIDToDXGI &entry) {
-    return memcmp(&entry.GUID, &data.PixelFormat, sizeof(GUID)) == 0;
+    return memcmp(&entry.GUID, &pixelFormat, sizeof(GUID)) == 0;
   });
   if (it == mLookupTable.end())
   {
-    return false;
+    auto fix =
+        std::find_if(mFixLookupTable.begin(), mFixLookupTable.end(), [&](const DX12::Texture::GUIDToGUID &entry) {
+          return memcmp(&entry.Source, &pixelFormat, sizeof(GUID)) == 0;
+        });
+    if (fix == mFixLookupTable.end())
+    {
+      LOG_WARNING("Failed to find suitable DXGI conversion format");
+      return false;
+    }
+
+    memcpy(&convertGUID, &fix->Target, sizeof(GUID));
   }
+
+  ComPtr<IWICComponentInfo> componentInfo;
+  wicFactory->CreateComponentInfo(convertGUID, &componentInfo);
+
+  ComPtr<IWICPixelFormatInfo> pixelFormatInfo;
+  componentInfo->QueryInterface(IID_PPV_ARGS(&pixelFormatInfo));
+  pixelFormatInfo->GetBitsPerPixel(&data.BitsPerPixel);
+  pixelFormatInfo->GetChannelCount(&data.ChannelCount);
+
+  // FIXME: Something wrong with the images
+  // Should be guaranteed to work now that we are converting incorrect types to a valid one
+  it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const DX12::Texture::GUIDToDXGI &entry) {
+    return memcmp(&entry.GUID, &convertGUID, sizeof(GUID)) == 0;
+  });
   data.Format = it->Format;
 
-  UINT32 stride = ((data.BitsPerPixel + 7) / 8) * data.Width;
-  UINT32 size = stride * data.Height;
-  data.Data.resize(size);
+  if (memcmp(&convertGUID, &pixelFormat, sizeof(GUID)) == 0)
+  {
+    UINT32 stride = ((data.BitsPerPixel + 7) / 8) * data.Width;
+    UINT32 size = stride * data.Height;
+    data.Data.resize(size);
 
-  WICRect copyRect{};
-  copyRect.X = 0;
-  copyRect.Y = 0;
-  copyRect.Width = data.Width;
-  copyRect.Height = data.Height;
+    WICRect copyRect{};
+    copyRect.X = 0;
+    copyRect.Y = 0;
+    copyRect.Width = data.Width;
+    copyRect.Height = data.Height;
 
-  wicFrameDecode->CopyPixels(&copyRect, stride, size, (BYTE *)data.Data.data());
+    wicFrameDecode->CopyPixels(0, stride, size, (BYTE *)data.Data.data());
+  }
+  else
+  {
+    ComPtr<IWICFormatConverter> fc;
+    wicFactory->CreateFormatConverter(&fc);
+    fc->Initialize(wicFrameDecode.Get(), convertGUID, WICBitmapDitherTypeErrorDiffusion, 0, 0,
+                   WICBitmapPaletteTypeCustom);
+
+    UINT32 stride = ((data.BitsPerPixel + 7) / 8) * data.Width;
+    UINT32 size = stride * data.Height;
+    data.Data.resize(size);
+
+    WICRect copyRect{};
+    copyRect.X = 0;
+    copyRect.Y = 0;
+    copyRect.Width = data.Width;
+    copyRect.Height = data.Height;
+
+    fc->CopyPixels(0, stride, size, (BYTE *)data.Data.data());
+  }
 
   return true;
 }

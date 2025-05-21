@@ -85,7 +85,7 @@ int main()
   Backend::ImmediateSubmit([&](ID3D12GraphicsCommandList10 *cmdList) {
     Core::AssetManager::Get().LoadGLTF("sphere.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
     Core::AssetManager::Get().LoadGLTF("Cube.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
-    Core::AssetManager::Get().LoadGLTF("DamagedHelmet.glb", cmdList);
+    Core::AssetManager::Get().LoadGLTF("DamagedHelmet.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
   });
 
   Backend::ImmediateSubmit([&](ID3D12GraphicsCommandList10 *cmdList) {
@@ -207,7 +207,7 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
   // materials
   {
     auto mat = Core::AssetManager::Get().AddMaterial("orange");
-    mat->DiffuseMapHeapIndex = Core::AssetManager::Get().GetTexture("Material 2")->HeapIndex;
+    mat->DiffuseMapHeapIndex = Core::AssetManager::Get().GetTexture("Default_albedo.jpg")->HeapIndex;
     mat->NoTexture = false;
     XMStoreFloat3(&mat->Diffuse, FXMVECTOR{1.0f, 0.5f, 0.0f});
   }

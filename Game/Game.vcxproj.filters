@@ -44,5 +44,32 @@
     </None>
     <None Include="Assets\Models\Cube.gltf" />
     <None Include="Assets\Models\DamagedHelmet.glb" />
+    <None Include="Assets\Models\DamagedHelmet.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Assets\Models\DamagedHelmet.gltf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\Textures\Cube_BaseColor.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Cube_MetallicRoughness.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Default_albedo.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Default_AO.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Default_emissive.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Default_normal.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Default_metalRoughness.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

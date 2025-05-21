@@ -174,7 +174,9 @@
     <None Include="Assets\Models\Box.glb" />
     <None Include="Assets\Models\Cube.bin" />
     <None Include="Assets\Models\Cube.gltf" />
+    <None Include="Assets\Models\DamagedHelmet.bin" />
     <None Include="Assets\Models\DamagedHelmet.glb" />
+    <None Include="Assets\Models\DamagedHelmet.gltf" />
     <None Include="Assets\Models\sphere.bin" />
     <None Include="Assets\Models\sphere.gltf" />
     <None Include="Assets\Shaders\BlinnPhong\Pixel.cso" />
@@ -184,6 +186,15 @@
     <None Include="Assets\Shaders\Lights\Vertex.cso" />
     <None Include="imgui.ini" />
     <None Include="shadertoolsconfig.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\Textures\Cube_BaseColor.png" />
+    <Image Include="Assets\Textures\Cube_MetallicRoughness.png" />
+    <Image Include="Assets\Textures\Default_albedo.jpg" />
+    <Image Include="Assets\Textures\Default_AO.jpg" />
+    <Image Include="Assets\Textures\Default_emissive.jpg" />
+    <Image Include="Assets\Textures\Default_metalRoughness.jpg" />
+    <Image Include="Assets\Textures\Default_normal.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

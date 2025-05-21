@@ -37,6 +37,5 @@ float4 main(VOutput input) : SV_Target {
         finalColor += float4(result, 0.0);
     }
     
-    return float4(color, 1.0);
     return finalColor;
 }
