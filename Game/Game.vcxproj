@@ -177,6 +177,7 @@
     <None Include="Assets\Models\DamagedHelmet.bin" />
     <None Include="Assets\Models\DamagedHelmet.glb" />
     <None Include="Assets\Models\DamagedHelmet.gltf" />
+    <None Include="Assets\Models\NormalTangentTest.glb" />
     <None Include="Assets\Models\sphere.bin" />
     <None Include="Assets\Models\sphere.gltf" />
     <None Include="Assets\Shaders\BlinnPhong\Pixel.cso" />

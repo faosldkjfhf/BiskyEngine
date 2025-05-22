@@ -48,6 +48,7 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Assets\Models\DamagedHelmet.gltf" />
+    <None Include="Assets\Models\NormalTangentTest.glb" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\Textures\Cube_BaseColor.png">

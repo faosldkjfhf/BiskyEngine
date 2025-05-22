@@ -65,17 +65,22 @@ void ForwardRenderer::Draw(ID3D12GraphicsCommandList10 *cmdList, DX12::FrameReso
     {
       auto handle = frameResource->ObjectConstants->Resource()->GetGPUVirtualAddress();
       handle += ri->ConstantBufferIndex * DX12::ConstantBufferByteSize(sizeof(Core::ObjectConstants));
-      cmdList->SetGraphicsRootConstantBufferView(1, handle);
+      cmdList->SetGraphicsRootConstantBufferView(2, handle);
     }
     {
       auto handle = frameResource->MaterialConstants->Resource()->GetGPUVirtualAddress();
       handle += ri->Material->ConstantBufferIndex * DX12::ConstantBufferByteSize(sizeof(Core::MaterialConstants));
-      cmdList->SetGraphicsRootConstantBufferView(2, handle);
+      cmdList->SetGraphicsRootConstantBufferView(3, handle);
     }
     {
       auto handle = DX12::Context::Get().ShaderResourceHeap()->GPUDescriptorHandle();
       handle.ptr += ri->Material->DiffuseMapHeapIndex * DX12::Context::Get().CbvSrvUavDescriptorSize();
       cmdList->SetGraphicsRootDescriptorTable(0, handle);
+    }
+    {
+      auto handle = DX12::Context::Get().ShaderResourceHeap()->GPUDescriptorHandle();
+      handle.ptr += ri->Material->NormalMapHeapIndex * DX12::Context::Get().CbvSrvUavDescriptorSize();
+      cmdList->SetGraphicsRootDescriptorTable(1, handle);
     }
 
     for (auto &submesh : ri->Geometry->DrawArgs)
@@ -123,8 +128,12 @@ void ForwardRenderer::InitRootSignatures()
   DX12::DescriptorRange tex{};
   tex.InitAsShaderResource(0, 1);
 
+  DX12::DescriptorRange normal{};
+  normal.InitAsShaderResource(1, 1);
+
   DX12::RootParameters p{};
   p.AddDescriptorTable(tex);
+  p.AddDescriptorTable(normal);
   p.AddDescriptor(0, D3D12_ROOT_PARAMETER_TYPE_CBV);
   p.AddDescriptor(1, D3D12_ROOT_PARAMETER_TYPE_CBV);
   p.AddDescriptor(2, D3D12_ROOT_PARAMETER_TYPE_CBV);
@@ -144,6 +153,8 @@ void ForwardRenderer::InitPipelineStateObjects()
       {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Core::Vertex, Normal),
        D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
       {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(Core::Vertex, TexCoord),
+       D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+      {"TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(Core::Vertex, Tangent),
        D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
   };
 

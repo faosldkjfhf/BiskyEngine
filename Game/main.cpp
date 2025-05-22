@@ -86,6 +86,7 @@ int main()
     Core::AssetManager::Get().LoadGLTF("sphere.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
     Core::AssetManager::Get().LoadGLTF("Cube.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
     Core::AssetManager::Get().LoadGLTF("DamagedHelmet.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
+    // Core::AssetManager::Get().LoadGLTF("NormalTangentTest.glb", cmdList);
   });
 
   Backend::ImmediateSubmit([&](ID3D12GraphicsCommandList10 *cmdList) {
@@ -127,7 +128,7 @@ int main()
     Window::Get().BeginFrame(cmdList);
 
     // clear the render target
-    float clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
+    float clearColor[] = {0.2f, 0.2f, 0.2f, 1.0f};
     cmdList->ClearRenderTargetView(Window::Get().RenderTargetView(), clearColor, 0, nullptr);
     cmdList->ClearDepthStencilView(gRenderer->DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
                                    1.0f, 0, 0, nullptr);
@@ -148,7 +149,7 @@ int main()
     cmdList->SetDescriptorHeaps(_countof(heaps), heaps);
 
     // set the pass constants
-    cmdList->SetGraphicsRootConstantBufferView(3, frameResource->PassConstants->Resource()->GetGPUVirtualAddress());
+    cmdList->SetGraphicsRootConstantBufferView(4, frameResource->PassConstants->Resource()->GetGPUVirtualAddress());
 
     // draw using our renderer
     gRenderer->Draw(cmdList, frameResource, gRenderItems);
@@ -202,12 +203,13 @@ int main()
 
 void InitScene(ID3D12GraphicsCommandList10 *cmdList)
 {
-  Core::GlobalCamera::Get().SetPosition(FXMVECTOR{3.0f, 3.0f, 3.0f});
+  Core::GlobalCamera::Get().SetPosition(FXMVECTOR{0.0f, 0.0f, 3.0f});
 
   // materials
   {
     auto mat = Core::AssetManager::Get().AddMaterial("orange");
     mat->DiffuseMapHeapIndex = Core::AssetManager::Get().GetTexture("Default_albedo.jpg")->HeapIndex;
+    mat->NormalMapHeapIndex = Core::AssetManager::Get().GetTexture("Default_normal.jpg")->HeapIndex;
     mat->NoTexture = false;
     XMStoreFloat3(&mat->Diffuse, FXMVECTOR{1.0f, 0.5f, 0.0f});
   }
@@ -222,7 +224,9 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
     ri->ConstantBufferIndex = 0;
     ri->Geometry = Core::AssetManager::Get().GetModel("mesh_helmet_LP_13930damagedHelmet");
     ri->Material = Core::AssetManager::Get().GetMaterial("orange");
-    XMStoreFloat4x4(&ri->World, XMMatrixScaling(1.0f, 1.0f, 1.0f));
+    // XMStoreFloat4x4(&ri->World, XMMatrixScaling(2.0f, 2.0f, 2.0f));
+    XMStoreFloat4x4(&ri->World, XMMatrixScaling(2.0f, 2.0f, 2.0f) *
+                                    XMMatrixRotationAxis(FXMVECTOR{1.0f, 0.0f, 0.0f}, XMConvertToRadians(90.0f)));
   }
 
   // lights

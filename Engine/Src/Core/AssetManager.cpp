@@ -98,6 +98,12 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
   std::vector<Core::Vertex> vertices;
   std::vector<UINT32> indices;
 
+  // load the textures
+  for (auto &image : asset->images)
+  {
+    LoadImage(cmdList, asset.get(), image);
+  }
+
   for (auto &mesh : asset->meshes)
   {
     Core::MeshGeometry newMesh{};
@@ -109,6 +115,7 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
 
     vertices.clear();
     indices.clear();
+    bool tangentsFound = false;
     for (auto &&p : mesh.primitives)
     {
       Core::MeshGeometry::SubmeshGeometry submesh;
@@ -131,11 +138,12 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
           vertex.Position = pos;
           vertex.Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
           vertex.TexCoord = XMFLOAT2(0.0f, 0.0f);
+          vertex.Tangent = XMFLOAT3(0.0f, 0.0f, 0.0f);
           vertices[index + initialVtx] = vertex;
         });
       }
 
-      // TODO: TEXCOORDS, NORMAL
+      // TODO: TEXCOORDS, NORMAL, TANGENT
       auto normals = p.findAttribute("NORMAL");
       if (normals != p.attributes.end())
       {
@@ -154,12 +162,51 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
         });
       }
 
+      auto tangents = p.findAttribute("TANGENT");
+      if (tangents != p.attributes.end())
+      {
+        tangentsFound = true;
+        auto &accessor = asset->accessors[tangents->accessorIndex];
+        fastgltf::iterateAccessorWithIndex<XMFLOAT4>(asset.get(), accessor, [&](XMFLOAT4 tangent, size_t index) {
+          vertices[index + initialVtx].Tangent = XMFLOAT3(tangent.x, tangent.y, tangent.z);
+        });
+      }
+
       newMesh.DrawArgs.push_back(submesh);
     }
 
-    for (auto &image : asset->images)
+    if (!tangentsFound)
     {
-      LoadImage(cmdList, asset.get(), image);
+      for (size_t idx = 0; idx < indices.size(); idx += 3)
+      {
+        UINT32 i = indices[idx];
+        UINT32 j = indices[idx + 1];
+        UINT32 k = indices[idx + 2];
+
+        auto pos1 = vertices[i].Position;
+        auto pos2 = vertices[j].Position;
+        auto pos3 = vertices[k].Position;
+        auto uv1 = vertices[i].TexCoord;
+        auto uv2 = vertices[j].TexCoord;
+        auto uv3 = vertices[k].TexCoord;
+
+        XMFLOAT3 edge1, edge2;
+        XMFLOAT2 duv1, duv2;
+        XMStoreFloat3(&edge1, XMVectorSubtract(XMLoadFloat3(&pos2), XMLoadFloat3(&pos1)));
+        XMStoreFloat3(&edge2, XMVectorSubtract(XMLoadFloat3(&pos3), XMLoadFloat3(&pos1)));
+        XMStoreFloat2(&duv1, XMVectorSubtract(XMLoadFloat2(&uv2), XMLoadFloat2(&uv1)));
+        XMStoreFloat2(&duv2, XMVectorSubtract(XMLoadFloat2(&uv3), XMLoadFloat2(&uv1)));
+
+        XMFLOAT3 tangent{};
+        float f = 1.0f / (duv1.x * duv2.y - duv1.y * duv2.x);
+        tangent.x = f * (duv2.y * edge1.x - duv1.y * edge2.x);
+        tangent.y = f * (duv2.y * edge1.y - duv1.y * edge2.y);
+        tangent.z = f * (duv2.y * edge1.z - duv1.y * edge2.z);
+
+        vertices[i].Tangent = tangent;
+        vertices[j].Tangent = tangent;
+        vertices[k].Tangent = tangent;
+      }
     }
 
     newMesh.VertexBufferByteSize = static_cast<UINT>(vertices.size() * sizeof(Core::Vertex));
@@ -492,16 +539,23 @@ bool AssetManager::LoadImageFromMemory(unsigned char *bytes, size_t byteOffset, 
   wicDecoder->GetFrame(0, &wicFrameDecode);
 
   wicFrameDecode->GetSize(&data.Width, &data.Height);
-  wicFrameDecode->GetPixelFormat(&data.PixelFormat);
+
+  // this is the original pixel format that we found
+  GUID pixelFormat;
+  wicFrameDecode->GetPixelFormat(&pixelFormat);
+
+  // this is eventually what we want to convert to
+  GUID convertGUID;
+  memcpy(&convertGUID, &pixelFormat, sizeof(GUID));
 
   auto it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const DX12::Texture::GUIDToDXGI &entry) {
-    return memcmp(&entry.GUID, &data.PixelFormat, sizeof(GUID)) == 0;
+    return memcmp(&entry.GUID, &pixelFormat, sizeof(GUID)) == 0;
   });
   if (it == mLookupTable.end())
   {
     auto fix =
         std::find_if(mFixLookupTable.begin(), mFixLookupTable.end(), [&](const DX12::Texture::GUIDToGUID &entry) {
-          return memcmp(&entry.Source, &data.PixelFormat, sizeof(GUID)) == 0;
+          return memcmp(&entry.Source, &pixelFormat, sizeof(GUID)) == 0;
         });
     if (fix == mFixLookupTable.end())
     {
@@ -509,34 +563,57 @@ bool AssetManager::LoadImageFromMemory(unsigned char *bytes, size_t byteOffset, 
       return false;
     }
 
-    data.PixelFormat = fix->Target;
+    memcpy(&convertGUID, &fix->Target, sizeof(GUID));
   }
 
   ComPtr<IWICComponentInfo> componentInfo;
-  wicFactory->CreateComponentInfo(data.PixelFormat, &componentInfo);
+  wicFactory->CreateComponentInfo(convertGUID, &componentInfo);
 
-  ComPtr<IWICPixelFormatInfo> pixelFormat;
-  componentInfo->QueryInterface(IID_PPV_ARGS(&pixelFormat));
-  pixelFormat->GetBitsPerPixel(&data.BitsPerPixel);
-  pixelFormat->GetChannelCount(&data.ChannelCount);
+  ComPtr<IWICPixelFormatInfo> pixelFormatInfo;
+  componentInfo->QueryInterface(IID_PPV_ARGS(&pixelFormatInfo));
+  pixelFormatInfo->GetBitsPerPixel(&data.BitsPerPixel);
+  pixelFormatInfo->GetChannelCount(&data.ChannelCount);
 
+  // FIXME: Something wrong with the images
   // Should be guaranteed to work now that we are converting incorrect types to a valid one
   it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const DX12::Texture::GUIDToDXGI &entry) {
-    return memcmp(&entry.GUID, &data.PixelFormat, sizeof(GUID)) == 0;
+    return memcmp(&entry.GUID, &convertGUID, sizeof(GUID)) == 0;
   });
   data.Format = it->Format;
 
-  UINT32 stride = ((data.BitsPerPixel + 7) / 8) * data.Width;
-  UINT32 size = stride * data.Height;
-  data.Data.resize(size);
+  if (memcmp(&convertGUID, &pixelFormat, sizeof(GUID)) == 0)
+  {
+    UINT32 stride = ((data.BitsPerPixel + 7) / 8) * data.Width;
+    UINT32 size = stride * data.Height;
+    data.Data.resize(size);
 
-  WICRect copyRect{};
-  copyRect.X = 0;
-  copyRect.Y = 0;
-  copyRect.Width = data.Width;
-  copyRect.Height = data.Height;
+    WICRect copyRect{};
+    copyRect.X = 0;
+    copyRect.Y = 0;
+    copyRect.Width = data.Width;
+    copyRect.Height = data.Height;
 
-  wicFrameDecode->CopyPixels(&copyRect, stride, size, (BYTE *)data.Data.data());
+    wicFrameDecode->CopyPixels(0, stride, size, (BYTE *)data.Data.data());
+  }
+  else
+  {
+    ComPtr<IWICFormatConverter> fc;
+    wicFactory->CreateFormatConverter(&fc);
+    fc->Initialize(wicFrameDecode.Get(), convertGUID, WICBitmapDitherTypeErrorDiffusion, 0, 0,
+                   WICBitmapPaletteTypeCustom);
+
+    UINT32 stride = ((data.BitsPerPixel + 7) / 8) * data.Width;
+    UINT32 size = stride * data.Height;
+    data.Data.resize(size);
+
+    WICRect copyRect{};
+    copyRect.X = 0;
+    copyRect.Y = 0;
+    copyRect.Width = data.Width;
+    copyRect.Height = data.Height;
+
+    fc->CopyPixels(0, stride, size, (BYTE *)data.Data.data());
+  }
 
   return true;
 }
