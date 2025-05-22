@@ -3,6 +3,7 @@
 #include "Common.h"
 #include "Core/Material.h"
 #include "Core/MeshGeometry.h"
+#include "DX12/RenderItem.h"
 #include "DX12/Texture.h"
 
 namespace Core

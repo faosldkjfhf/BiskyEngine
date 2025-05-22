@@ -49,11 +49,9 @@ float4 main(VOutput input) : SV_Target {
         float distance = length(light.Position.xyz - input.FragPosition);
         float attenuation = 1.0 / (gConstant + gLinear * distance + gQuadratic * (distance * distance));
         
-        /*
         ambient *= attenuation;
         diffuse *= attenuation;
         specular *= attenuation;
-*/
         
         float3 result = (ambient + diffuse + specular) * color;
         finalColor += float4(result, 0.0);
@@ -63,5 +61,9 @@ float4 main(VOutput input) : SV_Target {
     // FIXME: do it in a post processing step
     float gamma = 2.2;
     finalColor.rgb = pow(finalColor.rgb, float3(1.0 / gamma, 1.0 / gamma, 1.0 / gamma));
-    return finalColor;
+    
+    // Normal debug view
+    return float4(normal, 1.0);
+    
+    // return finalColor;
 }

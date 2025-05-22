@@ -101,6 +101,7 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
   // load the textures
   for (auto &image : asset->images)
   {
+    image.name = modelPath.filename().replace_extension().string();
     LoadImage(cmdList, asset.get(), image);
   }
 
@@ -274,24 +275,25 @@ void AssetManager::LoadImage(ID3D12GraphicsCommandList10 *cmdList, fastgltf::Ass
                                  auto &bufferView = asset.bufferViews[view.bufferViewIndex];
                                  auto &buffer = asset.buffers[bufferView.bufferIndex];
 
-                                 std::visit(fastgltf::visitor(
-                                                [](auto &arg) {},
-                                                [&](fastgltf::sources::Array &array) {
-                                                  DX12::Texture::ImageData data;
-                                                  if (!LoadImageFromMemory(
-                                                          reinterpret_cast<unsigned char *>(array.bytes.data()),
-                                                          bufferView.byteOffset, bufferView.byteLength, data))
-                                                  {
-                                                    LOG_WARNING("Failed to load buffer from memory");
-                                                    return;
-                                                  }
-                                                  texture = DX12::CreateTexture(cmdList, data);
-                                                  texture->CreateView();
-                                                  texture->Name = "Material " + std::to_string(texture->HeapIndex);
-                                                  mTextures[texture->Name] = texture;
-                                                  LOG_INFO("Loaded " + texture->Name);
-                                                }),
-                                            buffer.data);
+                                 std::visit(
+                                     fastgltf::visitor([](auto &arg) {},
+                                                       [&](fastgltf::sources::Array &array) {
+                                                         DX12::Texture::ImageData data;
+                                                         if (!LoadImageFromMemory(
+                                                                 reinterpret_cast<unsigned char *>(array.bytes.data()),
+                                                                 bufferView.byteOffset, bufferView.byteLength, data))
+                                                         {
+                                                           LOG_WARNING("Failed to load buffer from memory");
+                                                           return;
+                                                         }
+                                                         texture = DX12::CreateTexture(cmdList, data);
+                                                         texture->CreateView();
+                                                         texture->Name = std::string(image.name) + std::string("_") +
+                                                                         std::to_string(texture->HeapIndex);
+                                                         mTextures[texture->Name] = texture;
+                                                         LOG_INFO("Loaded " + texture->Name);
+                                                       }),
+                                     buffer.data);
                                }),
              image.data);
 

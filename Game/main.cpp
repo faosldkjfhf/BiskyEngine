@@ -203,7 +203,7 @@ int main()
 
 void InitScene(ID3D12GraphicsCommandList10 *cmdList)
 {
-  Core::GlobalCamera::Get().SetPosition(FXMVECTOR{0.0f, 0.0f, 3.0f});
+  Core::GlobalCamera::Get().SetPosition(FXMVECTOR{1.0f, 2.0f, 4.0f});
 
   // materials
   {
@@ -224,7 +224,6 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
     ri->ConstantBufferIndex = 0;
     ri->Geometry = Core::AssetManager::Get().GetModel("mesh_helmet_LP_13930damagedHelmet");
     ri->Material = Core::AssetManager::Get().GetMaterial("orange");
-    // XMStoreFloat4x4(&ri->World, XMMatrixScaling(2.0f, 2.0f, 2.0f));
     XMStoreFloat4x4(&ri->World, XMMatrixScaling(2.0f, 2.0f, 2.0f) *
                                     XMMatrixRotationAxis(FXMVECTOR{1.0f, 0.0f, 0.0f}, XMConvertToRadians(90.0f)));
   }
