@@ -6,6 +6,7 @@ struct VOutput
     float3 FragPosition : POSITION;
     float3 Normal : NORMAL;
     float2 TexCoord : TEXCOORD0;
+    float3 Debug : COLOR;
     float3x3 TBNMatrix : TANGENT1;
 };
 
@@ -22,7 +23,6 @@ float4 main(VOutput input) : SV_Target {
     float3 color = gMaterial.UseMaterial ? gMaterial.Diffuse : gDiffuseMap.Sample(gLinearSampler, input.TexCoord).xyz;
     
     float3 normal = gMaterial.UseMaterial ? normalize(input.Normal) : normalize(gNormalMap.Sample(gLinearSampler, input.TexCoord).xyz);
-    normal.y = 1.0 - normal.y; // flip the normal y - glTF normal maps follow right-handed convention instead of left-handed
     normal = normal * 2.0 - 1.0;
     normal = normalize(mul(input.TBNMatrix, normal));
     
@@ -57,8 +57,6 @@ float4 main(VOutput input) : SV_Target {
         float3 result = (ambient + diffuse + specular) * color;
         finalColor += float4(result, 0.0);
     }
-    
-    // return float4(input.Normal + 0.5 * 0.5, 1.0);
     
     // gamma correction
     // FIXME: do it in a post processing step

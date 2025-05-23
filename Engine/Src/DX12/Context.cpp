@@ -111,7 +111,7 @@ void Context::InitSamplers()
   linear.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
   linear.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
   linear.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
-  linear.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+  linear.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
   linear.MipLODBias = 0.0f;
   linear.MaxAnisotropy = 1;
   linear.MinLOD = 0.0f;

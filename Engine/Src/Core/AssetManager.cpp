@@ -213,7 +213,9 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
       if (mesh->HasTangentsAndBitangents())
       {
         const auto &tangent = mesh->mTangents[j];
+        const auto &bitangent = mesh->mBitangents[j];
         v.Tangent = XMFLOAT3(tangent.x, tangent.y, tangent.z);
+        v.Bitangent = XMFLOAT3(bitangent.x, bitangent.y, bitangent.z);
       }
 
       vertices.push_back(v);

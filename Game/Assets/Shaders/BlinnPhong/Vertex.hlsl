@@ -6,6 +6,7 @@ struct VOutput
     float3 FragPosition : POSITION;
     float3 Normal : NORMAL;
     float2 TexCoord : TEXCOORD0;
+    float3 Debug : COLOR;
     float3x3 TBNMatrix : TANGENT1;
 };
 
@@ -24,7 +25,11 @@ VOutput main(VInput input)
     
     float3 t = normalize(mul(gObject.World, float4(input.Tangent, 0.0)).xyz);
     float3 n = normalize(mul(gObject.World, float4(input.Normal, 0.0)).xyz);
-    float3 b = cross(n, t);
+    float3 b = normalize(mul(gObject.World, float4(input.Bitangent, 0.0)).xyz);
+    
+    // FIXME: Figure out how to correctly calculate bitangents - right now they are passed in
+    
+    output.Debug = b;
     output.TBNMatrix = transpose(float3x3(t, b, n));
     
     return output;  

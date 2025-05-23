@@ -213,7 +213,7 @@ int main()
 
 void InitScene(ID3D12GraphicsCommandList10 *cmdList)
 {
-  Core::GlobalCamera::Get().SetPosition(FXMVECTOR{0.0f, 0.0f, -4.0f});
+  Core::GlobalCamera::Get().SetPosition(FXMVECTOR{0.0f, 0.0f, 2.0f});
 
   // materials
   {
@@ -230,8 +230,9 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
     ri->ConstantBufferIndex = 0;
     ri->Geometry = Core::AssetManager::Get().GetModel("DamagedHelmet_0");
     ri->Material = Core::AssetManager::Get().GetMaterial("DamagedHelmet_0");
-    XMStoreFloat4x4(&ri->World, XMMatrixRotationAxis(FXMVECTOR{1.0f, 0.0f, 0.0f}, 180.0f));
-    // XMStoreFloat4x4(&ri->World, XMMatrixIdentity());
+    // XMStoreFloat4x4(&ri->World, XMMatrixRotationAxis(FXMVECTOR{1.0f, 0.0f, 0.0f}, XMConvertToRadians(-90.0f)) *
+    //                                XMMatrixRotationAxis(FXMVECTOR{0.0f, 1.0f, 0.0f}, XMConvertToRadians(180.0f)));
+    XMStoreFloat4x4(&ri->World, XMMatrixIdentity());
   }
 
   // lights
@@ -240,7 +241,7 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
     ri->ConstantBufferIndex = static_cast<UINT>(gRenderItems.size()) + 0;
     ri->Geometry = Core::AssetManager::Get().GetModel("sphere_0");
     ri->Material = Core::AssetManager::Get().GetMaterial("white");
-    XMStoreFloat4x4(&ri->World, XMMatrixScaling(0.1f, 0.1f, 0.1f) * XMMatrixTranslation(0.0f, 5.0f, 5.0f));
+    XMStoreFloat4x4(&ri->World, XMMatrixScaling(0.1f, 0.1f, 0.1f) * XMMatrixTranslation(0.0f, 3.0f, 3.0f));
   }
 }
 

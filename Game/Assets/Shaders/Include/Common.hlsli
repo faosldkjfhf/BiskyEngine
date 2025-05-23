@@ -6,6 +6,7 @@ struct VInput
     float3 Normal : NORMAL;
     float2 TexCoord : TEXCOORD0;
     float3 Tangent : TANGENT;
+    float3 Bitangent : BITANGENT;
 };
 
 struct ObjectConstants
