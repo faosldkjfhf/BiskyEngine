@@ -53,6 +53,10 @@ private:
   bool mShouldClose = false;
   bool mShouldResize = false;
 
+  POINT mLastMousePos;
+  float mDX;
+  float mDY;
+
 public:
   Window(const Window &) = delete;
   const Window &operator=(const Window &) = delete;
@@ -75,6 +79,16 @@ public:
   inline UINT Height() const
   {
     return mHeight;
+  }
+
+  inline float DX() const
+  {
+    return mDX;
+  }
+
+  inline float DY() const
+  {
+    return mDY;
   }
 
   inline float AspectRatio() const

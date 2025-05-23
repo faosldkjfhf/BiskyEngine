@@ -6,7 +6,8 @@ struct VOutput
     float3 FragPosition : POSITION;
     float3 Normal : NORMAL;
     float2 TexCoord : TEXCOORD0;
-    float3x3 TBNMatrix : TANGENT;
+    float3 Tangent : TANGENT0;
+    float3x3 TBNMatrix : TANGENT1;
 };
 
 ConstantBuffer<ObjectConstants> gObject : register(b0);
@@ -22,10 +23,11 @@ VOutput main(VInput input)
     output.Normal = mul((float3x3) gObject.NormalMatrix, input.Normal);
     output.TexCoord = input.TexCoord;
     
-    float3 t = normalize(float3(mul(gObject.World, float4(input.Tangent, 0.0)).xyz));
-    float3 n = normalize(float3(mul(gObject.World, float4(input.Normal, 0.0)).xyz));
+    float3 t = normalize(mul(gObject.World, float4(input.Tangent, 0.0)).xyz);
+    float3 n = normalize(mul(gObject.World, float4(input.Normal, 0.0)).xyz);
     float3 b = cross(n, t);
+    output.Tangent = n;
     output.TBNMatrix = transpose(float3x3(t, b, n));
     
-    return output;
+    return output;  
 }

@@ -160,8 +160,14 @@ LRESULT CALLBACK Window::OnWindowMessage(HWND hwnd, UINT msg, WPARAM wParam, LPA
   case WM_MOUSEMOVE:
     Get().mWindowCallbacks->OnMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     break;
-  case WM_LBUTTONDOWN:
+  case WM_LBUTTONDOWN: {
+    SetCapture(Get().mWindow);
     Get().mWindowCallbacks->OnLeftMouseDown(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+  }
+  break;
+  case WM_LBUTTONUP:
+    ReleaseCapture();
+    Get().mWindowCallbacks->OnLeftMouseUp();
     break;
   default:
     break;

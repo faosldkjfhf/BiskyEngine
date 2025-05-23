@@ -15,6 +15,22 @@
 #include "Editor/GUI.h"
 #include "Renderer/ForwardRenderer.h"
 
+namespace
+{
+Owner<DX12::FrameResource> gFrameResources[DX12::Window::FrameResourceCount];
+UINT gCurrentFrameResourceIndex = 0;
+
+Core::PassConstants gPassConstants;
+
+std::vector<Owner<DX12::RenderItem>> gRenderItems;
+std::vector<Owner<DX12::RenderItem>> gLights;
+Owner<Renderer::ForwardRenderer> gRenderer;
+
+Core::GameTimer gTimer;
+static float gFps = 0.0f;
+static float gMspf = 0.0f;
+} // namespace
+
 struct Callbacks : DX12::IWindowCallbacks
 {
   inline virtual void OnKeyDown(WPARAM key) override
@@ -31,28 +47,23 @@ struct Callbacks : DX12::IWindowCallbacks
 
   inline virtual void OnLeftMouseDown(WPARAM button, int x, int y) override
   {
+    MouseDown = true;
+  }
+
+  inline virtual void OnLeftMouseUp() override
+  {
+    MouseDown = false;
   }
 
   inline virtual void OnMouseMove(WPARAM button, int x, int y) override
   {
+    if (MouseDown)
+    {
+    }
   }
+
+  bool MouseDown = false;
 };
-
-namespace
-{
-Owner<DX12::FrameResource> gFrameResources[DX12::Window::FrameResourceCount];
-UINT gCurrentFrameResourceIndex = 0;
-
-Core::PassConstants gPassConstants;
-
-std::vector<Owner<DX12::RenderItem>> gRenderItems;
-std::vector<Owner<DX12::RenderItem>> gLights;
-Owner<Renderer::ForwardRenderer> gRenderer;
-
-Core::GameTimer gTimer;
-static float gFps = 0.0f;
-static float gMspf = 0.0f;
-} // namespace
 
 void InitScene(ID3D12GraphicsCommandList10 *cmdList);
 void InitFrameResources();
@@ -83,10 +94,9 @@ int main()
 
   // TODO: Make a function that can handle all the command list stuff and have us pass in a lambda?
   Backend::ImmediateSubmit([&](ID3D12GraphicsCommandList10 *cmdList) {
-    Core::AssetManager::Get().LoadGLTF("sphere.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
-    Core::AssetManager::Get().LoadGLTF("Cube.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
-    Core::AssetManager::Get().LoadGLTF("DamagedHelmet.gltf", cmdList, fastgltf::Options::LoadExternalBuffers);
-    // Core::AssetManager::Get().LoadGLTF("NormalTangentTest.glb", cmdList);
+    Core::AssetManager::Get().LoadGLTF("sphere.gltf", cmdList);
+    Core::AssetManager::Get().LoadGLTF("DamagedHelmet.gltf", cmdList);
+    Core::AssetManager::Get().LoadGLTF("NormalTangentTest.glb", cmdList);
   });
 
   Backend::ImmediateSubmit([&](ID3D12GraphicsCommandList10 *cmdList) {
@@ -203,18 +213,14 @@ int main()
 
 void InitScene(ID3D12GraphicsCommandList10 *cmdList)
 {
-  Core::GlobalCamera::Get().SetPosition(FXMVECTOR{1.0f, 2.0f, 4.0f});
+  Core::GlobalCamera::Get().SetPosition(FXMVECTOR{0.0f, 0.0f, -4.0f});
 
   // materials
   {
-    auto mat = Core::AssetManager::Get().AddMaterial("orange");
+    auto mat = Core::AssetManager::Get().AddMaterial("white");
     mat->DiffuseMapHeapIndex = Core::AssetManager::Get().GetTexture("Default_albedo.jpg")->HeapIndex;
     mat->NormalMapHeapIndex = Core::AssetManager::Get().GetTexture("Default_normal.jpg")->HeapIndex;
     mat->NoTexture = false;
-    XMStoreFloat3(&mat->Diffuse, FXMVECTOR{1.0f, 0.5f, 0.0f});
-  }
-  {
-    auto mat = Core::AssetManager::Get().AddMaterial("white");
     XMStoreFloat3(&mat->Diffuse, FXMVECTOR{1.0f, 1.0f, 1.0f});
   }
 
@@ -222,19 +228,19 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
   {
     auto *ri = gRenderItems.emplace_back(MakeOwner<DX12::RenderItem>()).get();
     ri->ConstantBufferIndex = 0;
-    ri->Geometry = Core::AssetManager::Get().GetModel("mesh_helmet_LP_13930damagedHelmet");
-    ri->Material = Core::AssetManager::Get().GetMaterial("orange");
-    XMStoreFloat4x4(&ri->World, XMMatrixScaling(2.0f, 2.0f, 2.0f) *
-                                    XMMatrixRotationAxis(FXMVECTOR{1.0f, 0.0f, 0.0f}, XMConvertToRadians(90.0f)));
+    ri->Geometry = Core::AssetManager::Get().GetModel("DamagedHelmet_0");
+    ri->Material = Core::AssetManager::Get().GetMaterial("DamagedHelmet_0");
+    XMStoreFloat4x4(&ri->World, XMMatrixRotationAxis(FXMVECTOR{1.0f, 0.0f, 0.0f}, 180.0f));
+    // XMStoreFloat4x4(&ri->World, XMMatrixIdentity());
   }
 
   // lights
   {
     auto *ri = gLights.emplace_back(MakeOwner<DX12::RenderItem>()).get();
     ri->ConstantBufferIndex = static_cast<UINT>(gRenderItems.size()) + 0;
-    ri->Geometry = Core::AssetManager::Get().GetModel("sphere.gltf");
+    ri->Geometry = Core::AssetManager::Get().GetModel("sphere_0");
     ri->Material = Core::AssetManager::Get().GetMaterial("white");
-    XMStoreFloat4x4(&ri->World, XMMatrixScaling(0.1f, 0.1f, 0.1f) * XMMatrixTranslation(0.0f, 3.0f, 3.0f));
+    XMStoreFloat4x4(&ri->World, XMMatrixScaling(0.1f, 0.1f, 0.1f) * XMMatrixTranslation(0.0f, 5.0f, 5.0f));
   }
 }
 

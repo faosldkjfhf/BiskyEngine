@@ -27,12 +27,12 @@ public:
   void SetModelDirectory(const std::filesystem::path &path);
   void SetTextureDirectory(const std::filesystem::path &path);
 
-  // GLTF
-  Error LoadGLTF(const std::filesystem::path &filename, ID3D12GraphicsCommandList10 *cmdList,
-                 fastgltf::Options flags = fastgltf::Options::None);
   Ref<Core::MeshGeometry> GetModel(std::string_view name);
-  void LoadImage(ID3D12GraphicsCommandList10 *cmdList, fastgltf::Asset &asset, fastgltf::Image &image);
+  // void LoadImage(ID3D12GraphicsCommandList10 *cmdList, fastgltf::Asset &asset, fastgltf::Image &image);
   Ref<DX12::Texture> GetTexture(std::string_view name);
+
+  Error LoadGLTF(const std::filesystem::path &filename, ID3D12GraphicsCommandList10 *cmdList);
+  void ProcessNode(aiNode *node, aiScene *scene, ID3D12GraphicsCommandList10 *cmdList);
 
   // Shaders
   ComPtr<ID3DBlob> LoadBinary(const std::filesystem::path &filename);

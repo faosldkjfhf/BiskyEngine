@@ -8,12 +8,16 @@
 #include <unordered_map>
 #include <vector>
 
-#include <fmt/color.h>
-#include <fmt/core.h>
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 
 #include <fastgltf/core.hpp>
 #include <fastgltf/dxmath_element_traits.hpp>
 #include <fastgltf/tools.hpp>
+
+#include <fmt/color.h>
+#include <fmt/core.h>
 
 #include <imgui.h>
 #include <imgui_impl_dx12.h>

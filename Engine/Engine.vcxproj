@@ -166,6 +166,7 @@
     <ClCompile Include="Src\Core\AssetManager.cpp" />
     <ClCompile Include="Src\Core\Camera.cpp" />
     <ClCompile Include="Src\Core\GameTimer.cpp" />
+    <ClCompile Include="Src\Core\GlobalCamera.cpp" />
     <ClCompile Include="Src\Core\Logger.cpp" />
     <ClCompile Include="Src\DX12\Context.cpp" />
     <ClCompile Include="Src\DX12\DebugLayer.cpp" />
@@ -210,6 +211,7 @@
     <ClInclude Include="Include\DX12\Window.h" />
     <ClInclude Include="Include\Editor\GUI.h" />
     <ClInclude Include="Include\Renderer\ForwardRenderer.h" />
+    <ClInclude Include="Include\Renderer\ViewMode.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

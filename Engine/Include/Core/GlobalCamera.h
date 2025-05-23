@@ -8,6 +8,8 @@ namespace Core
 class GlobalCamera : public Camera
 {
 public:
+  void UpdatePosition(int x, int y);
+
   GlobalCamera(const GlobalCamera &) = delete;
   const GlobalCamera &operator=(const GlobalCamera &) = delete;
   inline static GlobalCamera &Get()
@@ -19,4 +21,5 @@ public:
 private:
   GlobalCamera() = default;
 };
+
 } // namespace Core

@@ -73,169 +73,6 @@ void AssetManager::SetTextureDirectory(const std::filesystem::path &path)
   LOG_INFO("Set texture directory to " + mTextureDirectory.string());
 }
 
-AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename, ID3D12GraphicsCommandList10 *cmdList,
-                                           fastgltf::Options flags)
-{
-  std::filesystem::path modelPath = mModelDirectory / filename;
-  std::string strPath = modelPath.string();
-
-  auto data = fastgltf::GltfDataBuffer::FromPath(modelPath);
-  if (data.error() != fastgltf::Error::None)
-  {
-    LOG_WARNING("Failed to load " + strPath);
-    return LoadFile;
-  }
-
-  fastgltf::Parser parser;
-  auto asset = parser.loadGltf(data.get(), modelPath.parent_path(), flags);
-  if (auto error = asset.error(); error != fastgltf::Error::None)
-  {
-    LOG_WARNING("Failed to parse " + strPath);
-    return ParseFile;
-  }
-
-  std::vector<Ref<Core::MeshGeometry>> meshes;
-  std::vector<Core::Vertex> vertices;
-  std::vector<UINT32> indices;
-
-  // load the textures
-  for (auto &image : asset->images)
-  {
-    image.name = modelPath.filename().replace_extension().string();
-    LoadImage(cmdList, asset.get(), image);
-  }
-
-  for (auto &mesh : asset->meshes)
-  {
-    Core::MeshGeometry newMesh{};
-    newMesh.Name = mesh.name;
-    if (newMesh.Name == "")
-    {
-      newMesh.Name = filename.string();
-    }
-
-    vertices.clear();
-    indices.clear();
-    bool tangentsFound = false;
-    for (auto &&p : mesh.primitives)
-    {
-      Core::MeshGeometry::SubmeshGeometry submesh;
-      submesh.StartIndexLocation = (UINT)indices.size();
-      submesh.BaseVertexLocation = (UINT)vertices.size();
-      submesh.IndexCount = (UINT)asset->accessors[p.indicesAccessor.value()].count;
-      size_t initialVtx = vertices.size();
-
-      {
-        auto &indexAccessor = asset->accessors[p.indicesAccessor.value()];
-        indices.reserve(indices.size() + indexAccessor.count);
-        fastgltf::iterateAccessor<UINT32>(asset.get(), indexAccessor,
-                                          [&](UINT32 index) { indices.push_back((UINT32)initialVtx + index); });
-      }
-      {
-        auto &posAccessor = asset->accessors[p.findAttribute("POSITION")->accessorIndex];
-        vertices.resize(vertices.size() + posAccessor.count);
-        fastgltf::iterateAccessorWithIndex<XMFLOAT3>(asset.get(), posAccessor, [&](XMFLOAT3 pos, size_t index) {
-          Core::Vertex vertex;
-          vertex.Position = pos;
-          vertex.Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-          vertex.TexCoord = XMFLOAT2(0.0f, 0.0f);
-          vertex.Tangent = XMFLOAT3(0.0f, 0.0f, 0.0f);
-          vertices[index + initialVtx] = vertex;
-        });
-      }
-
-      // TODO: TEXCOORDS, NORMAL, TANGENT
-      auto normals = p.findAttribute("NORMAL");
-      if (normals != p.attributes.end())
-      {
-        auto &accessor = asset->accessors[normals->accessorIndex];
-        fastgltf::iterateAccessorWithIndex<XMFLOAT3>(asset.get(), accessor, [&](XMFLOAT3 normal, size_t index) {
-          vertices[index + initialVtx].Normal = normal;
-        });
-      }
-
-      auto texcoords = p.findAttribute("TEXCOORD_0");
-      if (texcoords != p.attributes.end())
-      {
-        auto &accessor = asset->accessors[texcoords->accessorIndex];
-        fastgltf::iterateAccessorWithIndex<XMFLOAT2>(asset.get(), accessor, [&](XMFLOAT2 texcoord, size_t index) {
-          vertices[index + initialVtx].TexCoord = texcoord;
-        });
-      }
-
-      auto tangents = p.findAttribute("TANGENT");
-      if (tangents != p.attributes.end())
-      {
-        tangentsFound = true;
-        auto &accessor = asset->accessors[tangents->accessorIndex];
-        fastgltf::iterateAccessorWithIndex<XMFLOAT4>(asset.get(), accessor, [&](XMFLOAT4 tangent, size_t index) {
-          vertices[index + initialVtx].Tangent = XMFLOAT3(tangent.x, tangent.y, tangent.z);
-        });
-      }
-
-      newMesh.DrawArgs.push_back(submesh);
-    }
-
-    if (!tangentsFound)
-    {
-      for (size_t idx = 0; idx < indices.size(); idx += 3)
-      {
-        UINT32 i = indices[idx];
-        UINT32 j = indices[idx + 1];
-        UINT32 k = indices[idx + 2];
-
-        auto pos1 = vertices[i].Position;
-        auto pos2 = vertices[j].Position;
-        auto pos3 = vertices[k].Position;
-        auto uv1 = vertices[i].TexCoord;
-        auto uv2 = vertices[j].TexCoord;
-        auto uv3 = vertices[k].TexCoord;
-
-        XMFLOAT3 edge1, edge2;
-        XMFLOAT2 duv1, duv2;
-        XMStoreFloat3(&edge1, XMVectorSubtract(XMLoadFloat3(&pos2), XMLoadFloat3(&pos1)));
-        XMStoreFloat3(&edge2, XMVectorSubtract(XMLoadFloat3(&pos3), XMLoadFloat3(&pos1)));
-        XMStoreFloat2(&duv1, XMVectorSubtract(XMLoadFloat2(&uv2), XMLoadFloat2(&uv1)));
-        XMStoreFloat2(&duv2, XMVectorSubtract(XMLoadFloat2(&uv3), XMLoadFloat2(&uv1)));
-
-        XMFLOAT3 tangent{};
-        float f = 1.0f / (duv1.x * duv2.y - duv1.y * duv2.x);
-        tangent.x = f * (duv2.y * edge1.x - duv1.y * edge2.x);
-        tangent.y = f * (duv2.y * edge1.y - duv1.y * edge2.y);
-        tangent.z = f * (duv2.y * edge1.z - duv1.y * edge2.z);
-
-        vertices[i].Tangent = tangent;
-        vertices[j].Tangent = tangent;
-        vertices[k].Tangent = tangent;
-      }
-    }
-
-    newMesh.VertexBufferByteSize = static_cast<UINT>(vertices.size() * sizeof(Core::Vertex));
-    newMesh.VertexByteStride = sizeof(Core::Vertex);
-    newMesh.IndexFormat = DXGI_FORMAT_R32_UINT;
-    newMesh.IndexBufferByteSize = static_cast<UINT>(indices.size() * sizeof(UINT32));
-
-    D3DCreateBlob(newMesh.VertexBufferByteSize, &newMesh.VertexBufferCPU);
-    D3DCreateBlob(newMesh.IndexBufferByteSize, &newMesh.IndexBufferCPU);
-    CopyMemory(newMesh.VertexBufferCPU->GetBufferPointer(), vertices.data(), newMesh.VertexBufferCPU->GetBufferSize());
-    CopyMemory(newMesh.IndexBufferCPU->GetBufferPointer(), indices.data(), newMesh.IndexBufferCPU->GetBufferSize());
-
-    newMesh.VertexBufferGPU = DX12::CreateBuffer(cmdList, newMesh.VertexBufferCPU, newMesh.VertexBufferUploader);
-    newMesh.IndexBufferGPU = DX12::CreateBuffer(cmdList, newMesh.IndexBufferCPU, newMesh.IndexBufferUploader);
-
-    LOG_INFO("Model added: " + newMesh.Name);
-    meshes.emplace_back(MakeRef<Core::MeshGeometry>(std::move(newMesh)));
-  }
-
-  for (auto &mesh : meshes)
-  {
-    mGeometries[mesh->Name] = std::move(mesh);
-  }
-
-  LOG_INFO("Loaded " + strPath);
-  return None;
-}
-
 Ref<Core::MeshGeometry> AssetManager::GetModel(std::string_view name)
 {
   auto it = mGeometries.find(name);
@@ -249,59 +86,60 @@ Ref<Core::MeshGeometry> AssetManager::GetModel(std::string_view name)
   return it->second;
 }
 
-void AssetManager::LoadImage(ID3D12GraphicsCommandList10 *cmdList, fastgltf::Asset &asset, fastgltf::Image &image)
-{
-  Ref<DX12::Texture> texture = nullptr;
-  std::visit(fastgltf::visitor([](auto &arg) {},
-                               [&](fastgltf::sources::URI &filepath) {
-                                 const std::string path(filepath.uri.path().begin(), filepath.uri.path().end());
-
-                                 DX12::Texture::ImageData data;
-                                 if (!LoadImageFromDisk(path, data))
-                                 {
-                                   LOG_WARNING("Failed to load " + path);
-                                   return;
-                                 }
-
-                                 texture = DX12::CreateTexture(cmdList, data);
-                                 texture->Name = path;
-                                 texture->CreateView();
-                                 mTextures[texture->Name] = texture;
-
-                                 LOG_INFO("Loaded " + path);
-                               },
-                               [&](fastgltf::sources::Vector &vector) { LOG_INFO("hi"); },
-                               [&](fastgltf::sources::BufferView &view) {
-                                 auto &bufferView = asset.bufferViews[view.bufferViewIndex];
-                                 auto &buffer = asset.buffers[bufferView.bufferIndex];
-
-                                 std::visit(
-                                     fastgltf::visitor([](auto &arg) {},
-                                                       [&](fastgltf::sources::Array &array) {
-                                                         DX12::Texture::ImageData data;
-                                                         if (!LoadImageFromMemory(
-                                                                 reinterpret_cast<unsigned char *>(array.bytes.data()),
-                                                                 bufferView.byteOffset, bufferView.byteLength, data))
-                                                         {
-                                                           LOG_WARNING("Failed to load buffer from memory");
-                                                           return;
-                                                         }
-                                                         texture = DX12::CreateTexture(cmdList, data);
-                                                         texture->CreateView();
-                                                         texture->Name = std::string(image.name) + std::string("_") +
-                                                                         std::to_string(texture->HeapIndex);
-                                                         mTextures[texture->Name] = texture;
-                                                         LOG_INFO("Loaded " + texture->Name);
-                                                       }),
-                                     buffer.data);
-                               }),
-             image.data);
-
-  if (texture == nullptr)
-  {
-    LOG_WARNING("Failed to load texture");
-  }
-}
+// void AssetManager::LoadImage(ID3D12GraphicsCommandList10 *cmdList, fastgltf::Asset &asset, fastgltf::Image &image)
+//{
+//   Ref<DX12::Texture> texture = nullptr;
+//   std::visit(fastgltf::visitor([](auto &arg) {},
+//                                [&](fastgltf::sources::URI &filepath) {
+//                                  const std::string path(filepath.uri.path().begin(), filepath.uri.path().end());
+//
+//                                  DX12::Texture::ImageData data;
+//                                  if (!LoadImageFromDisk(path, data))
+//                                  {
+//                                    LOG_WARNING("Failed to load " + path);
+//                                    return;
+//                                  }
+//
+//                                  texture = DX12::CreateTexture(cmdList, data);
+//                                  texture->Name = path;
+//                                  texture->CreateView();
+//                                  mTextures[texture->Name] = texture;
+//
+//                                  LOG_INFO("Loaded " + path);
+//                                },
+//                                [&](fastgltf::sources::Vector &vector) { LOG_INFO("hi"); },
+//                                [&](fastgltf::sources::BufferView &view) {
+//                                  auto &bufferView = asset.bufferViews[view.bufferViewIndex];
+//                                  auto &buffer = asset.buffers[bufferView.bufferIndex];
+//
+//                                  std::visit(
+//                                      fastgltf::visitor([](auto &arg) {},
+//                                                        [&](fastgltf::sources::Array &array) {
+//                                                          DX12::Texture::ImageData data;
+//                                                          if (!LoadImageFromMemory(
+//                                                                  reinterpret_cast<unsigned char
+//                                                                  *>(array.bytes.data()), bufferView.byteOffset,
+//                                                                  bufferView.byteLength, data))
+//                                                          {
+//                                                            LOG_WARNING("Failed to load buffer from memory");
+//                                                            return;
+//                                                          }
+//                                                          texture = DX12::CreateTexture(cmdList, data);
+//                                                          texture->CreateView();
+//                                                          texture->Name = std::string(image.name) + std::string("_") +
+//                                                                          std::to_string(texture->HeapIndex);
+//                                                          mTextures[texture->Name] = texture;
+//                                                          LOG_INFO("Loaded " + texture->Name);
+//                                                        }),
+//                                      buffer.data);
+//                                }),
+//              image.data);
+//
+//   if (texture == nullptr)
+//   {
+//     LOG_WARNING("Failed to load texture");
+//   }
+// }
 
 Ref<DX12::Texture> AssetManager::GetTexture(std::string_view name)
 {
@@ -314,6 +152,173 @@ Ref<DX12::Texture> AssetManager::GetTexture(std::string_view name)
 
   LOG_INFO("Returning texture " + std::string(name));
   return mTextures[name];
+}
+
+AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename, ID3D12GraphicsCommandList10 *cmdList)
+{
+  const std::filesystem::path modelPath = mModelDirectory / filename;
+  Assimp::Importer importer;
+  const aiScene *scene =
+      importer.ReadFile(modelPath.string(), aiProcess_CalcTangentSpace | aiProcess_ConvertToLeftHanded);
+  if (!scene)
+  {
+    LOG_WARNING("Failed to import " + modelPath.string());
+    return LoadFile;
+  }
+
+  std::vector<Vertex> vertices;
+  std::vector<UINT32> indices;
+  for (UINT i = 0; i < scene->mNumMeshes; i++)
+  {
+    const auto *mesh = scene->mMeshes[i];
+    vertices.clear();
+    indices.clear();
+
+    MeshGeometry::SubmeshGeometry subgeo;
+    subgeo.BaseVertexLocation = 0;
+    subgeo.StartIndexLocation = 0;
+    subgeo.IndexCount = mesh->mNumFaces * 3;
+
+    for (UINT j = 0; j < mesh->mNumFaces; j++)
+    {
+      const auto &face = mesh->mFaces[j];
+      for (UINT k = 0; k < face.mNumIndices; k++)
+      {
+        indices.push_back(face.mIndices[k]);
+      }
+    }
+
+    for (UINT j = 0; j < mesh->mNumVertices; j++)
+    {
+      const auto &vertex = mesh->mVertices[j];
+
+      Vertex v{};
+      v.Position = XMFLOAT3(vertex.x, vertex.y, vertex.z);
+      v.Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+      v.TexCoord = XMFLOAT2(0.0f, 0.0f);
+      v.Tangent = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+      if (mesh->HasNormals())
+      {
+        const auto &normal = mesh->mNormals[j];
+        v.Normal = XMFLOAT3(normal.x, normal.y, normal.z);
+      }
+
+      if (mesh->HasTextureCoords(0))
+      {
+        const auto &uv = mesh->mTextureCoords[0][j];
+        v.TexCoord = XMFLOAT2(uv.x, uv.y);
+      }
+
+      if (mesh->HasTangentsAndBitangents())
+      {
+        const auto &tangent = mesh->mTangents[j];
+        v.Tangent = XMFLOAT3(tangent.x, tangent.y, tangent.z);
+      }
+
+      vertices.push_back(v);
+    }
+
+    auto keyName = filename.filename().replace_extension().string() + "_" + std::to_string(i);
+    auto geo = MakeRef<MeshGeometry>();
+    geo->Name = keyName;
+    geo->DrawArgs.push_back(subgeo);
+    geo->VertexBufferByteSize = static_cast<UINT>(vertices.size() * sizeof(Core::Vertex));
+    geo->VertexByteStride = sizeof(Core::Vertex);
+    geo->IndexFormat = DXGI_FORMAT_R32_UINT;
+    geo->IndexBufferByteSize = static_cast<UINT>(indices.size() * sizeof(UINT32));
+
+    D3DCreateBlob(geo->VertexBufferByteSize, &geo->VertexBufferCPU);
+    D3DCreateBlob(geo->IndexBufferByteSize, &geo->IndexBufferCPU);
+    CopyMemory(geo->VertexBufferCPU->GetBufferPointer(), vertices.data(), geo->VertexBufferCPU->GetBufferSize());
+    CopyMemory(geo->IndexBufferCPU->GetBufferPointer(), indices.data(), geo->IndexBufferCPU->GetBufferSize());
+
+    geo->VertexBufferGPU = DX12::CreateBuffer(cmdList, geo->VertexBufferCPU, geo->VertexBufferUploader);
+    geo->IndexBufferGPU = DX12::CreateBuffer(cmdList, geo->IndexBufferCPU, geo->IndexBufferUploader);
+
+    mGeometries[geo->Name] = geo;
+    LOG_INFO("Model added " + geo->Name);
+
+    auto material = AddMaterial(geo->Name);
+    material->NoTexture = false;
+    {
+
+      aiString path;
+      scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_BASE_COLOR, 0, &path);
+      DX12::Texture::ImageData imageData;
+
+      auto *embeddedTexture = scene->GetEmbeddedTexture(path.C_Str());
+      if (embeddedTexture)
+      {
+        if (embeddedTexture->mHeight == 0)
+        {
+          if (!LoadImageFromMemory(reinterpret_cast<unsigned char *>(embeddedTexture->pcData), 0,
+                                   embeddedTexture->mWidth, imageData))
+          {
+            LOG_ERROR("Failed to load " + std::string(path.C_Str()) + " from memory");
+          }
+
+          Ref<DX12::Texture> texture = DX12::CreateTexture(cmdList, imageData);
+          texture->Name = path.C_Str();
+          texture->CreateView();
+          mTextures[texture->Name] = texture;
+          material->DiffuseMapHeapIndex = texture->HeapIndex;
+        }
+      }
+      else
+      {
+        if (LoadImageFromDisk(path.C_Str(), imageData))
+        {
+          Ref<DX12::Texture> texture = DX12::CreateTexture(cmdList, imageData);
+          texture->Name = path.C_Str();
+          texture->CreateView();
+          mTextures[texture->Name] = texture;
+          material->DiffuseMapHeapIndex = texture->HeapIndex;
+        }
+      }
+    }
+    {
+      aiString path;
+      scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_NORMALS, 0, &path);
+      DX12::Texture::ImageData imageData;
+
+      auto *embeddedTexture = scene->GetEmbeddedTexture(path.C_Str());
+      if (embeddedTexture)
+      {
+        if (embeddedTexture->mHeight == 0)
+        {
+          if (!LoadImageFromMemory(reinterpret_cast<unsigned char *>(embeddedTexture->pcData), 0,
+                                   embeddedTexture->mWidth, imageData))
+          {
+            LOG_ERROR("Failed to load " + std::string(path.C_Str()) + " from memory");
+          }
+
+          Ref<DX12::Texture> texture = DX12::CreateTexture(cmdList, imageData);
+          texture->Name = path.C_Str();
+          texture->CreateView();
+          mTextures[texture->Name] = texture;
+          material->NormalMapHeapIndex = texture->HeapIndex;
+        }
+      }
+      else
+      {
+        if (LoadImageFromDisk(path.C_Str(), imageData))
+        {
+          Ref<DX12::Texture> texture = DX12::CreateTexture(cmdList, imageData);
+          texture->Name = path.C_Str();
+          texture->CreateView();
+          mTextures[texture->Name] = texture;
+          material->NormalMapHeapIndex = texture->HeapIndex;
+        }
+      }
+    }
+  }
+
+  return None;
+}
+
+void AssetManager::ProcessNode(aiNode *node, aiScene *scene, ID3D12GraphicsCommandList10 *cmdList)
+{
 }
 
 ComPtr<ID3DBlob> AssetManager::LoadBinary(const std::filesystem::path &filename)
@@ -412,7 +417,7 @@ bool AssetManager::LoadImageFromDisk(const std::filesystem::path &filepath, DX12
   HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&wicFactory));
   if (FAILED(hr))
   {
-    LOG_ERROR("Failed to create WIC Factory");
+    LOG_WARNING("Failed to create WIC Factory");
     return false;
   }
 
@@ -423,7 +428,7 @@ bool AssetManager::LoadImageFromDisk(const std::filesystem::path &filepath, DX12
   // Initialize stream
   if (FAILED(wicFileStream->InitializeFromFilename(texturePath.wstring().c_str(), GENERIC_READ)))
   {
-    LOG_ERROR("Failed to load " + texturePath.string());
+    LOG_WARNING("Failed to load " + texturePath.string());
     return false;
   }
 
