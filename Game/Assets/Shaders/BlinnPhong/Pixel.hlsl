@@ -6,7 +6,6 @@ struct VOutput
     float3 FragPosition : POSITION;
     float3 Normal : NORMAL;
     float2 TexCoord : TEXCOORD0;
-    float3 Tangent : TANGENT0;
     float3x3 TBNMatrix : TANGENT1;
 };
 
@@ -58,6 +57,8 @@ float4 main(VOutput input) : SV_Target {
         float3 result = (ambient + diffuse + specular) * color;
         finalColor += float4(result, 0.0);
     }
+    
+    // return float4(input.Normal + 0.5 * 0.5, 1.0);
     
     // gamma correction
     // FIXME: do it in a post processing step
