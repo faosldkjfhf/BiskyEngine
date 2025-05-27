@@ -25,7 +25,8 @@ Currently a work in progress and for me to learn and play with D3D12.
 
 ## Implemented Papers
 
-[Microfacet Models for Refraction through Rough Surfaces](https://www.graphics.cornell.edu/~bjw/microfacetbsdf.pdf)
+- [ ] [A Reflectance Model for Computer Graphics](https://graphics.pixar.com/library/ReflectanceModel/paper.pdf)
+- [ ] [Microfacet Models for Refraction through Rough Surfaces](https://www.graphics.cornell.edu/~bjw/microfacetbsdf.pdf)
 
 ## File Structure
 
