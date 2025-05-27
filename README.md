@@ -23,6 +23,10 @@ Currently a work in progress and for me to learn and play with D3D12.
   - [ ] Scene editor
   - [ ] Profiler
 
+## Implemented Papers
+
+[Microfacet Models for Refraction through Rough Surfaces](https://www.graphics.cornell.edu/~bjw/microfacetbsdf.pdf)
+
 ## File Structure
 
 "Engine" contains the code that is wrapped around D3D12.
