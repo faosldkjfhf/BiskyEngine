@@ -163,11 +163,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Src\Core\ArcBall.cpp" />
     <ClCompile Include="Src\Core\AssetManager.cpp" />
     <ClCompile Include="Src\Core\Camera.cpp" />
     <ClCompile Include="Src\Core\GameTimer.cpp" />
     <ClCompile Include="Src\Core\GlobalCamera.cpp" />
     <ClCompile Include="Src\Core\Logger.cpp" />
+    <ClCompile Include="Src\Core\Transformation.cpp" />
     <ClCompile Include="Src\DX12\Context.cpp" />
     <ClCompile Include="Src\DX12\DebugLayer.cpp" />
     <ClCompile Include="Src\DX12\DescriptorHeap.cpp" />
@@ -184,6 +186,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Common.h" />
+    <ClInclude Include="Include\Core\ArcBall.h" />
     <ClInclude Include="Include\Core\AssetManager.h" />
     <ClInclude Include="Include\Core\Constants.h" />
     <ClInclude Include="Include\Core\GameTimer.h" />
@@ -193,6 +196,7 @@
     <ClInclude Include="Include\Core\Material.h" />
     <ClInclude Include="Include\Core\MathHelpers.h" />
     <ClInclude Include="Include\Core\MeshGeometry.h" />
+    <ClInclude Include="Include\Core\Transformation.h" />
     <ClInclude Include="Include\Core\Vertex.h" />
     <ClInclude Include="Include\Core\Camera.h" />
     <ClInclude Include="Include\DX12\Backend.h" />
@@ -210,6 +214,7 @@
     <ClInclude Include="Include\DX12\Utilities.h" />
     <ClInclude Include="Include\DX12\Window.h" />
     <ClInclude Include="Include\Editor\GUI.h" />
+    <ClInclude Include="Include\Math\Quaternion.h" />
     <ClInclude Include="Include\Renderer\ForwardRenderer.h" />
     <ClInclude Include="Include\Renderer\ViewMode.h" />
   </ItemGroup>

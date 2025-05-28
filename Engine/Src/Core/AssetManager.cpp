@@ -16,7 +16,8 @@ const std::vector<DX12::Texture::GUIDToDXGI> AssetManager::mLookupTable = {
     {GUID_WICPixelFormat32bppRGBA, DXGI_FORMAT_R8G8B8A8_UNORM}};
 
 const std::vector<DX12::Texture::GUIDToGUID> AssetManager::mFixLookupTable = {
-    {GUID_WICPixelFormat24bppBGR, GUID_WICPixelFormat32bppRGBA}};
+    {GUID_WICPixelFormat24bppBGR, GUID_WICPixelFormat32bppRGBA},
+    {GUID_WICPixelFormat24bppRGB, GUID_WICPixelFormat32bppRGBA}};
 
 void AssetManager::Shutdown()
 {
@@ -85,61 +86,6 @@ Ref<Core::MeshGeometry> AssetManager::GetModel(std::string_view name)
   LOG_INFO("Returning " + std::string(name));
   return it->second;
 }
-
-// void AssetManager::LoadImage(ID3D12GraphicsCommandList10 *cmdList, fastgltf::Asset &asset, fastgltf::Image &image)
-//{
-//   Ref<DX12::Texture> texture = nullptr;
-//   std::visit(fastgltf::visitor([](auto &arg) {},
-//                                [&](fastgltf::sources::URI &filepath) {
-//                                  const std::string path(filepath.uri.path().begin(), filepath.uri.path().end());
-//
-//                                  DX12::Texture::ImageData data;
-//                                  if (!LoadImageFromDisk(path, data))
-//                                  {
-//                                    LOG_WARNING("Failed to load " + path);
-//                                    return;
-//                                  }
-//
-//                                  texture = DX12::CreateTexture(cmdList, data);
-//                                  texture->Name = path;
-//                                  texture->CreateView();
-//                                  mTextures[texture->Name] = texture;
-//
-//                                  LOG_INFO("Loaded " + path);
-//                                },
-//                                [&](fastgltf::sources::Vector &vector) { LOG_INFO("hi"); },
-//                                [&](fastgltf::sources::BufferView &view) {
-//                                  auto &bufferView = asset.bufferViews[view.bufferViewIndex];
-//                                  auto &buffer = asset.buffers[bufferView.bufferIndex];
-//
-//                                  std::visit(
-//                                      fastgltf::visitor([](auto &arg) {},
-//                                                        [&](fastgltf::sources::Array &array) {
-//                                                          DX12::Texture::ImageData data;
-//                                                          if (!LoadImageFromMemory(
-//                                                                  reinterpret_cast<unsigned char
-//                                                                  *>(array.bytes.data()), bufferView.byteOffset,
-//                                                                  bufferView.byteLength, data))
-//                                                          {
-//                                                            LOG_WARNING("Failed to load buffer from memory");
-//                                                            return;
-//                                                          }
-//                                                          texture = DX12::CreateTexture(cmdList, data);
-//                                                          texture->CreateView();
-//                                                          texture->Name = std::string(image.name) + std::string("_") +
-//                                                                          std::to_string(texture->HeapIndex);
-//                                                          mTextures[texture->Name] = texture;
-//                                                          LOG_INFO("Loaded " + texture->Name);
-//                                                        }),
-//                                      buffer.data);
-//                                }),
-//              image.data);
-//
-//   if (texture == nullptr)
-//   {
-//     LOG_WARNING("Failed to load texture");
-//   }
-// }
 
 Ref<DX12::Texture> AssetManager::GetTexture(std::string_view name)
 {
@@ -254,17 +200,15 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
       {
         if (embeddedTexture->mHeight == 0)
         {
-          if (!LoadImageFromMemory(reinterpret_cast<unsigned char *>(embeddedTexture->pcData), 0,
-                                   embeddedTexture->mWidth, imageData))
+          if (LoadImageFromMemory(reinterpret_cast<unsigned char *>(embeddedTexture->pcData), 0,
+                                  embeddedTexture->mWidth, imageData))
           {
-            LOG_ERROR("Failed to load " + std::string(path.C_Str()) + " from memory");
+            Ref<DX12::Texture> texture = DX12::CreateTexture(cmdList, imageData);
+            texture->Name = path.C_Str();
+            texture->CreateView();
+            mTextures[texture->Name] = texture;
+            material->DiffuseMapHeapIndex = texture->HeapIndex;
           }
-
-          Ref<DX12::Texture> texture = DX12::CreateTexture(cmdList, imageData);
-          texture->Name = path.C_Str();
-          texture->CreateView();
-          mTextures[texture->Name] = texture;
-          material->DiffuseMapHeapIndex = texture->HeapIndex;
         }
       }
       else

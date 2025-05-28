@@ -24,6 +24,8 @@
     <FxCompile Include="Assets\Shaders\BlinnPhong\Vertex.hlsl" />
     <FxCompile Include="Assets\Shaders\Lights\Pixel.hlsl" />
     <FxCompile Include="Assets\Shaders\Lights\Vertex.hlsl" />
+    <FxCompile Include="Assets\Shaders\PBR\Pixel.hlsl" />
+    <FxCompile Include="Assets\Shaders\PBR\Vertex.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Models\Box.glb" />
@@ -49,6 +51,7 @@
     </None>
     <None Include="Assets\Models\DamagedHelmet.gltf" />
     <None Include="Assets\Models\NormalTangentTest.glb" />
+    <None Include="Assets\Shaders\Include\Lighting.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\Textures\Cube_BaseColor.png">

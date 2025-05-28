@@ -55,3 +55,5 @@ template <typename T, typename... Args> auto MakeRef(Args &&...args)
 {
   return std::make_shared<T>(std::forward<Args>(args)...);
 }
+
+#include "Core/Logger.h"

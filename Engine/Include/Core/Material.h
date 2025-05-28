@@ -10,6 +10,9 @@ namespace Core
 struct Material
 {
   XMFLOAT3 Diffuse;
+  float Metallic;
+  float Roughness;
+  float AmbientOcclusion;
   UINT DiffuseMapHeapIndex = 0;
   UINT NormalMapHeapIndex = 0;
   UINT ConstantBufferIndex = 0;

@@ -15,7 +15,11 @@ struct ObjectConstants
 struct MaterialConstants
 {
   XMFLOAT3 Diffuse;
-  float UseMaterial;
+  float Metallic;
+  float Roughness;
+  float AmbientOcclusion;
+  bool UseMaterial;
+  float Buffer1;
 };
 
 struct PassConstants

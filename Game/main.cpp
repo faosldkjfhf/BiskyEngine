@@ -1,8 +1,10 @@
+#include "Core/ArcBall.h"
 #include "Core/AssetManager.h"
 #include "Core/Constants.h"
 #include "Core/GameTimer.h"
 #include "Core/GlobalCamera.h"
 #include "Core/Logger.h"
+#include "Core/MathHelpers.h"
 #include "Core/MeshGeometry.h"
 #include "Core/Vertex.h"
 #include "DX12/Backend.h"
@@ -48,6 +50,9 @@ struct Callbacks : DX12::IWindowCallbacks
   inline virtual void OnLeftMouseDown(WPARAM button, int x, int y) override
   {
     MouseDown = true;
+    LastMousePos.x = x;
+    LastMousePos.y = y;
+    ArcBall.OnLeftMouseDown(x, y);
   }
 
   inline virtual void OnLeftMouseUp() override
@@ -59,10 +64,25 @@ struct Callbacks : DX12::IWindowCallbacks
   {
     if (MouseDown)
     {
+      // TODO: Figure out arc ball stuff
+      ArcBall.OnMouseMove(x, y);
+
+      // update frame resources
+      XMStoreFloat4x4(&gPassConstants.View, Core::GlobalCamera::Get().ViewMatrix());
+      XMStoreFloat4(&gPassConstants.ViewPosition, Core::GlobalCamera::Get().Position());
+      for (auto &frameResource : gFrameResources)
+      {
+        frameResource->PassConstants->CopyData(0, gPassConstants);
+      }
+
+      LastMousePos.x = x;
+      LastMousePos.y = y;
     }
   }
 
   bool MouseDown = false;
+  Core::ArcBall ArcBall;
+  POINT LastMousePos;
 };
 
 void InitScene(ID3D12GraphicsCommandList10 *cmdList);
@@ -119,12 +139,19 @@ int main()
     {
       Window::Get().Resize();
       gRenderer->Resize();
+      Core::GlobalCamera::Get().SetLens(90.0f, Window::Get().AspectRatio(), 0.1f, 100.0f);
+
       XMStoreFloat4x4(&gPassConstants.Projection, Core::GlobalCamera::Get().ProjectionMatrix());
       for (auto &frameResource : gFrameResources)
       {
         frameResource->PassConstants->CopyData(0, gPassConstants);
       }
     }
+
+    // rotate the object around the y-axis
+    // gRenderItems[0]->Transform.AddRotation(
+    //    XMMatrixRotationQuaternion(XMQuaternionRotationAxis(FXMVECTOR{0.0f, 1.0f, 0.0f}, 5.0f * gTimer.DeltaTime())));
+    // gRenderItems[0]->NumFramesDirty = DX12::Window::FrameResourceCount;
 
     // calculate frame statistics
     CalculateFrameStats();
@@ -213,26 +240,25 @@ int main()
 
 void InitScene(ID3D12GraphicsCommandList10 *cmdList)
 {
-  Core::GlobalCamera::Get().SetPosition(FXMVECTOR{0.0f, 0.0f, 2.0f});
+  Core::GlobalCamera::Get().SetPosition(0.0f, 0.0f, 8.0f);
 
   // materials
   {
-    auto mat = Core::AssetManager::Get().AddMaterial("white");
-    mat->DiffuseMapHeapIndex = Core::AssetManager::Get().GetTexture("Default_albedo.jpg")->HeapIndex;
-    mat->NormalMapHeapIndex = Core::AssetManager::Get().GetTexture("Default_normal.jpg")->HeapIndex;
-    mat->NoTexture = false;
-    XMStoreFloat3(&mat->Diffuse, FXMVECTOR{1.0f, 1.0f, 1.0f});
+    auto mat = Core::AssetManager::Get().AddMaterial("orange");
+    mat->Diffuse = XMFLOAT3(1.0f, 0.0f, 0.0f);
+    mat->Metallic = 0.5f;
+    mat->Roughness = 0.5f;
+    mat->AmbientOcclusion = 0.5f;
+    mat->NoTexture = true;
   }
 
   // render items
   {
     auto *ri = gRenderItems.emplace_back(MakeOwner<DX12::RenderItem>()).get();
     ri->ConstantBufferIndex = 0;
-    ri->Geometry = Core::AssetManager::Get().GetModel("DamagedHelmet_0");
-    ri->Material = Core::AssetManager::Get().GetMaterial("DamagedHelmet_0");
-    // XMStoreFloat4x4(&ri->World, XMMatrixRotationAxis(FXMVECTOR{1.0f, 0.0f, 0.0f}, XMConvertToRadians(-90.0f)) *
-    //                                XMMatrixRotationAxis(FXMVECTOR{0.0f, 1.0f, 0.0f}, XMConvertToRadians(180.0f)));
-    XMStoreFloat4x4(&ri->World, XMMatrixIdentity());
+    ri->Geometry = Core::AssetManager::Get().GetModel("sphere_0");
+    ri->Material = Core::AssetManager::Get().GetMaterial("orange");
+    ri->Transform.SetScale(3.0f, 3.0f, 3.0f);
   }
 
   // lights
@@ -240,8 +266,9 @@ void InitScene(ID3D12GraphicsCommandList10 *cmdList)
     auto *ri = gLights.emplace_back(MakeOwner<DX12::RenderItem>()).get();
     ri->ConstantBufferIndex = static_cast<UINT>(gRenderItems.size()) + 0;
     ri->Geometry = Core::AssetManager::Get().GetModel("sphere_0");
-    ri->Material = Core::AssetManager::Get().GetMaterial("white");
-    XMStoreFloat4x4(&ri->World, XMMatrixScaling(0.1f, 0.1f, 0.1f) * XMMatrixTranslation(0.0f, 3.0f, 3.0f));
+    ri->Material = Core::AssetManager::Get().GetMaterial("sphere_0");
+    ri->Transform.SetScale(0.1f, 0.1f, 0.1f);
+    ri->Transform.SetTranslation(0.0f, 4.0f, 8.0f);
   }
 }
 
@@ -249,11 +276,9 @@ void InitFrameResources()
 {
   XMStoreFloat4x4(&gPassConstants.View, Core::GlobalCamera::Get().ViewMatrix());
   XMStoreFloat4x4(&gPassConstants.Projection, Core::GlobalCamera::Get().ProjectionMatrix());
-  XMStoreFloat4(&gPassConstants.Lights[0].Position, FXMVECTOR{0.0f, 3.0f, 3.0f});
+  XMStoreFloat4(&gPassConstants.Lights[0].Position, FXMVECTOR{0.0f, 4.0f, 8.0f});
   XMStoreFloat4(&gPassConstants.Lights[0].Strength, FXMVECTOR{1.0f, 1.0f, 1.0f});
-
-  auto pos = Core::GlobalCamera::Get().Position();
-  XMStoreFloat4(&gPassConstants.ViewPosition, pos);
+  XMStoreFloat4(&gPassConstants.ViewPosition, Core::GlobalCamera::Get().Position());
 
   for (auto &frameResource : gFrameResources)
   {
@@ -323,7 +348,7 @@ void UpdateConstants()
     {
       Core::ObjectConstants constants{};
 
-      XMMATRIX world = XMLoadFloat4x4(&ri->World);
+      XMMATRIX world = ri->Transform.LocalToWorldMatrix();
       XMStoreFloat4x4(&constants.World, world);
       XMStoreFloat4x4(&constants.InverseWorld, XMMatrixInverse(nullptr, world));
       XMStoreFloat4x4(&constants.NormalMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, world)));
@@ -339,7 +364,7 @@ void UpdateConstants()
     {
       Core::ObjectConstants constants{};
 
-      XMMATRIX world = XMLoadFloat4x4(&ri->World);
+      XMMATRIX world = ri->Transform.LocalToWorldMatrix();
       XMStoreFloat4x4(&constants.World, world);
       XMStoreFloat4x4(&constants.InverseWorld, XMMatrixInverse(nullptr, world));
       XMStoreFloat4x4(&constants.NormalMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, world)));
@@ -355,6 +380,9 @@ void UpdateConstants()
     {
       Core::MaterialConstants mat{};
       mat.Diffuse = material->Diffuse;
+      mat.Metallic = material->Metallic;
+      mat.Roughness = material->Roughness;
+      mat.AmbientOcclusion = material->AmbientOcclusion;
       mat.UseMaterial = material->NoTexture;
       frameResource->MaterialConstants->CopyData(material->ConstantBufferIndex, mat);
       material->NumFramesDirty--;
@@ -390,7 +418,7 @@ void GUICommands()
   {
     XMFLOAT3 pos;
     XMStoreFloat3(&pos, Core::GlobalCamera::Get().Position());
-    if (ImGui::SliderFloat3("Position", (float *)&pos.x, -10.0f, 10.0f))
+    if (ImGui::SliderFloat3("Position", (float *)&pos, -10.0f, 10.0f))
     {
       Core::GlobalCamera::Get().SetPosition(XMLoadFloat3(&pos));
       XMStoreFloat4x4(&gPassConstants.View, Core::GlobalCamera::Get().ViewMatrix());
@@ -399,6 +427,12 @@ void GUICommands()
       {
         frameResource->PassConstants->CopyData(0, gPassConstants);
       }
+    }
+
+    XMFLOAT3 look;
+    XMStoreFloat3(&look, Core::GlobalCamera::Get().Look());
+    if (ImGui::SliderFloat3("Look", (float *)&look, -10.0f, 10.0f))
+    {
     }
   }
   if (ImGui::CollapsingHeader("Materials"))
@@ -412,6 +446,18 @@ void GUICommands()
         ImGui::SeparatorText("Diffuse");
         if (ImGui::ColorEdit3("Diffuse", (float *)&material->Diffuse,
                               ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_InputRGB))
+        {
+          material->NumFramesDirty = DX12::Window::FrameResourceCount;
+        }
+        if (ImGui::SliderFloat("Metallic", (float *)&material->Metallic, 0.0f, 1.0f))
+        {
+          material->NumFramesDirty = DX12::Window::FrameResourceCount;
+        }
+        if (ImGui::SliderFloat("Roughness", (float *)&material->Roughness, 0.0f, 1.0f))
+        {
+          material->NumFramesDirty = DX12::Window::FrameResourceCount;
+        }
+        if (ImGui::SliderFloat("Ambient Occlusion", (float *)&material->AmbientOcclusion, 0.0f, 1.0f))
         {
           material->NumFramesDirty = DX12::Window::FrameResourceCount;
         }
@@ -433,8 +479,7 @@ void GUICommands()
           auto diff = XMVectorSubtract(XMLoadFloat4(&light.Position), XMLoadFloat4(&oldPos));
           XMFLOAT4 translation;
           XMStoreFloat4(&translation, diff);
-          XMStoreFloat4x4(&gLights[0]->World, XMLoadFloat4x4(&gLights[0]->World) *
-                                                  XMMatrixTranslation(translation.x, translation.y, translation.z));
+          gLights[0]->Transform.AddTranslation(translation.x, translation.y, translation.z);
           gLights[0]->NumFramesDirty = DX12::Window::FrameResourceCount;
 
           for (auto &frameResource : gFrameResources)

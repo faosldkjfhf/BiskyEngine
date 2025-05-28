@@ -142,8 +142,8 @@ void ForwardRenderer::InitRootSignatures()
 
 void ForwardRenderer::InitPipelineStateObjects()
 {
-  ComPtr<ID3DBlob> vs = Core::AssetManager::Get().LoadBinary("BlinnPhong\\Vertex.cso");
-  ComPtr<ID3DBlob> ps = Core::AssetManager::Get().LoadBinary("BlinnPhong\\Pixel.cso");
+  ComPtr<ID3DBlob> vs = Core::AssetManager::Get().LoadBinary("PBR\\Vertex.cso");
+  ComPtr<ID3DBlob> ps = Core::AssetManager::Get().LoadBinary("PBR\\Pixel.cso");
   ComPtr<ID3DBlob> lightVS = Core::AssetManager::Get().LoadBinary("Lights\\Vertex.cso");
   ComPtr<ID3DBlob> lightPS = Core::AssetManager::Get().LoadBinary("Lights\\Pixel.cso");
 

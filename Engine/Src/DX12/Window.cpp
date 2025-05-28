@@ -9,7 +9,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 namespace DX12
 {
 
-Window::Error Window::Init(IWindowCallbacks *windowCallbacks, UINT width, UINT height, LPCWSTR title)
+Window::Error Window::Init(IWindowCallbacks *windowCallbacks, UINT width, UINT height, const std::string &title)
 {
   mWindowCallbacks = windowCallbacks;
   mWidth = width;
@@ -35,7 +35,9 @@ Window::Error Window::Init(IWindowCallbacks *windowCallbacks, UINT width, UINT h
     return Error::RegistrationFailed;
   }
 
-  mWindow = CreateWindowExW(WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, (LPCWSTR)mWindowClass, title,
+  std::string fullTitle = title + " | Bisky Engine 0.1.0";
+  std::wstring stemp = std::wstring(fullTitle.begin(), fullTitle.end());
+  mWindow = CreateWindowExW(WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, (LPCWSTR)mWindowClass, stemp.c_str(),
                             WS_OVERLAPPEDWINDOW | WS_VISIBLE, 50, 50, mWidth, mHeight, nullptr, nullptr,
                             GetModuleHandle(nullptr), nullptr);
   if (mWindow == nullptr)

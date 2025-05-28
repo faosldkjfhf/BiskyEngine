@@ -16,7 +16,8 @@ public:
     CreationFailed = 2
   };
 
-  Error Init(IWindowCallbacks *windowCallbacks, UINT width = 1280, UINT height = 960, LPCWSTR title = L"KevEngine");
+  Error Init(IWindowCallbacks *windowCallbacks, UINT width = 1280, UINT height = 960,
+             const std::string &title = "Game Demo");
   void Shutdown();
   void Update();
   void Resize();

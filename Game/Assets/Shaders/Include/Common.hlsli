@@ -1,4 +1,10 @@
 #define NUM_LIGHTS 1
+#define M_PI 3.14159265358979323846
+
+float sqr(float x)
+{
+    return x * x;
+}
 
 struct VInput
 {
@@ -33,7 +39,11 @@ struct PassConstants
 struct MaterialConstants
 {
     float3 Diffuse;
+    float Metallic;
+    float Roughness;
+    float AmbientOcclusion;
     bool UseMaterial;
+    float Buffer1;
 };
 
 SamplerState gLinearSampler : register(s0);

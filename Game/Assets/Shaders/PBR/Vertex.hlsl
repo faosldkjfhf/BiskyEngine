@@ -18,8 +18,9 @@ ConstantBuffer<PassConstants> gPass : register(b2);
 
 VOutput main(VInput input)
 {
-    float4 position = float4(input.Position, 1.0);
     VOutput output = (VOutput) 0;
+    float4 position = float4(input.Position, 1.0);
+    
     output.Position = mul(gPass.Projection, mul(gPass.View, mul(gObject.World, position)));
     output.FragPosition = mul(gObject.World, position).xyz;
     output.Normal = mul((float3x3) gObject.NormalMatrix, input.Normal);
@@ -29,7 +30,6 @@ VOutput main(VInput input)
     output.tTangent = normalize(mul(gObject.World, float4(input.Tangent, 0.0)).xyz);
     output.tNormal = normalize(mul(gObject.World, float4(input.Normal, 0.0)).xyz);
     output.tBitangent = normalize(mul(gObject.World, float4(input.Bitangent, 0.0)).xyz);
-
     
-    return output;  
+    return output;
 }

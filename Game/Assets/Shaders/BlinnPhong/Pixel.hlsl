@@ -7,7 +7,9 @@ struct VOutput
     float3 Normal : NORMAL;
     float2 TexCoord : TEXCOORD0;
     float3 Debug : COLOR;
-    float3x3 TBNMatrix : TANGENT1;
+    float3 tTangent : TANGENT0;
+    float3 tNormal : TANGENT1;
+    float3 tBitangent : TANGENT2;
 };
 
 Texture2D gDiffuseMap : register(t0);
@@ -19,13 +21,14 @@ ConstantBuffer<PassConstants> gPass : register(b2);
 // FIXME: Pass in lights through pass constants
 float4 main(VOutput input) : SV_Target {
     float4 finalColor = float4(0.0, 0.0, 0.0, 1.0);
-    
     float3 color = gMaterial.UseMaterial ? gMaterial.Diffuse : gDiffuseMap.Sample(gLinearSampler, input.TexCoord).xyz;
-    
     float3 normal = gMaterial.UseMaterial ? normalize(input.Normal) : normalize(gNormalMap.Sample(gLinearSampler, input.TexCoord).xyz);
-    normal = normal * 2.0 - 1.0;
-    normal = normalize(mul(input.TBNMatrix, normal));
-    
+    if (!gMaterial.UseMaterial)
+    {
+        normal = normal * 2.0 - 1.0;
+        normal = (normal.x * input.tTangent) + (normal.y * input.tBitangent) + (normal.z * input.tNormal);
+    }
+
     float3 viewDir = normalize(gPass.ViewPosition.xyz - input.FragPosition);
     
     // attenuation values
@@ -50,17 +53,20 @@ float4 main(VOutput input) : SV_Target {
         float distance = length(light.Position.xyz - input.FragPosition);
         float attenuation = 1.0 / (gConstant + gLinear * distance + gQuadratic * (distance * distance));
         
-        ambient *= attenuation;
-        diffuse *= attenuation;
-        specular *= attenuation;
+        // ambient *= attenuation;
+        // diffuse *= attenuation;
+        // specular *= attenuation;
         
         float3 result = (ambient + diffuse + specular) * color;
         finalColor += float4(result, 0.0);
     }
     
+    // TODO: Check if correct
+    // return float4(input.tBitangent, 1.0);
+    
     // gamma correction
     // FIXME: do it in a post processing step
     float gamma = 2.2;
-    finalColor.rgb = pow(finalColor.rgb, float3(1.0 / gamma, 1.0 / gamma, 1.0 / gamma));
+    // finalColor.rgb = pow(finalColor.rgb, float3(1.0 / gamma, 1.0 / gamma, 1.0 / gamma));
     return finalColor;
 }
