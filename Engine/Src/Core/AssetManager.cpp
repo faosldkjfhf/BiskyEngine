@@ -3,21 +3,113 @@
 #include "Core/AssetManager.h"
 #include "Core/Logger.h"
 #include "Core/Vertex.h"
-#include "DX12/Context.h"
-#include "DX12/Initializers.h"
-#include "DX12/Utilities.h"
+#include "D3D12/Context.h"
+#include "D3D12/Initializers.h"
+#include "D3D12/Utilities.h"
 #include <fstream>
 
 namespace Core
 {
 
-const std::vector<DX12::Texture::GUIDToDXGI> AssetManager::mLookupTable = {
-    {GUID_WICPixelFormat32bppBGRA, DXGI_FORMAT_B8G8R8A8_UNORM},
-    {GUID_WICPixelFormat32bppRGBA, DXGI_FORMAT_R8G8B8A8_UNORM}};
+const std::vector<D3D12::Texture::GUIDToDXGI> AssetManager::mLookupTable = {
+    {GUID_WICPixelFormat128bppRGBAFloat, DXGI_FORMAT_R32G32B32A32_FLOAT},
 
-const std::vector<DX12::Texture::GUIDToGUID> AssetManager::mFixLookupTable = {
-    {GUID_WICPixelFormat24bppBGR, GUID_WICPixelFormat32bppRGBA},
-    {GUID_WICPixelFormat24bppRGB, GUID_WICPixelFormat32bppRGBA}};
+    {GUID_WICPixelFormat64bppRGBAHalf, DXGI_FORMAT_R16G16B16A16_FLOAT},
+    {GUID_WICPixelFormat64bppRGBA, DXGI_FORMAT_R16G16B16A16_UNORM},
+
+    {GUID_WICPixelFormat32bppRGBA, DXGI_FORMAT_R8G8B8A8_UNORM},
+    {GUID_WICPixelFormat32bppBGRA, DXGI_FORMAT_B8G8R8A8_UNORM}, // DXGI 1.1
+    {GUID_WICPixelFormat32bppBGR, DXGI_FORMAT_B8G8R8X8_UNORM},  // DXGI 1.1
+
+    {GUID_WICPixelFormat32bppRGBA1010102XR, DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM}, // DXGI 1.1
+    {GUID_WICPixelFormat32bppRGBA1010102, DXGI_FORMAT_R10G10B10A2_UNORM},
+    {GUID_WICPixelFormat32bppRGBE, DXGI_FORMAT_R9G9B9E5_SHAREDEXP},
+
+#ifdef DXGI_1_2_FORMATS
+
+    {GUID_WICPixelFormat16bppBGRA5551, DXGI_FORMAT_B5G5R5A1_UNORM},
+    {GUID_WICPixelFormat16bppBGR565, DXGI_FORMAT_B5G6R5_UNORM},
+
+#endif // DXGI_1_2_FORMATS
+
+    {GUID_WICPixelFormat32bppGrayFloat, DXGI_FORMAT_R32_FLOAT},
+    {GUID_WICPixelFormat16bppGrayHalf, DXGI_FORMAT_R16_FLOAT},
+    {GUID_WICPixelFormat16bppGray, DXGI_FORMAT_R16_UNORM},
+    {GUID_WICPixelFormat8bppGray, DXGI_FORMAT_R8_UNORM},
+
+    {GUID_WICPixelFormat8bppAlpha, DXGI_FORMAT_A8_UNORM},
+
+#if (_WIN32_WINNT >= 0x0602 /*_WIN32_WINNT_WIN8*/)
+    {GUID_WICPixelFormat96bppRGBFloat, DXGI_FORMAT_R32G32B32_FLOAT},
+#endif
+};
+
+const std::vector<D3D12::Texture::GUIDToGUID> AssetManager::mFixLookupTable = {
+    // Note target GUID in this conversion table must be one of those directly supported formats (above).
+
+    {GUID_WICPixelFormatBlackWhite, GUID_WICPixelFormat8bppGray}, // DXGI_FORMAT_R8_UNORM
+
+    {GUID_WICPixelFormat1bppIndexed, GUID_WICPixelFormat32bppRGBA}, // DXGI_FORMAT_R8G8B8A8_UNORM
+    {GUID_WICPixelFormat2bppIndexed, GUID_WICPixelFormat32bppRGBA}, // DXGI_FORMAT_R8G8B8A8_UNORM
+    {GUID_WICPixelFormat4bppIndexed, GUID_WICPixelFormat32bppRGBA}, // DXGI_FORMAT_R8G8B8A8_UNORM
+    {GUID_WICPixelFormat8bppIndexed, GUID_WICPixelFormat32bppRGBA}, // DXGI_FORMAT_R8G8B8A8_UNORM
+
+    {GUID_WICPixelFormat2bppGray, GUID_WICPixelFormat8bppGray}, // DXGI_FORMAT_R8_UNORM
+    {GUID_WICPixelFormat4bppGray, GUID_WICPixelFormat8bppGray}, // DXGI_FORMAT_R8_UNORM
+
+    {GUID_WICPixelFormat16bppGrayFixedPoint, GUID_WICPixelFormat16bppGrayHalf},  // DXGI_FORMAT_R16_FLOAT
+    {GUID_WICPixelFormat32bppGrayFixedPoint, GUID_WICPixelFormat32bppGrayFloat}, // DXGI_FORMAT_R32_FLOAT
+
+#ifdef DXGI_1_2_FORMATS
+
+    {GUID_WICPixelFormat16bppBGR555, GUID_WICPixelFormat16bppBGRA5551}, // DXGI_FORMAT_B5G5R5A1_UNORM
+
+#else
+
+    {GUID_WICPixelFormat16bppBGR555, GUID_WICPixelFormat32bppRGBA},   // DXGI_FORMAT_R8G8B8A8_UNORM
+    {GUID_WICPixelFormat16bppBGRA5551, GUID_WICPixelFormat32bppRGBA}, // DXGI_FORMAT_R8G8B8A8_UNORM
+    {GUID_WICPixelFormat16bppBGR565, GUID_WICPixelFormat32bppRGBA},   // DXGI_FORMAT_R8G8B8A8_UNORM
+
+#endif // DXGI_1_2_FORMATS
+
+    {GUID_WICPixelFormat32bppBGR101010, GUID_WICPixelFormat32bppRGBA1010102}, // DXGI_FORMAT_R10G10B10A2_UNORM
+
+    {GUID_WICPixelFormat24bppBGR, GUID_WICPixelFormat32bppRGBA},   // DXGI_FORMAT_R8G8B8A8_UNORM
+    {GUID_WICPixelFormat24bppRGB, GUID_WICPixelFormat32bppRGBA},   // DXGI_FORMAT_R8G8B8A8_UNORM
+    {GUID_WICPixelFormat32bppPBGRA, GUID_WICPixelFormat32bppRGBA}, // DXGI_FORMAT_R8G8B8A8_UNORM
+    {GUID_WICPixelFormat32bppPRGBA, GUID_WICPixelFormat32bppRGBA}, // DXGI_FORMAT_R8G8B8A8_UNORM
+
+    {GUID_WICPixelFormat48bppRGB, GUID_WICPixelFormat64bppRGBA},   // DXGI_FORMAT_R16G16B16A16_UNORM
+    {GUID_WICPixelFormat48bppBGR, GUID_WICPixelFormat64bppRGBA},   // DXGI_FORMAT_R16G16B16A16_UNORM
+    {GUID_WICPixelFormat64bppBGRA, GUID_WICPixelFormat64bppRGBA},  // DXGI_FORMAT_R16G16B16A16_UNORM
+    {GUID_WICPixelFormat64bppPRGBA, GUID_WICPixelFormat64bppRGBA}, // DXGI_FORMAT_R16G16B16A16_UNORM
+    {GUID_WICPixelFormat64bppPBGRA, GUID_WICPixelFormat64bppRGBA}, // DXGI_FORMAT_R16G16B16A16_UNORM
+
+    {GUID_WICPixelFormat48bppRGBFixedPoint, GUID_WICPixelFormat64bppRGBAHalf},  // DXGI_FORMAT_R16G16B16A16_FLOAT
+    {GUID_WICPixelFormat48bppBGRFixedPoint, GUID_WICPixelFormat64bppRGBAHalf},  // DXGI_FORMAT_R16G16B16A16_FLOAT
+    {GUID_WICPixelFormat64bppRGBAFixedPoint, GUID_WICPixelFormat64bppRGBAHalf}, // DXGI_FORMAT_R16G16B16A16_FLOAT
+    {GUID_WICPixelFormat64bppBGRAFixedPoint, GUID_WICPixelFormat64bppRGBAHalf}, // DXGI_FORMAT_R16G16B16A16_FLOAT
+    {GUID_WICPixelFormat64bppRGBFixedPoint, GUID_WICPixelFormat64bppRGBAHalf},  // DXGI_FORMAT_R16G16B16A16_FLOAT
+    {GUID_WICPixelFormat64bppRGBHalf, GUID_WICPixelFormat64bppRGBAHalf},        // DXGI_FORMAT_R16G16B16A16_FLOAT
+    {GUID_WICPixelFormat48bppRGBHalf, GUID_WICPixelFormat64bppRGBAHalf},        // DXGI_FORMAT_R16G16B16A16_FLOAT
+
+    {GUID_WICPixelFormat96bppRGBFixedPoint, GUID_WICPixelFormat128bppRGBAFloat},   // DXGI_FORMAT_R32G32B32A32_FLOAT
+    {GUID_WICPixelFormat128bppPRGBAFloat, GUID_WICPixelFormat128bppRGBAFloat},     // DXGI_FORMAT_R32G32B32A32_FLOAT
+    {GUID_WICPixelFormat128bppRGBFloat, GUID_WICPixelFormat128bppRGBAFloat},       // DXGI_FORMAT_R32G32B32A32_FLOAT
+    {GUID_WICPixelFormat128bppRGBAFixedPoint, GUID_WICPixelFormat128bppRGBAFloat}, // DXGI_FORMAT_R32G32B32A32_FLOAT
+    {GUID_WICPixelFormat128bppRGBFixedPoint, GUID_WICPixelFormat128bppRGBAFloat},  // DXGI_FORMAT_R32G32B32A32_FLOAT
+
+    {GUID_WICPixelFormat32bppCMYK, GUID_WICPixelFormat32bppRGBA},      // DXGI_FORMAT_R8G8B8A8_UNORM
+    {GUID_WICPixelFormat64bppCMYK, GUID_WICPixelFormat64bppRGBA},      // DXGI_FORMAT_R16G16B16A16_UNORM
+    {GUID_WICPixelFormat40bppCMYKAlpha, GUID_WICPixelFormat64bppRGBA}, // DXGI_FORMAT_R16G16B16A16_UNORM
+    {GUID_WICPixelFormat80bppCMYKAlpha, GUID_WICPixelFormat64bppRGBA}, // DXGI_FORMAT_R16G16B16A16_UNORM
+
+#if (_WIN32_WINNT >= 0x0602 /*_WIN32_WINNT_WIN8*/)
+    {GUID_WICPixelFormat32bppRGB, GUID_WICPixelFormat32bppRGBA},           // DXGI_FORMAT_R8G8B8A8_UNORM
+    {GUID_WICPixelFormat64bppRGB, GUID_WICPixelFormat64bppRGBA},           // DXGI_FORMAT_R16G16B16A16_UNORM
+    {GUID_WICPixelFormat64bppPRGBAHalf, GUID_WICPixelFormat64bppRGBAHalf}, // DXGI_FORMAT_R16G16B16A16_FLOAT
+#endif
+};
 
 void AssetManager::Shutdown()
 {
@@ -87,7 +179,7 @@ Ref<Core::MeshGeometry> AssetManager::GetModel(std::string_view name)
   return it->second;
 }
 
-Ref<DX12::Texture> AssetManager::GetTexture(std::string_view name)
+Ref<D3D12::Texture> AssetManager::GetTexture(std::string_view name)
 {
   auto it = mTextures.find(name);
   if (it == mTextures.end())
@@ -100,6 +192,7 @@ Ref<DX12::Texture> AssetManager::GetTexture(std::string_view name)
   return mTextures[name];
 }
 
+// TODO: Make helper methods, too long right now
 AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename, ID3D12GraphicsCommandList10 *cmdList)
 {
   const std::filesystem::path modelPath = mModelDirectory / filename;
@@ -181,8 +274,8 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
     CopyMemory(geo->VertexBufferCPU->GetBufferPointer(), vertices.data(), geo->VertexBufferCPU->GetBufferSize());
     CopyMemory(geo->IndexBufferCPU->GetBufferPointer(), indices.data(), geo->IndexBufferCPU->GetBufferSize());
 
-    geo->VertexBufferGPU = DX12::CreateBuffer(cmdList, geo->VertexBufferCPU, geo->VertexBufferUploader);
-    geo->IndexBufferGPU = DX12::CreateBuffer(cmdList, geo->IndexBufferCPU, geo->IndexBufferUploader);
+    geo->VertexBufferGPU = D3D12::CreateBuffer(cmdList, geo->VertexBufferCPU, geo->VertexBufferUploader);
+    geo->IndexBufferGPU = D3D12::CreateBuffer(cmdList, geo->IndexBufferCPU, geo->IndexBufferUploader);
 
     mGeometries[geo->Name] = geo;
     LOG_INFO("Model added " + geo->Name);
@@ -190,11 +283,11 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
     auto material = AddMaterial(geo->Name);
     material->NoTexture = false;
     {
-
       aiString path;
       scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_BASE_COLOR, 0, &path);
-      DX12::Texture::ImageData imageData;
+      D3D12::Texture::ImageData imageData;
 
+      // albedo map
       auto *embeddedTexture = scene->GetEmbeddedTexture(path.C_Str());
       if (embeddedTexture)
       {
@@ -203,7 +296,7 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
           if (LoadImageFromMemory(reinterpret_cast<unsigned char *>(embeddedTexture->pcData), 0,
                                   embeddedTexture->mWidth, imageData))
           {
-            Ref<DX12::Texture> texture = DX12::CreateTexture(cmdList, imageData);
+            Ref<D3D12::Texture> texture = D3D12::CreateTexture(cmdList, imageData);
             texture->Name = path.C_Str();
             texture->CreateView();
             mTextures[texture->Name] = texture;
@@ -215,7 +308,7 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
       {
         if (LoadImageFromDisk(path.C_Str(), imageData))
         {
-          Ref<DX12::Texture> texture = DX12::CreateTexture(cmdList, imageData);
+          Ref<D3D12::Texture> texture = D3D12::CreateTexture(cmdList, imageData);
           texture->Name = path.C_Str();
           texture->CreateView();
           mTextures[texture->Name] = texture;
@@ -223,10 +316,12 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
         }
       }
     }
+
+    // normal map
     {
       aiString path;
       scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_NORMALS, 0, &path);
-      DX12::Texture::ImageData imageData;
+      D3D12::Texture::ImageData imageData;
 
       auto *embeddedTexture = scene->GetEmbeddedTexture(path.C_Str());
       if (embeddedTexture)
@@ -239,7 +334,7 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
             LOG_ERROR("Failed to load " + std::string(path.C_Str()) + " from memory");
           }
 
-          Ref<DX12::Texture> texture = DX12::CreateTexture(cmdList, imageData);
+          Ref<D3D12::Texture> texture = D3D12::CreateTexture(cmdList, imageData);
           texture->Name = path.C_Str();
           texture->CreateView();
           mTextures[texture->Name] = texture;
@@ -250,11 +345,85 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
       {
         if (LoadImageFromDisk(path.C_Str(), imageData))
         {
-          Ref<DX12::Texture> texture = DX12::CreateTexture(cmdList, imageData);
+          Ref<D3D12::Texture> texture = D3D12::CreateTexture(cmdList, imageData);
           texture->Name = path.C_Str();
           texture->CreateView();
           mTextures[texture->Name] = texture;
           material->NormalMapHeapIndex = texture->HeapIndex;
+        }
+      }
+    }
+
+    // ao map
+    {
+      aiString path;
+      scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &path);
+      D3D12::Texture::ImageData imageData;
+
+      auto *embeddedTexture = scene->GetEmbeddedTexture(path.C_Str());
+      if (embeddedTexture)
+      {
+        if (embeddedTexture->mHeight == 0)
+        {
+          if (!LoadImageFromMemory(reinterpret_cast<unsigned char *>(embeddedTexture->pcData), 0,
+                                   embeddedTexture->mWidth, imageData))
+          {
+            LOG_ERROR("Failed to load " + std::string(path.C_Str()) + " from memory");
+          }
+
+          Ref<D3D12::Texture> texture = D3D12::CreateTexture(cmdList, imageData);
+          texture->Name = path.C_Str();
+          texture->CreateView();
+          mTextures[texture->Name] = texture;
+          material->AmbientOcclusionMapHeapIndex = texture->HeapIndex;
+        }
+      }
+      else
+      {
+        if (LoadImageFromDisk(path.C_Str(), imageData))
+        {
+          Ref<D3D12::Texture> texture = D3D12::CreateTexture(cmdList, imageData);
+          texture->Name = path.C_Str();
+          texture->CreateView();
+          mTextures[texture->Name] = texture;
+          material->AmbientOcclusionMapHeapIndex = texture->HeapIndex;
+        }
+      }
+    }
+
+    // metal roughness map
+    {
+      aiString path;
+      scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_UNKNOWN, 0, &path);
+      D3D12::Texture::ImageData imageData;
+
+      auto *embeddedTexture = scene->GetEmbeddedTexture(path.C_Str());
+      if (embeddedTexture)
+      {
+        if (embeddedTexture->mHeight == 0)
+        {
+          if (!LoadImageFromMemory(reinterpret_cast<unsigned char *>(embeddedTexture->pcData), 0,
+                                   embeddedTexture->mWidth, imageData))
+          {
+            LOG_ERROR("Failed to load " + std::string(path.C_Str()) + " from memory");
+          }
+
+          Ref<D3D12::Texture> texture = D3D12::CreateTexture(cmdList, imageData);
+          texture->Name = path.C_Str();
+          texture->CreateView();
+          mTextures[texture->Name] = texture;
+          material->MetalRoughnessMapHeapIndex = texture->HeapIndex;
+        }
+      }
+      else
+      {
+        if (LoadImageFromDisk(path.C_Str(), imageData))
+        {
+          Ref<D3D12::Texture> texture = D3D12::CreateTexture(cmdList, imageData);
+          texture->Name = path.C_Str();
+          texture->CreateView();
+          mTextures[texture->Name] = texture;
+          material->MetalRoughnessMapHeapIndex = texture->HeapIndex;
         }
       }
     }
@@ -263,8 +432,49 @@ AssetManager::Error AssetManager::LoadGLTF(const std::filesystem::path &filename
   return None;
 }
 
-void AssetManager::ProcessNode(aiNode *node, aiScene *scene, ID3D12GraphicsCommandList10 *cmdList)
+AssetManager::Error AssetManager::LoadCubeMap(const std::filesystem::path &filename)
 {
+  std::filesystem::path texturePath = mTextureDirectory / filename;
+  Ref<D3D12::Texture> texture = MakeRef<D3D12::Texture>();
+  texture->Name = filename.string();
+  ResourceUploadBatch upload(D3D12::Context::Get().Device().Get());
+  bool isCubemap;
+
+  upload.Begin();
+
+  if (FAILED(CreateDDSTextureFromFile(D3D12::Context::Get().Device().Get(), upload, texturePath.c_str(),
+                                      &texture->Resource, false, 0, nullptr, &isCubemap)))
+  {
+    LOG_WARNING("Failed to load " + texture->Name);
+    return LoadFile;
+  }
+
+  if (!isCubemap)
+  {
+    LOG_WARNING(texture->Name + " is not a cubemap");
+    return LoadFile;
+  }
+
+  auto finish = upload.End(D3D12::Context::Get().CommandQueue().Get());
+  finish.wait();
+
+  mTextures[texture->Name] = texture;
+
+  // create SRV
+  texture->HeapIndex = D3D12::Context::Get().ShaderResourceHeap()->AddDescriptor();
+  auto handle = D3D12::Context::Get().ShaderResourceHeap()->CPUDescriptorHandle();
+  handle.ptr += texture->HeapIndex * D3D12::Context::Get().CbvSrvUavDescriptorSize();
+
+  D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
+  srv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+  srv.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+  srv.TextureCube.MipLevels = texture->Resource->GetDesc().MipLevels;
+  srv.TextureCube.MostDetailedMip = 0;
+  srv.TextureCube.ResourceMinLODClamp = 0.0f;
+  D3D12::Context::Get().Device()->CreateShaderResourceView(texture->Resource.Get(), &srv, handle);
+
+  LOG_INFO("Loaded " + texture->Name);
+  return None;
 }
 
 ComPtr<ID3DBlob> AssetManager::LoadBinary(const std::filesystem::path &filename)
@@ -354,7 +564,7 @@ Ref<Core::Material> AssetManager::GetMaterial(std::string_view name)
 // FIXME: Code's a little messy - fixed
 // TODO: Clean up this holy moly
 // Right now, seems it was decoded as 24bit but it needs to be decoded as 32bit
-bool AssetManager::LoadImageFromDisk(const std::filesystem::path &filepath, DX12::Texture::ImageData &data)
+bool AssetManager::LoadImageFromDisk(const std::filesystem::path &filepath, D3D12::Texture::ImageData &data)
 {
   std::filesystem::path texturePath = mTextureDirectory / filepath;
 
@@ -394,13 +604,13 @@ bool AssetManager::LoadImageFromDisk(const std::filesystem::path &filepath, DX12
   GUID convertGUID;
   memcpy(&convertGUID, &pixelFormat, sizeof(GUID));
 
-  auto it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const DX12::Texture::GUIDToDXGI &entry) {
+  auto it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const D3D12::Texture::GUIDToDXGI &entry) {
     return memcmp(&entry.GUID, &pixelFormat, sizeof(GUID)) == 0;
   });
   if (it == mLookupTable.end())
   {
     auto fix =
-        std::find_if(mFixLookupTable.begin(), mFixLookupTable.end(), [&](const DX12::Texture::GUIDToGUID &entry) {
+        std::find_if(mFixLookupTable.begin(), mFixLookupTable.end(), [&](const D3D12::Texture::GUIDToGUID &entry) {
           return memcmp(&entry.Source, &pixelFormat, sizeof(GUID)) == 0;
         });
     if (fix == mFixLookupTable.end())
@@ -422,7 +632,7 @@ bool AssetManager::LoadImageFromDisk(const std::filesystem::path &filepath, DX12
 
   // FIXME: Something wrong with the images
   // Should be guaranteed to work now that we are converting incorrect types to a valid one
-  it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const DX12::Texture::GUIDToDXGI &entry) {
+  it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const D3D12::Texture::GUIDToDXGI &entry) {
     return memcmp(&entry.GUID, &convertGUID, sizeof(GUID)) == 0;
   });
   data.Format = it->Format;
@@ -465,7 +675,7 @@ bool AssetManager::LoadImageFromDisk(const std::filesystem::path &filepath, DX12
 }
 
 bool AssetManager::LoadImageFromMemory(unsigned char *bytes, size_t byteOffset, size_t bufferSize,
-                                       DX12::Texture::ImageData &data)
+                                       D3D12::Texture::ImageData &data)
 {
   // Factory
   ComPtr<IWICImagingFactory> wicFactory;
@@ -501,13 +711,13 @@ bool AssetManager::LoadImageFromMemory(unsigned char *bytes, size_t byteOffset, 
   GUID convertGUID;
   memcpy(&convertGUID, &pixelFormat, sizeof(GUID));
 
-  auto it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const DX12::Texture::GUIDToDXGI &entry) {
+  auto it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const D3D12::Texture::GUIDToDXGI &entry) {
     return memcmp(&entry.GUID, &pixelFormat, sizeof(GUID)) == 0;
   });
   if (it == mLookupTable.end())
   {
     auto fix =
-        std::find_if(mFixLookupTable.begin(), mFixLookupTable.end(), [&](const DX12::Texture::GUIDToGUID &entry) {
+        std::find_if(mFixLookupTable.begin(), mFixLookupTable.end(), [&](const D3D12::Texture::GUIDToGUID &entry) {
           return memcmp(&entry.Source, &pixelFormat, sizeof(GUID)) == 0;
         });
     if (fix == mFixLookupTable.end())
@@ -529,7 +739,7 @@ bool AssetManager::LoadImageFromMemory(unsigned char *bytes, size_t byteOffset, 
 
   // FIXME: Something wrong with the images
   // Should be guaranteed to work now that we are converting incorrect types to a valid one
-  it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const DX12::Texture::GUIDToDXGI &entry) {
+  it = std::find_if(mLookupTable.begin(), mLookupTable.end(), [&](const D3D12::Texture::GUIDToDXGI &entry) {
     return memcmp(&entry.GUID, &convertGUID, sizeof(GUID)) == 0;
   });
   data.Format = it->Format;

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "DX12/DescriptorHeap.h"
-#include "DX12/FrameResource.h"
-#include "DX12/RenderItem.h"
+#include "D3D12/DescriptorHeap.h"
+#include "D3D12/FrameResource.h"
+#include "D3D12/RenderItem.h"
 
 namespace Renderer
 {
@@ -20,8 +20,10 @@ public:
   void Shutdown();
   void Resize();
 
-  void Draw(ID3D12GraphicsCommandList10 *cmdList, DX12::FrameResource *frameResource,
-            const std::vector<Owner<DX12::RenderItem>> &renderItems);
+  void Draw(ID3D12GraphicsCommandList10 *cmdList, D3D12::FrameResource *frameResource,
+            const std::vector<Owner<D3D12::RenderItem>> &renderItems);
+  void DrawCubeMap(ID3D12GraphicsCommandList10 *cmdList, D3D12::FrameResource *frameResource,
+                   const std::vector<Owner<D3D12::RenderItem>> &renderItems, Ref<D3D12::Texture> texture);
 
   inline ID3D12RootSignature *RootSignature(std::string_view name)
   {
@@ -55,7 +57,7 @@ private:
   void InitRootSignatures();
   void InitPipelineStateObjects();
 
-  Owner<DX12::DescriptorHeap> mDepthStencilHeap;
+  Owner<D3D12::DescriptorHeap> mDepthStencilHeap;
   ComPtr<ID3D12Resource> mDepthStencilBuffer;
   D3D12_CPU_DESCRIPTOR_HANDLE mDepthStencilHandle = {};
   DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;

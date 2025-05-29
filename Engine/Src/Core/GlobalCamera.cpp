@@ -1,7 +1,7 @@
 #include "Common.h"
 
 #include "Core/GlobalCamera.h"
-#include "DX12/Window.h"
+#include "D3D12/Window.h"
 
 namespace Core
 {

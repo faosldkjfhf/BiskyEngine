@@ -180,6 +180,18 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="Assets\Shaders\Skybox\Pixel.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Assets\Shaders\Skybox\Vertex.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
@@ -198,6 +210,7 @@
     <None Include="Assets\Shaders\Include\Lighting.hlsli" />
     <None Include="Assets\Shaders\Lights\Pixel.cso" />
     <None Include="Assets\Shaders\Lights\Vertex.cso" />
+    <None Include="Assets\Textures\Simon-HDRI_018_EXT_Matane_8k.exr" />
     <None Include="imgui.ini" />
     <None Include="shadertoolsconfig.json" />
   </ItemGroup>
@@ -209,6 +222,7 @@
     <Image Include="Assets\Textures\Default_emissive.jpg" />
     <Image Include="Assets\Textures\Default_metalRoughness.jpg" />
     <Image Include="Assets\Textures\Default_normal.jpg" />
+    <Image Include="Assets\Textures\skybox\cubemap.dds" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

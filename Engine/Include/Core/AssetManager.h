@@ -3,8 +3,8 @@
 #include "Common.h"
 #include "Core/Material.h"
 #include "Core/MeshGeometry.h"
-#include "DX12/RenderItem.h"
-#include "DX12/Texture.h"
+#include "D3D12/RenderItem.h"
+#include "D3D12/Texture.h"
 
 namespace Core
 {
@@ -29,10 +29,10 @@ public:
 
   Ref<Core::MeshGeometry> GetModel(std::string_view name);
   // void LoadImage(ID3D12GraphicsCommandList10 *cmdList, fastgltf::Asset &asset, fastgltf::Image &image);
-  Ref<DX12::Texture> GetTexture(std::string_view name);
+  Ref<D3D12::Texture> GetTexture(std::string_view name);
 
   Error LoadGLTF(const std::filesystem::path &filename, ID3D12GraphicsCommandList10 *cmdList);
-  void ProcessNode(aiNode *node, aiScene *scene, ID3D12GraphicsCommandList10 *cmdList);
+  Error LoadCubeMap(const std::filesystem::path &filename);
 
   // Shaders
   ComPtr<ID3DBlob> LoadBinary(const std::filesystem::path &filename);
@@ -53,8 +53,8 @@ public:
   }
 
 private:
-  bool LoadImageFromDisk(const std::filesystem::path &filepath, DX12::Texture::ImageData &data);
-  bool LoadImageFromMemory(unsigned char *bytes, size_t byteOffset, size_t bufferSize, DX12::Texture::ImageData &data);
+  bool LoadImageFromDisk(const std::filesystem::path &filepath, D3D12::Texture::ImageData &data);
+  bool LoadImageFromMemory(unsigned char *bytes, size_t byteOffset, size_t bufferSize, D3D12::Texture::ImageData &data);
 
   std::filesystem::path mCurrentWorkingDirectory = std::filesystem::absolute(__FILE__).parent_path();
   std::filesystem::path mShaderDirectory = mCurrentWorkingDirectory / "Shaders";
@@ -63,11 +63,11 @@ private:
 
   std::unordered_map<std::string_view, Ref<Core::MeshGeometry>> mGeometries{};
   std::unordered_map<std::string_view, Ref<Core::Material>> mMaterials{};
-  std::unordered_map<std::string_view, Ref<DX12::Texture>> mTextures{};
+  std::unordered_map<std::string_view, Ref<D3D12::Texture>> mTextures{};
 
   // FIXME: Change the names
-  static const std::vector<DX12::Texture::GUIDToDXGI> mLookupTable;
-  static const std::vector<DX12::Texture::GUIDToGUID> mFixLookupTable;
+  static const std::vector<D3D12::Texture::GUIDToDXGI> mLookupTable;
+  static const std::vector<D3D12::Texture::GUIDToGUID> mFixLookupTable;
 
 public:
   AssetManager(const AssetManager &) = delete;

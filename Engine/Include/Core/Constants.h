@@ -27,7 +27,8 @@ struct PassConstants
   XMFLOAT4X4 View;
   XMFLOAT4X4 Projection;
   XMFLOAT4 ViewPosition;
-  Light Lights[1];
+  PointLight PointLights[1];
+  DirectionalLight DirectionalLights[1];
 };
 
 struct ShadowPassConstants

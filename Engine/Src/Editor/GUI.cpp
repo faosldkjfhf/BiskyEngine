@@ -1,7 +1,7 @@
 #include "Common.h"
 
-#include "DX12/Context.h"
-#include "DX12/Window.h"
+#include "D3D12/Context.h"
+#include "D3D12/Window.h"
 #include "Editor/GUI.h"
 
 namespace Editor
@@ -15,22 +15,22 @@ static HeapAllocator gHeap;
 void GUI::Init()
 {
 #ifdef _DEBUG
-  auto heap =
-      MakeOwner<DX12::DescriptorHeap>(DX12::DescriptorType::ShaderResource, 64, DX12::DescriptorFlags::ShaderVisible);
-  gHeap.Create(DX12::Context::Get().Device().Get(), std::move(heap));
+  auto heap = MakeOwner<D3D12::DescriptorHeap>(D3D12::DescriptorType::ShaderResource, 64,
+                                               D3D12::DescriptorFlags::ShaderVisible);
+  gHeap.Create(D3D12::Context::Get().Device().Get(), std::move(heap));
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-  ImGui_ImplWin32_Init(DX12::Window::Get().Handle());
+  ImGui_ImplWin32_Init(D3D12::Window::Get().Handle());
 
   ImGui_ImplDX12_InitInfo info{};
-  info.Device = DX12::Context::Get().Device().Get();
-  info.CommandQueue = DX12::Context::Get().CommandQueue().Get();
-  info.NumFramesInFlight = DX12::Window::FrameResourceCount;
-  info.RTVFormat = DX12::Window::Get().BackBufferFormat();
+  info.Device = D3D12::Context::Get().Device().Get();
+  info.CommandQueue = D3D12::Context::Get().CommandQueue().Get();
+  info.NumFramesInFlight = D3D12::Window::FrameResourceCount;
+  info.RTVFormat = D3D12::Window::Get().BackBufferFormat();
   info.DSVFormat = DXGI_FORMAT_UNKNOWN; // FIXME: Figure out how to pass it in, don't really need right now tho
   info.SrvDescriptorHeap = gHeap.Heap->Resource();
   info.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo *, D3D12_CPU_DESCRIPTOR_HANDLE *outCPUHandle,
@@ -73,7 +73,7 @@ void GUI::Draw(ID3D12GraphicsCommandList *gCmdList)
   ImGui::Render();
 
   ID3D12DescriptorHeap *heaps[] = {gHeap.Heap->Resource()};
-  gCmdList->OMSetRenderTargets(1, &DX12::Window::Get().RenderTargetView(), false, nullptr);
+  gCmdList->OMSetRenderTargets(1, &D3D12::Window::Get().RenderTargetView(), false, nullptr);
   gCmdList->SetDescriptorHeaps(_countof(heaps), heaps);
   ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), gCmdList);
 #endif

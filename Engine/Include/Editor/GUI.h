@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DX12/DescriptorHeap.h"
+#include "D3D12/DescriptorHeap.h"
 #include <functional>
 
 namespace Editor
@@ -8,14 +8,14 @@ namespace Editor
 
 struct HeapAllocator
 {
-  Owner<DX12::DescriptorHeap> Heap = nullptr;
+  Owner<D3D12::DescriptorHeap> Heap = nullptr;
   D3D12_DESCRIPTOR_HEAP_TYPE HeapType;
   D3D12_CPU_DESCRIPTOR_HANDLE HeapStartCPU;
   D3D12_GPU_DESCRIPTOR_HANDLE HeapStartGPU;
   UINT HeapHandleIncrement;
   std::vector<int> FreeIndices;
 
-  inline void Create(ID3D12Device *device, Owner<DX12::DescriptorHeap> heap)
+  inline void Create(ID3D12Device *device, Owner<D3D12::DescriptorHeap> heap)
   {
     Heap = std::move(heap);
     D3D12_DESCRIPTOR_HEAP_DESC desc = Heap->Resource()->GetDesc();

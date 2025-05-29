@@ -26,6 +26,8 @@
     <FxCompile Include="Assets\Shaders\Lights\Vertex.hlsl" />
     <FxCompile Include="Assets\Shaders\PBR\Pixel.hlsl" />
     <FxCompile Include="Assets\Shaders\PBR\Vertex.hlsl" />
+    <FxCompile Include="Assets\Shaders\Skybox\Pixel.hlsl" />
+    <FxCompile Include="Assets\Shaders\Skybox\Vertex.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Models\Box.glb" />
@@ -52,6 +54,7 @@
     <None Include="Assets\Models\DamagedHelmet.gltf" />
     <None Include="Assets\Models\NormalTangentTest.glb" />
     <None Include="Assets\Shaders\Include\Lighting.hlsli" />
+    <None Include="Assets\Textures\Simon-HDRI_018_EXT_Matane_8k.exr" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\Textures\Cube_BaseColor.png">
@@ -75,5 +78,6 @@
     <Image Include="Assets\Textures\Default_metalRoughness.jpg">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Assets\Textures\skybox\cubemap.dds" />
   </ItemGroup>
 </Project>

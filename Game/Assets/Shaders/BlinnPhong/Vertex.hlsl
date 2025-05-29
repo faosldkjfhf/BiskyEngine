@@ -30,6 +30,5 @@ VOutput main(VInput input)
     output.tNormal = normalize(mul(gObject.World, float4(input.Normal, 0.0)).xyz);
     output.tBitangent = normalize(mul(gObject.World, float4(input.Bitangent, 0.0)).xyz);
 
-    
     return output;  
 }

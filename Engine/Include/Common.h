@@ -39,7 +39,11 @@ using namespace DirectX;
 #include <d3dcompiler.h>
 #include <dxgi1_6.h>
 
-#ifndef NDEBUG
+#include <directx/d3dx12.h>
+#include <directxtk12/DDSTextureLoader.h>
+#include <directxtk12/ResourceUploadBatch.h>
+
+#ifdef _DEBUG
 #include <d3d12sdklayers.h>
 #include <dxgidebug.h>
 #endif

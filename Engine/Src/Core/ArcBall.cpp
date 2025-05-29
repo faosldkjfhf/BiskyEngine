@@ -3,7 +3,7 @@
 #include "Core/ArcBall.h"
 #include "Core/GlobalCamera.h"
 #include "Core/MathHelpers.h"
-#include "DX12/Window.h"
+#include "D3D12/Window.h"
 
 namespace Core
 {
@@ -32,8 +32,8 @@ void ArcBall::OnMouseMove(int x, int y)
   // XMStoreFloat2(&mEnd, FXMVECTOR{(float)x, (float)y});
 
   // XMFLOAT2 dAngle, angle;
-  // dAngle.x = 2 * XM_PI / DX12::Window::Get().Width();
-  // dAngle.y = XM_PI / DX12::Window::Get().Height();
+  // dAngle.x = 2 * XM_PI / D3D12::Window::Get().Width();
+  // dAngle.y = XM_PI / D3D12::Window::Get().Height();
   // angle.x = (x - mStart.x) * dAngle.x;
   // angle.y = (y - mStart.y) * dAngle.y;
 
@@ -71,8 +71,8 @@ XMFLOAT3 ArcBall::ConvertToNDC(int x, int y)
 {
   XMFLOAT3 ndc{};
   float tx, ty;
-  tx = (x * 1.0f / ((static_cast<float>(DX12::Window::Get().Width() - 1.0f) * 0.5f))) - 1.0f;
-  ty = (y * 1.0f / ((static_cast<float>(DX12::Window::Get().Height() - 1.0f) * 0.5f))) - 1.0f;
+  tx = (x * 1.0f / ((static_cast<float>(D3D12::Window::Get().Width() - 1.0f) * 0.5f))) - 1.0f;
+  ty = (y * 1.0f / ((static_cast<float>(D3D12::Window::Get().Height() - 1.0f) * 0.5f))) - 1.0f;
 
   float quadrance = ((tx * tx) + (ty * ty));
   if (quadrance > 1.0f)

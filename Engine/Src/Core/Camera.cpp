@@ -2,7 +2,7 @@
 
 #include "Core/Camera.h"
 #include "Core/Logger.h"
-#include "DX12/Window.h"
+#include "D3D12/Window.h"
 
 namespace Core
 {
@@ -10,7 +10,7 @@ namespace Core
 Camera::Camera()
 {
   XMStoreFloat4x4(&mProjectionMatrix,
-                  XMMatrixPerspectiveFovLH(XMConvertToRadians(mFov), DX12::Window::Get().AspectRatio(), mNear, mFar));
+                  XMMatrixPerspectiveFovLH(XMConvertToRadians(mFov), D3D12::Window::Get().AspectRatio(), mNear, mFar));
   UpdateViewMatrix();
 }
 

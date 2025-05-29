@@ -1,5 +1,14 @@
 {
   "dependencies": [
+    "assimp",
+    {
+      "name": "directxtex",
+      "features": [
+        "dx12",
+        "openexr"
+      ]
+    },
+    "directxtk12",
     "fastgltf",
     "fmt",
     {
@@ -9,7 +18,6 @@
         "dx12-binding",
         "win32-binding"
       ]
-    },
-    "assimp"
+    }
   ]
 }

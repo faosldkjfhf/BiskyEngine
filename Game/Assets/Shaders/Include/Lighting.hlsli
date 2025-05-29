@@ -3,17 +3,20 @@
 /*
 * Shlick's Appromixation for the Fresnel Equation
 *
-* @param F0 amount of light reflected back at normal incidence (0)
-* @param u cosine of the angle between V and H
+* @param F0 The amount of light reflected back at normal incidence (0)
+* @param u Cosine of the angle between V and H
 */
 float3 F_FresnelShlick(float3 F0, float u)
 {
-    float F = pow(clamp(1.0 - u, 0.0, 1.0), 5.0);
+    float F = pow(1.0 - u, 5.0);
     return F + F0 * (1.0 - F);
 }
 
 /*
 * Microfacet Distribution Function (GGX)
+*
+* @param NoH The dot product between normal and halfway vector
+* @param roughness The material roughness
 */
 float D_GGX(float NoH, float roughness)
 {
@@ -23,20 +26,26 @@ float D_GGX(float NoH, float roughness)
 }
 
 /*
+* Smith Geometry Function (GGX)
 *
+* @param NoV Dot product between normal and outgoing light
+* @param NoL Dot product between normal and incident light
+* @param roughness The material roughness
 */
-float ShlickGGX(float NdotV, float k)
+float SmithG_GGX(float NoV, float NoL, float roughness)
 {
-    float denom = NdotV * (1.0 - k) + k;
-    return NdotV / denom;
+    float a = roughness;
+    float GGXV = NoL * (NoV * (1.0 - a) + a);
+    float GGXL = NoV * (NoL * (1.0 - a) + a);
+    return 0.5 / (GGXV + GGXL + 0.00001);
 }
 
-/*
-*
-*/
-float SmithG_GGX(float3 N, float3 V, float3 L, float K)
+float Fd_Lambert()
 {
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-    return ShlickGGX(NdotV, K) * ShlickGGX(NdotL, K);
+    return 1.0 / M_PI;
+}
+
+float3 BRDF_CookTorrance()
+{
+    return float3(0.0, 0.0, 0.0);
 }

@@ -1,6 +1,14 @@
-#define NUM_LIGHTS 1
+#define NUM_POINT_LIGHTS 1
+#define NUM_DIRECTIONAL_LIGHTS 1
+#define NUM_LIGHTS 2
 #define M_PI 3.14159265358979323846
 
+/*
+* Squares the input
+*
+* @param x The input to square
+* @return The input squared
+*/
 float sqr(float x)
 {
     return x * x;
@@ -28,12 +36,19 @@ struct PointLight
     float4 Strength;
 };
 
+struct DirectionalLight
+{
+    float4 Direction;
+    float4 Strength;
+};
+
 struct PassConstants
 {
     float4x4 View;
     float4x4 Projection;
     float4 ViewPosition;
-    PointLight PointLights[1];
+    PointLight PointLights[NUM_POINT_LIGHTS];
+    DirectionalLight DirectionalLights[NUM_DIRECTIONAL_LIGHTS];
 };
 
 struct MaterialConstants
