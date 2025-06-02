@@ -30,8 +30,33 @@ Currently a work in progress and for me to learn and play with D3D12.
 
 ## File Structure
 
-"Engine" contains the code that is wrapped around D3D12.
-"Game" contains an example using the libraries that I have built.
+`Bisky` contains the code that is wrapped around D3D12.  
+`Sandbox` contains an example using the library that I have built.
+
+## Updates
+
+### 6/2/2025 - Bindless Rendering
+
+Did a huge refactor, basiclly rewriting everything that I had originally.  
+For a quick summary, here are the biggest points:
+- [x] Bindless Rendering
+- [x] New Library Structure
+- [x] Wrappers over D3D12
+Spent a lot of time learning the bindless rendering setup and was able to implement it.
+The new file structure is as follows:
+- `Bisky`
+  - `Core`
+  - `Editor`
+  - `Graphics`
+  - `Renderer`
+  - `Scene`
+- `Sandbox`
+  - `Assets`
+  - `Main.cpp`
+
+The main library code lies within `Graphics`, while supporting classes lie in `Core`.
+`Editor` contains the ImGui wrapper code. `Renderer` contains resources for drawing.  
+`Scene` contains code for setting up a render scene.
 
 ## Installation
 
