@@ -1,0 +1,17 @@
+{
+  "dependencies": [
+    "fastgltf",
+    "directx-dxc",
+    "fmt",
+    {
+      "name": "imgui",
+      "features": [
+        "docking-experimental",
+        "dx12-binding",
+        "win32-binding"
+      ]
+    },
+    "stb",
+    "directx-headers"
+  ]
+}
