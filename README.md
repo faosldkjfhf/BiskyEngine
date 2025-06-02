@@ -60,5 +60,5 @@ The main library code lies within `Graphics`, while supporting classes lie in `C
 
 ## Installation
 
-This project is build with Visual Studio 2022 and requires VCPKG in manifest mode to be activated.
+This project is built with Visual Studio 2022 and requires VCPKG in manifest mode to be activated.
 To build/run, clone the repository and open the solution in Visual Studio 2022.
