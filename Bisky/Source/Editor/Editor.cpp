@@ -19,9 +19,12 @@ namespace bisky::editor
 
 Editor::Editor(gfx::Window *const window, gfx::Device *const device)
 {
-    g_heapAllocator.Create(device->getDevice(),
-                           std::make_unique<gfx::DescriptorHeap>(device->getDevice(), gfx::DescriptorType::CbvSrvUav,
-                                                                 100, gfx::DescriptorFlags::ShaderVisible));
+    g_heapAllocator.Create(
+        device->getDevice(),
+        std::make_unique<gfx::DescriptorHeap>(
+            device->getDevice(), gfx::DescriptorType::CbvSrvUav, 100, gfx::DescriptorFlags::ShaderVisible
+        )
+    );
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -75,13 +78,22 @@ void Editor::render(scene::Scene *const scene)
         ImGui::SeparatorText("Position");
         {
             if (ImGui::SliderFloat("X", (float *)&position.x, -10.0f, 10.0f))
+            {
                 camera->setPosition(position.x, position.y, position.z);
+                scene->updateSceneBuffer();
+            }
 
             if (ImGui::SliderFloat("Y", (float *)&position.y, -10.0f, 10.0f))
+            {
                 camera->setPosition(position.x, position.y, position.z);
+                scene->updateSceneBuffer();
+            }
 
             if (ImGui::SliderFloat("Z", (float *)&position.z, -10.0f, 10.0f))
+            {
                 camera->setPosition(position.x, position.y, position.z);
+                scene->updateSceneBuffer();
+            }
         }
     }
     if (ImGui::CollapsingHeader("Objects", ImGuiTreeNodeFlags_DefaultOpen))

@@ -38,6 +38,9 @@ class Device
     Device(const Device &&)                   = delete;
     const Device &&operator=(const Device &&) = delete;
 
+  public: // Static variables
+    constexpr static uint32_t FramesInFlight = 3u;
+
   public: // Public methods
     /*
      * Fetches the current back buffer index from the swap chain.
@@ -155,6 +158,8 @@ class Device
      */
     IDXGISwapChain4 *const getSwapChain() const;
 
+    std::array<std::unique_ptr<FrameResource>, Device::FramesInFlight> &getFrameResources();
+
     /*
      * Gets the frame resource for this frame.
      *
@@ -244,9 +249,6 @@ class Device
      * @return A const reference to the depth stencil handle.
      */
     const D3D12_CPU_DESCRIPTOR_HANDLE &getDepthStencilView() const;
-
-  public: // Static variables
-    constexpr static uint32_t FramesInFlight = 3u;
 
   private: // Private methods
     void initDevice();

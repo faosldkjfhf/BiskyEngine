@@ -23,12 +23,11 @@ class Camera
     const Camera &&operator=(const Camera &&) = delete;
 
   public:
-    virtual void input(const core::GameTimer *const timer);
+    virtual bool input(const core::GameTimer *const timer);
     void         reset();
     void         updateViewMatrix();
     void         setPosition(float x, float y, float z);
     void         setLens(float aspectRatio, float nearZ, float farZ);
-    void         cleanFrame();
 
   public:
     math::XMMATRIX   getView();
@@ -43,7 +42,6 @@ class Camera
     math::XMFLOAT3   getUp3f() const;
     math::XMVECTOR   getRight() const;
     math::XMFLOAT3   getRight3f() const;
-    uint32_t         getNumFramesDirty() const;
 
   private:
     math::XMFLOAT3   m_position;
@@ -53,11 +51,10 @@ class Camera
     math::XMFLOAT4X4 m_view;
     math::XMFLOAT4X4 m_projection;
     float            m_aspectRatio;
-    float            m_fov            = 90.0f;
-    float            m_near           = 0.1f;
-    float            m_far            = 100.0f;
-    float            m_speed          = 10.0f;
-    uint32_t         m_numFramesDirty = gfx::Device::FramesInFlight;
+    float            m_fov   = 90.0f;
+    float            m_near  = 0.1f;
+    float            m_far   = 100.0f;
+    float            m_speed = 10.0f;
 };
 
 } // namespace bisky::scene

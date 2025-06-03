@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common.hpp"
+#include "Scene/Lights.hpp"
 
 /*
  * A collection of types of constants.
@@ -18,6 +19,7 @@ struct SceneBuffer
     math::XMFLOAT4X4 view;
     math::XMFLOAT4X4 projection;
     math::XMFLOAT4X4 viewProjection;
+    math::XMFLOAT4   viewPosition;
 };
 
 /*
@@ -27,6 +29,13 @@ struct ObjectBuffer
 {
     math::XMFLOAT4X4 world;
     math::XMFLOAT4X4 inverseWorld;
+    math::XMFLOAT4X4 tranposeInverseWorld;
+};
+
+struct LightBuffer
+{
+    scene::PointLight lights[10];
+    uint32_t          numLights;
 };
 
 /*

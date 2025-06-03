@@ -40,6 +40,17 @@ void ForwardRenderer::draw(
     // -------------- bind root signature --------------
     cmdList->setRootSignature(m_backend->getRootSignature("opaque"));
 
+    // -------------- allocate lights --------------
+    auto             &lights      = scene->getLights();
+    gfx::Allocation   alloc       = frameResource->resourceAllocator->allocate(sizeof(gfx::LightBuffer));
+    gfx::LightBuffer *lightBuffer = reinterpret_cast<gfx::LightBuffer *>(alloc.cpuBase);
+    for (size_t i = 0; i < lights.size(); i++)
+    {
+        lightBuffer->lights[i] = lights[i];
+    }
+    lightBuffer->numLights = static_cast<uint32_t>(lights.size());
+    cmdList->setConstantBufferView(2, alloc.gpuBase);
+
     for (auto &object : scene->getRenderObjects())
     {
         auto *mesh = object->mesh;
@@ -58,28 +69,22 @@ void ForwardRenderer::draw(
         rr->vertexBufferIndex      = gfx::Buffer::GetSrvIndex(mesh->vertexBuffer.get());
         rr->sceneBufferIndex       = gfx::Buffer::GetCbvIndex(frameResource->sceneBuffer.get());
 
-        {
-            // -------------- allocate object constants --------------
-            gfx::Allocation    objectAlloc = frameResource->resourceAllocator->allocate(sizeof(gfx::ObjectBuffer));
-            gfx::ObjectBuffer *ptr         = (gfx::ObjectBuffer *)objectAlloc.cpuBase;
-            math::XMStoreFloat4x4(&ptr->world, object->transform->getLocalToWorld());
-            math::XMStoreFloat4x4(
-                &ptr->inverseWorld, math::XMMatrixInverse(nullptr, object->transform->getLocalToWorld())
-            );
-            cmdList->setConstantBufferView(1, objectAlloc.gpuBase);
-        }
+        // -------------- allocate object constants --------------
+        gfx::Allocation    objectAlloc = frameResource->resourceAllocator->allocate(sizeof(gfx::ObjectBuffer));
+        gfx::ObjectBuffer *ptr         = (gfx::ObjectBuffer *)objectAlloc.cpuBase;
+        XMStoreFloat4x4(&ptr->world, object->transform->getLocalToWorld());
+        XMStoreFloat4x4(&ptr->inverseWorld, math::XMMatrixInverse(nullptr, object->transform->getLocalToWorld()));
+        XMStoreFloat4x4(&ptr->tranposeInverseWorld, math::XMMatrixTranspose(XMLoadFloat4x4(&ptr->inverseWorld)));
+        cmdList->setConstantBufferView(1, objectAlloc.gpuBase);
 
-        // -------------- draw submeshes --------------
         for (auto &submesh : mesh->submeshes)
         {
-            {
-                rr->diffuseTextureIndex = gfx::Texture::GetSrvIndex(submesh.material->diffuseTexture);
-                rr->metallicRoughnessTextureIndex =
-                    gfx::Texture::GetSrvIndex(submesh.material->metallicRoughnessTexture);
+            // ------------- finish setting 32-bit constants -------------
+            rr->diffuseTextureIndex           = gfx::Texture::GetSrvIndex(submesh.material->diffuseTexture);
+            rr->metallicRoughnessTextureIndex = gfx::Texture::GetSrvIndex(submesh.material->metallicRoughnessTexture);
+            cmdList->set32BitConstants(0, 4u, reinterpret_cast<void *>(rr));
 
-                cmdList->set32BitConstants(0, 4u, reinterpret_cast<void *>(rr));
-            }
-
+            // -------------- draw submesh --------------
             cmdList->drawIndexedInstanced(submesh);
         }
     }
@@ -90,6 +95,7 @@ void ForwardRenderer::initRootSignatures()
     gfx::RootParameters parameters{};
     parameters.add32BitConstants(0, 4);
     parameters.addDescriptor(1, D3D12_ROOT_PARAMETER_TYPE_CBV);
+    parameters.addDescriptor(2, D3D12_ROOT_PARAMETER_TYPE_CBV);
     parameters.addStaticSampler({
         .Filter           = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR,
         .AddressU         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
@@ -113,12 +119,12 @@ void ForwardRenderer::initPipelineStateObjects()
 
     gfx::GraphicsPipelineStateDesc psoDesc = {
         .rootSignature = m_backend->getRootSignature("opaque")->getRootSignature(),
-        .vertexShader  = {.name = "Geometry\\Shader.hlsl", .entryPoint = L"vertexMain"},
-        .pixelShader   = {.name = "Geometry\\Shader.hlsl", .entryPoint = L"pixelMain"},
+        .vertexShader  = {.name = "Geometry\\Shader.hlsl", .entryPoint = L"VsMain"},
+        .pixelShader   = {.name = "Geometry\\Shader.hlsl", .entryPoint = L"PsMain"},
         .rtvCount      = 1,
         .rtvFormats    = formats,
         .dsvFormat     = m_backend->getDepthStencilFormat(),
-        .cullMode      = gfx::CullMode::None,
+        .cullMode      = gfx::CullMode::Back,
         .frontFace     = gfx::FrontFace::Clockwise,
         .depthFunc     = gfx::ComparisonFunc::Less,
     };

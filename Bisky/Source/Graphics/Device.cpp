@@ -285,6 +285,11 @@ IDXGISwapChain4 *const Device::getSwapChain() const
     return m_swapChain.Get();
 }
 
+std::array<std::unique_ptr<FrameResource>, Device::FramesInFlight> &Device::getFrameResources()
+{
+    return m_frameResources;
+}
+
 FrameResource *const Device::getFrameResource() const
 {
     return m_frameResources[m_currentFrameResourceIndex].get();

@@ -42,12 +42,13 @@ PipelineState::PipelineState(ID3D12Device10 *const device, const GraphicsPipelin
     wrl::ComPtr<IDxcBlob> errors;
     if (!ShaderCompiler::compile(ShaderType::Vertex, gfxD.vertexShader.name, gfxD.vertexShader.entryPoint, vs, errors))
     {
-        // LOG_WARNING(std::string(static_cast<const char *>(errors->GetBufferPointer())));
+        LOG_WARNING(std::string(static_cast<const char *>(errors->GetBufferPointer())));
     }
 
     wrl::ComPtr<IDxcBlob> ps;
     if (!ShaderCompiler::compile(ShaderType::Pixel, gfxD.pixelShader.name, gfxD.pixelShader.entryPoint, ps, errors))
     {
+        LOG_WARNING(std::string(static_cast<const char *>(errors->GetBufferPointer())));
     }
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC gps = {

@@ -55,6 +55,7 @@ void Application::run()
             m_backend->getDirectCommandQueue()->flush();
             m_window->resize(m_backend.get());
             m_scene->getCamera()->setLens(m_window->getAspectRatio(), 0.1f, 100.0f);
+            m_scene->updateSceneBuffer();
         }
 
         // -------------- reset the command list --------------

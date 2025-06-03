@@ -28,5 +28,6 @@
     <None Include="shadertoolsconfig.json" />
     <None Include="Assets\Models\Box.glb" />
     <None Include="Assets\Models\DamagedHelmet.glb" />
+    <None Include="Shaders\Include\Lighting\BlinnPhong.hlsli" />
   </ItemGroup>
 </Project>

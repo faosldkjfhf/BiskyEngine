@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Graphics/Constants.hpp"
 #include "Graphics/Device.hpp"
 #include "Scene/Camera.hpp"
 #include "Scene/Lights.hpp"
@@ -37,10 +38,12 @@ class Scene
 
   public: // Public functions
     void update(const core::GameTimer *const timer);
+    void updateSceneBuffer();
 
   public: // Getter functions
     const std::vector<std::shared_ptr<RenderObject>> &getRenderObjects() const;
     Camera *const                                     getCamera() const;
+    const std::vector<PointLight>                    &getLights() const;
 
   private: // Private functions
     void initDefaultScene();
@@ -51,6 +54,8 @@ class Scene
     std::string_view                           m_name;
     std::vector<std::shared_ptr<RenderObject>> m_renderObjects;
     std::unique_ptr<Camera>                    m_camera; // every scene has a camera - later hold more cameras
+    std::unique_ptr<gfx::SceneBuffer>          m_sceneBuffer;
+    std::vector<PointLight>                    m_lights;
 };
 
 } // namespace bisky::scene

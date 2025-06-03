@@ -17,31 +17,37 @@ Camera::~Camera()
 {
 }
 
-void Camera::input(const core::GameTimer *const timer)
+bool Camera::input(const core::GameTimer *const timer)
 {
     if (GetAsyncKeyState('W') & 0x8000)
     {
         m_position.z += m_speed * timer->deltaTime();
         updateViewMatrix();
+        return true;
     }
 
     if (GetAsyncKeyState('S') & 0x8000)
     {
         m_position.z -= m_speed * timer->deltaTime();
         updateViewMatrix();
+        return true;
     }
 
     if (GetAsyncKeyState('A') & 0x8000)
     {
         m_position.x -= m_speed * timer->deltaTime();
         updateViewMatrix();
+        return true;
     }
 
     if (GetAsyncKeyState('D') & 0x8000)
     {
         m_position.x += m_speed * timer->deltaTime();
         updateViewMatrix();
+        return true;
     }
+
+    return false;
 }
 
 void Camera::reset()
@@ -62,7 +68,6 @@ void Camera::updateViewMatrix()
     math::XMVECTOR p = XMLoadFloat3(&m_position);
 
     XMStoreFloat4x4(&m_view, math::XMMatrixLookAtLH(p, math::XMVectorAdd(p, f), u));
-    m_numFramesDirty = gfx::Device::FramesInFlight;
 }
 
 void Camera::setPosition(float x, float y, float z)
@@ -81,11 +86,6 @@ void Camera::setLens(float aspectRatio, float nearZ, float farZ)
         &m_projection, math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(m_fov), aspectRatio, nearZ, farZ)
     );
     updateViewMatrix();
-}
-
-void Camera::cleanFrame()
-{
-    m_numFramesDirty--;
 }
 
 math::XMMATRIX Camera::getView()
@@ -146,11 +146,6 @@ math::XMVECTOR Camera::getRight() const
 math::XMFLOAT3 Camera::getRight3f() const
 {
     return m_right;
-}
-
-uint32_t Camera::getNumFramesDirty() const
-{
-    return m_numFramesDirty;
 }
 
 } // namespace bisky::scene

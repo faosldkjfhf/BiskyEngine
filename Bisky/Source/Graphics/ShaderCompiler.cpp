@@ -10,8 +10,10 @@ wrl::ComPtr<IDxcCompiler3>      compiler;
 wrl::ComPtr<IDxcUtils>          utils;
 wrl::ComPtr<IDxcIncludeHandler> includeHandler;
 
-bool compile(const ShaderType &shaderType, const std::filesystem::path &filename, const std::wstring_view entryPoint,
-             wrl::ComPtr<IDxcBlob> &resultBlob, wrl::ComPtr<IDxcBlob> &errorBlob)
+bool compile(
+    const ShaderType &shaderType, const std::filesystem::path &filename, const std::wstring_view entryPoint,
+    wrl::ComPtr<IDxcBlob> &resultBlob, wrl::ComPtr<IDxcBlob> &errorBlob
+)
 {
     if (!utils)
     {
@@ -74,8 +76,10 @@ bool compile(const ShaderType &shaderType, const std::filesystem::path &filename
     };
 
     wrl::ComPtr<IDxcResult> compiledBuffer;
-    HRESULT hr = compiler->Compile(&sourceBuffer, compilationArgs.data(), static_cast<uint32_t>(compilationArgs.size()),
-                                   includeHandler.Get(), IID_PPV_ARGS(&compiledBuffer));
+    HRESULT                 hr = compiler->Compile(
+        &sourceBuffer, compilationArgs.data(), static_cast<uint32_t>(compilationArgs.size()), includeHandler.Get(),
+        IID_PPV_ARGS(&compiledBuffer)
+    );
     if (FAILED(hr))
     {
         LOG_ERROR("Failed to compile " + path.string());
@@ -92,7 +96,6 @@ bool compile(const ShaderType &shaderType, const std::filesystem::path &filename
     if (compiledBuffer->HasOutput(DXC_OUT_ERRORS))
     {
         compiledBuffer->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errorBlob), nullptr);
-        return false;
     }
 
     return result;

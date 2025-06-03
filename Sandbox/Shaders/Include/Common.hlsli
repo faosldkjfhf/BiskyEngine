@@ -1,7 +1,10 @@
+#pragma once
+
 struct ObjectBuffer
 {
     float4x4 world;
     float4x4 inverseWorld;
+    float4x4 transposeInverseWorld;
 };
 
 struct SceneBuffer
@@ -9,20 +12,7 @@ struct SceneBuffer
     float4x4 view;
     float4x4 projection;
     float4x4 viewProjection;
-};
-
-struct MaterialInfo
-{
-    int diffuseTextureIndex;
-    int metallicRoughnessTextureIndex;
-};
-
-struct RenderResource
-{
-    int vertexBufferIndex;
-    int sceneBufferIndex;
-    int diffuseTextureIndex;
-    int metallicRoughnessTextureIndex;
+    float4 viewPosition;
 };
 
 struct Light

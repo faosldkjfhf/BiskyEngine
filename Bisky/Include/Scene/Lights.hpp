@@ -7,14 +7,13 @@ namespace bisky::scene
 
 struct Light
 {
-    virtual ~Light() = default;
-
     math::XMFLOAT4 strength;
 };
 
-struct PointLight : public Light
+struct PointLight
 {
     math::XMFLOAT4 position;
+    math::XMFLOAT4 strength;
 };
 
 struct DirectionalLight : public Light

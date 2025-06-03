@@ -162,6 +162,7 @@
     <None Include="Assets\Models\DamagedHelmet.glb" />
     <None Include="imgui.ini" />
     <None Include="Shaders\Include\Common.hlsli" />
+    <None Include="Shaders\Include\Lighting\BlinnPhong.hlsli" />
     <None Include="shadertoolsconfig.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
