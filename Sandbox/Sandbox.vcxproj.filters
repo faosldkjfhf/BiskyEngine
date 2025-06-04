@@ -21,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\Geometry\Shader.hlsl" />
+    <FxCompile Include="Shaders\RenderPass\FinalRenderPass.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="imgui.ini" />

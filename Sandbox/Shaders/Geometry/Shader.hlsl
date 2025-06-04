@@ -29,12 +29,11 @@ struct RenderResource
 ConstantBuffer<RenderResource> renderResource : register(b0);
 ConstantBuffer<ObjectBuffer> objectBuffer : register(b1);
 ConstantBuffer<LightBuffer> lightBuffer : register(b2);
-SamplerState gLinearWrap : register(s0);
+ConstantBuffer<SceneBuffer> sceneBuffer : register(b3);
 
 VOutput VsMain(uint vertexId : SV_VertexID)
 {
     StructuredBuffer<Vertex> vertexBuffer = ResourceDescriptorHeap[renderResource.vertexBufferIndex];
-    ConstantBuffer<SceneBuffer> sceneBuffer = ResourceDescriptorHeap[renderResource.sceneBufferIndex];
     Vertex vertex = vertexBuffer[vertexId];
     
     VOutput output = (VOutput) 0;
@@ -50,11 +49,10 @@ VOutput VsMain(uint vertexId : SV_VertexID)
 
 float4 PsMain(VOutput input) : SV_Target
 {
-    ConstantBuffer<SceneBuffer> sceneBuffer = ResourceDescriptorHeap[renderResource.sceneBufferIndex];
     Texture2D diffuse = ResourceDescriptorHeap[renderResource.diffuseTextureIndex];
     Texture2D metalRoughness = ResourceDescriptorHeap[renderResource.metallicRoughnessTextureIndex];
     
-    float3 color = diffuse.Sample(gLinearWrap, input.texCoord).xyz;
+    float3 color = diffuse.Sample(linearWrapSampler, input.texCoord).xyz;
     
     float3 Lo = float3(0.0, 0.0, 0.0);
     for (uint i = 0; i < lightBuffer.numLights; i++)

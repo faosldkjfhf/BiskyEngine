@@ -229,6 +229,12 @@ class Device
      */
     DescriptorHeap *const getCbvSrvUavHeap() const;
 
+    DescriptorHeap *const getRtvHeap() const;
+
+    DescriptorHeap *const getDsvHeap() const;
+
+    uint32_t getCurrentFrameResourceIndex() const;
+
     /*
      * Gets the depth stencil buffer.
      *

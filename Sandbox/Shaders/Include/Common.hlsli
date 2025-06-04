@@ -26,3 +26,5 @@ struct LightBuffer
     Light lights[10];
     int numLights;
 };
+
+SamplerState linearWrapSampler: register(s0);

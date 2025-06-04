@@ -1,8 +1,10 @@
 #include "Common.hpp"
 
+#include "Core/FrameStats.hpp"
 #include "Graphics/Constants.hpp"
 #include "Graphics/Device.hpp"
 #include "Graphics/ShaderCompiler.hpp"
+#include "Graphics/Window.hpp"
 #include "Renderer/ForwardRenderer.hpp"
 #include "Scene/Material.hpp"
 #include "Scene/Scene.hpp"
@@ -10,35 +12,89 @@
 namespace bisky::renderer
 {
 
-ForwardRenderer::ForwardRenderer(gfx::Device *const backend) : m_backend(backend)
+ForwardRenderer::ForwardRenderer(gfx::Window *const window, gfx::Device *const backend, DXGI_FORMAT renderTextureFormat)
+    : m_backend(backend), m_renderTextureFormat(renderTextureFormat)
 {
+    for (uint32_t i = 0u; i < gfx::Device::FramesInFlight; i++)
+    {
+        m_renderTextureSrvs[i] = backend->getCbvSrvUavHeap()->allocate();
+        m_renderTextureRtvs[i] = backend->getRtvHeap()->allocate();
+    }
+
     initRootSignatures();
     initPipelineStateObjects();
+    initRenderResources(window->getWidth(), window->getHeight());
 
     LOG_INFO("Forward Renderer initialized");
 }
 
 ForwardRenderer::~ForwardRenderer()
 {
+    for (auto &renderResource : m_renderTextures)
+    {
+        renderResource.reset();
+    }
 }
 
 void ForwardRenderer::draw(
-    const RenderLayer &renderLayer, gfx::FrameResource *frameResource, const scene::Scene *const scene
+    const RenderLayer &renderLayer, gfx::FrameResource *frameResource, const scene::Scene *const scene,
+    core::FrameStats *const frameStats
 )
 {
-    // -------------- grab the graphics command list --------------
-    auto cmdList = frameResource->graphicsCommandList.get();
+    frameStats->drawCount     = 0;
+    frameStats->triangleCount = 0;
+    auto start                = std::chrono::system_clock::now();
 
-    // -------------- bind the pipeline state
-    cmdList->setPipelineState(m_backend->getPipelineState("opaque"));
+    // -------------- grab the graphics command list --------------
+    auto cmdList       = frameResource->graphicsCommandList.get();
+    auto renderTexture = m_renderTextures[m_backend->getCurrentFrameResourceIndex()].get();
+
+    // -------------- prepare render resource --------------
+    cmdList->addBarrier(renderTexture, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    cmdList->dispatchBarriers();
+
+    // -------------- clear render target view --------------
+    float color[4] = {0.15f, 0.15f, 0.15f, 1.0f};
+    cmdList->clearRenderTargetView(renderTexture->rtvDescriptor.cpu, color);
+    cmdList->clearDepthStencilView(m_backend->getDepthStencilView(), 1.0f, 0);
+
+    // -------------- set viewport and scissor --------------
+    cmdList->setViewport(m_backend->getViewport());
+    cmdList->setScissorRect(m_backend->getScissor());
+
+    // -------------- set render targets --------------
+    cmdList->setRenderTargets(renderTexture->rtvDescriptor.cpu, m_backend->getDepthStencilView());
+
+    // -------------- bind the pipeline state --------------
+    switch (renderLayer)
+    {
+    case RenderLayer::Skybox:
+        break;
+    case RenderLayer::Transparent:
+        break;
+    case RenderLayer::Opaque:
+    default:
+        cmdList->setPipelineState(m_backend->getPipelineState("opaque"));
+        break;
+    }
 
     // -------------- set descriptor heaps --------------
-    // -------------- must be set before root signature with bindless --------------
     std::array<const gfx::DescriptorHeap *const, 1> heaps = {m_backend->getCbvSrvUavHeap()};
     cmdList->setDescriptorHeaps(heaps);
 
     // -------------- bind root signature --------------
     cmdList->setRootSignature(m_backend->getRootSignature("opaque"));
+
+    // -------------- allocate scene buffer --------------
+    auto *camera = scene->getCamera();
+    camera->updateViewMatrix();
+    gfx::Allocation   sceneAlloc  = frameResource->resourceAllocator->allocate(sizeof(gfx::SceneBuffer));
+    gfx::SceneBuffer *sceneBuffer = reinterpret_cast<gfx::SceneBuffer *>(sceneAlloc.cpuBase);
+    XMStoreFloat4x4(&sceneBuffer->view, camera->getView());
+    XMStoreFloat4x4(&sceneBuffer->projection, camera->getProjection());
+    XMStoreFloat4x4(&sceneBuffer->viewProjection, camera->getView() * camera->getProjection());
+    XMStoreFloat4(&sceneBuffer->viewPosition, camera->getPosition());
+    cmdList->setConstantBufferView(3, sceneAlloc.gpuBase);
 
     // -------------- allocate lights --------------
     auto             &lights      = scene->getLights();
@@ -48,7 +104,7 @@ void ForwardRenderer::draw(
     {
         lightBuffer->lights[i] = lights[i];
     }
-    lightBuffer->numLights = static_cast<uint32_t>(lights.size());
+    lightBuffer->numLights = static_cast<uint32_t>(min(lights.size(), 10));
     cmdList->setConstantBufferView(2, alloc.gpuBase);
 
     for (auto &object : scene->getRenderObjects())
@@ -67,7 +123,7 @@ void ForwardRenderer::draw(
         gfx::Allocation      alloc = frameResource->resourceAllocator->allocate(sizeof(gfx::RenderResource));
         gfx::RenderResource *rr    = (gfx::RenderResource *)alloc.cpuBase;
         rr->vertexBufferIndex      = gfx::Buffer::GetSrvIndex(mesh->vertexBuffer.get());
-        rr->sceneBufferIndex       = gfx::Buffer::GetCbvIndex(frameResource->sceneBuffer.get());
+        rr->sceneBufferIndex       = -1;
 
         // -------------- allocate object constants --------------
         gfx::Allocation    objectAlloc = frameResource->resourceAllocator->allocate(sizeof(gfx::ObjectBuffer));
@@ -86,8 +142,34 @@ void ForwardRenderer::draw(
 
             // -------------- draw submesh --------------
             cmdList->drawIndexedInstanced(submesh);
+            frameStats->drawCount++;
+            frameStats->triangleCount += submesh.indexCount / 3u;
         }
     }
+
+    // -------------- transition render resource to common --------------
+    cmdList->addBarrier(renderTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
+    cmdList->dispatchBarriers();
+
+    // -------------- calculate mesh draw time --------------
+    auto end                 = std::chrono::system_clock::now();
+    auto elapsed             = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    frameStats->meshDrawTime = elapsed.count() / 1000.0f;
+}
+
+void ForwardRenderer::resize(uint32_t width, uint32_t height)
+{
+    for (auto &renderResource : m_renderTextures)
+    {
+        renderResource.reset();
+    }
+
+    initRenderResources(width, height);
+}
+
+gfx::Texture *const ForwardRenderer::getRenderTexture(uint32_t index) const
+{
+    return m_renderTextures[index].get();
 }
 
 void ForwardRenderer::initRootSignatures()
@@ -96,6 +178,7 @@ void ForwardRenderer::initRootSignatures()
     parameters.add32BitConstants(0, 4);
     parameters.addDescriptor(1, D3D12_ROOT_PARAMETER_TYPE_CBV);
     parameters.addDescriptor(2, D3D12_ROOT_PARAMETER_TYPE_CBV);
+    parameters.addDescriptor(3, D3D12_ROOT_PARAMETER_TYPE_CBV);
     parameters.addStaticSampler({
         .Filter           = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR,
         .AddressU         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
@@ -115,7 +198,7 @@ void ForwardRenderer::initRootSignatures()
 void ForwardRenderer::initPipelineStateObjects()
 {
     std::array<DXGI_FORMAT, 1> formats;
-    formats[0] = m_backend->getBackBufferFormat();
+    formats[0] = m_renderTextureFormat;
 
     gfx::GraphicsPipelineStateDesc psoDesc = {
         .rootSignature = m_backend->getRootSignature("opaque")->getRootSignature(),
@@ -130,6 +213,44 @@ void ForwardRenderer::initPipelineStateObjects()
     };
 
     m_backend->addGraphicsPipelineState("opaque", psoDesc);
+}
+
+void ForwardRenderer::initRenderResources(uint32_t width, uint32_t height)
+{
+    for (uint32_t i = 0; i < gfx::Device::FramesInFlight; i++)
+    {
+        m_renderTextures[i] =
+            m_backend->createTexture2D(width, height, m_renderTextureFormat, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+
+        // ------------- create render target view -------------
+        m_renderTextures[i]->rtvDescriptor = m_renderTextureRtvs[i];
+
+        D3D12_RENDER_TARGET_VIEW_DESC rtv = {
+            .Format        = m_renderTextureFormat,
+            .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
+            .Texture2D     = {.MipSlice = 0, .PlaneSlice = 0}
+        };
+        m_backend->getDevice()->CreateRenderTargetView(
+            m_renderTextures[i]->resource.Get(), &rtv, m_renderTextures[i]->rtvDescriptor.cpu
+        );
+
+        // ------------- create shader resource view -------------
+        m_renderTextures[i]->srvDescriptor = m_renderTextureSrvs[i];
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC srv = {
+            .Format                  = m_renderTextureFormat,
+            .ViewDimension           = D3D12_SRV_DIMENSION_TEXTURE2D,
+            .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+            .Texture2D =
+                {.MostDetailedMip     = 0u,
+                 .MipLevels           = m_renderTextures[i]->resource->GetDesc().MipLevels,
+                 .PlaneSlice          = 0u,
+                 .ResourceMinLODClamp = 0.0f},
+        };
+        m_backend->getDevice()->CreateShaderResourceView(
+            m_renderTextures[i]->resource.Get(), &srv, m_renderTextures[i]->srvDescriptor.cpu
+        );
+    }
 }
 
 } // namespace bisky::renderer

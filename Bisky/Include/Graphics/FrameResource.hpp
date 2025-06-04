@@ -14,7 +14,6 @@ struct FrameResource
 {
     std::unique_ptr<GraphicsCommandList> graphicsCommandList = nullptr;
     std::unique_ptr<Allocator>           resourceAllocator   = nullptr;
-    std::unique_ptr<Buffer>              sceneBuffer         = nullptr;
     uint64_t                             fenceValue          = 0u;
 };
 

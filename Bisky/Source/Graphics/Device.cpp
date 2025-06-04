@@ -73,9 +73,7 @@ void Device::getBuffers(uint32_t width, uint32_t height)
 {
     for (uint32_t i = 0; i < FramesInFlight; i++)
     {
-        m_renderTargetBuffers[i] = std::make_unique<Texture>();
-        // m_renderTargetBuffers[i]->width         = width;
-        // m_renderTargetBuffers[i]->height        = height;
+        m_renderTargetBuffers[i]                = std::make_unique<Texture>();
         m_renderTargetBuffers[i]->rtvDescriptor = m_renderTargetHandles[i];
 
         m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_renderTargetBuffers[i]->resource));
@@ -161,8 +159,6 @@ std::unique_ptr<Texture> Device::createTexture2D(
 )
 {
     std::unique_ptr<Texture> texture = std::make_unique<Texture>();
-    // texture->width                   = width;
-    // texture->height                  = height;
 
     D3D12_HEAP_PROPERTIES heap = {
         .Type = D3D12_HEAP_TYPE_DEFAULT,
@@ -181,11 +177,23 @@ std::unique_ptr<Texture> Device::createTexture2D(
         .Flags            = flags,
     };
 
+    D3D12_CLEAR_VALUE optClear = {.Format = format};
     if (format == DXGI_FORMAT_D24_UNORM_S8_UINT || format == DXGI_FORMAT_D32_FLOAT)
     {
-        D3D12_CLEAR_VALUE optClear = {.Format = format, .DepthStencil = {.Depth = 1.0f, .Stencil = 0}};
+        optClear.DepthStencil = {.Depth = 1.0f, .Stencil = 0};
         m_device->CreateCommittedResource(
             &heap, D3D12_HEAP_FLAG_NONE, &resource, D3D12_RESOURCE_STATE_DEPTH_WRITE, &optClear,
+            IID_PPV_ARGS(&texture->resource)
+        );
+    }
+    else if (flags == D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+    {
+        optClear.Color[0] = 0.15f;
+        optClear.Color[1] = 0.15f;
+        optClear.Color[2] = 0.15f;
+        optClear.Color[3] = 1.0f;
+        m_device->CreateCommittedResource(
+            &heap, D3D12_HEAP_FLAG_NONE, &resource, D3D12_RESOURCE_STATE_COMMON, &optClear,
             IID_PPV_ARGS(&texture->resource)
         );
     }
@@ -349,6 +357,21 @@ DescriptorHeap *const Device::getCbvSrvUavHeap() const
     return m_cbvSrvUavHeap.get();
 }
 
+DescriptorHeap *const Device::getRtvHeap() const
+{
+    return m_rtvHeap.get();
+}
+
+DescriptorHeap *const Device::getDsvHeap() const
+{
+    return m_dsvHeap.get();
+}
+
+uint32_t Device::getCurrentFrameResourceIndex() const
+{
+    return m_currentFrameResourceIndex;
+}
+
 Texture *const Device::getDepthStencilBuffer() const
 {
     return m_depthStencilBuffer.get();
@@ -455,18 +478,7 @@ void Device::initFrameResources()
         m_frameResources[i]                      = std::make_unique<FrameResource>();
         m_frameResources[i]->graphicsCommandList = std::make_unique<GraphicsCommandList>(this);
         m_frameResources[i]->resourceAllocator   = std::make_unique<Allocator>(this, 64u * 1024u);
-        m_frameResources[i]->sceneBuffer         = createUploadBuffer(sceneBufferSize);
         m_frameResources[i]->fenceValue          = 0;
-
-        // -------------- create constant buffer view --------------
-        {
-            m_frameResources[i]->sceneBuffer->cbvDescriptor = m_cbvSrvUavHeap->allocate();
-            D3D12_CONSTANT_BUFFER_VIEW_DESC cbv{
-                .BufferLocation = m_frameResources[i]->sceneBuffer->resource->GetGPUVirtualAddress(),
-                .SizeInBytes    = sceneBufferSize
-            };
-            m_device->CreateConstantBufferView(&cbv, m_frameResources[i]->sceneBuffer->cbvDescriptor.cpu);
-        }
     }
 
     LOG_VERBOSE("Frame resources created");

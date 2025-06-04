@@ -126,6 +126,15 @@
     <ClInclude Include="Include\Scene\Lights.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Core\FrameStats.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Renderer\RenderLayer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Renderer\FinalRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Common.cpp">
@@ -207,6 +216,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Graphics\Texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\FinalRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

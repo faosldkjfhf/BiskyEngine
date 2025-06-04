@@ -71,6 +71,7 @@ void Editor::render(scene::Scene *const scene)
     scene::Camera *camera        = scene->getCamera();
     math::XMFLOAT3 position      = camera->getPosition3f();
     auto          &renderObjects = scene->getRenderObjects();
+    auto          &lights        = scene->getLights();
 
     ImGui::Begin("Scene");
     if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
@@ -113,6 +114,21 @@ void Editor::render(scene::Scene *const scene)
                     object->transform->setRotation(rotation.x, rotation.y, rotation.z);
                 if (ImGui::SliderFloat3("Scale", (float *)&scale, 0.0f, 100.0f))
                     object->transform->setScale(scale.x, scale.y, scale.z);
+                ImGui::Indent();
+                ImGui::TreePop();
+            }
+        }
+    }
+    if (ImGui::CollapsingHeader("Lights", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Text("Number of lights: %i", lights.size());
+        for (auto &light : lights)
+        {
+            if (ImGui::TreeNode("Light"))
+            {
+                ImGui::Unindent();
+                ImGui::SliderFloat3("Position", (float *)&light.position, -10.0f, 10.0f);
+                ImGui::ColorEdit3("Strength", (float *)&light.strength);
                 ImGui::Indent();
                 ImGui::TreePop();
             }

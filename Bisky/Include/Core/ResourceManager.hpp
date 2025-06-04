@@ -61,12 +61,35 @@ class ResourceManager
      */
     void reset();
 
+    /*
+     * Sets the working directory that will be used.
+     *
+     * @param path The path to set.
+     */
     void setWorkingDirectory(const std::filesystem::path &path);
 
+    /*
+     * Sets the shader directory that will be used.
+     * The path will be appended to the current working directory.
+     *
+     * @param path The path to set.
+     */
     void setShaderDirectory(const std::filesystem::path &path);
 
+    /*
+     * Sets the model directory that will be used.
+     * The path will be appended to the current working directory.
+     *
+     * @param path The path to set.
+     */
     void setModelDirectory(const std::filesystem::path &path);
 
+    /*
+     * Sets the texture directory that will be used.
+     * The path will be appended to the current working directory.
+     *
+     * @param path The path to set.
+     */
     void setTextureDirectory(const std::filesystem::path &path);
 
     /*

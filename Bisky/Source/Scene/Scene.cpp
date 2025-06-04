@@ -32,26 +32,28 @@ Scene::~Scene()
 
 void Scene::update(const core::GameTimer *const timer)
 {
-    if (m_camera->input(timer))
-    {
-        updateSceneBuffer();
-    }
+    m_camera->input(timer);
+    // updateSceneBuffer();
 }
 
 void Scene::updateSceneBuffer()
 {
-    XMStoreFloat4x4(&m_sceneBuffer->view, m_camera->getView());
-    XMStoreFloat4x4(&m_sceneBuffer->projection, m_camera->getProjection());
-    XMStoreFloat4x4(&m_sceneBuffer->viewProjection, m_camera->getView() * m_camera->getProjection());
-    XMStoreFloat4(&m_sceneBuffer->viewPosition, m_camera->getPosition());
+    // if (m_camera->getDirty())
+    //{
+    //     m_camera->updateViewMatrix();
+    //     XMStoreFloat4x4(&m_sceneBuffer->view, m_camera->getView());
+    //     XMStoreFloat4x4(&m_sceneBuffer->projection, m_camera->getProjection());
+    //     XMStoreFloat4x4(&m_sceneBuffer->viewProjection, m_camera->getView() * m_camera->getProjection());
+    //     XMStoreFloat4(&m_sceneBuffer->viewPosition, m_camera->getPosition());
 
-    for (auto &frameResource : m_device->getFrameResources())
-    {
-        void *upload;
-        frameResource->sceneBuffer->resource->Map(0, nullptr, &upload);
-        memcpy(upload, m_sceneBuffer.get(), gfx::constantBufferByteSize(sizeof(gfx::SceneBuffer)));
-        frameResource->sceneBuffer->resource->Unmap(0, nullptr);
-    }
+    //    for (auto &frameResource : m_device->getFrameResources())
+    //    {
+    //        void *upload;
+    //        frameResource->sceneBuffer->resource->Map(0, nullptr, &upload);
+    //        memcpy(upload, m_sceneBuffer.get(), gfx::constantBufferByteSize(sizeof(gfx::SceneBuffer)));
+    //        frameResource->sceneBuffer->resource->Unmap(0, nullptr);
+    //    }
+    //}
 }
 
 const std::vector<std::shared_ptr<RenderObject>> &Scene::getRenderObjects() const
@@ -71,6 +73,8 @@ const std::vector<PointLight> &Scene::getLights() const
 
 void Scene::initDefaultScene()
 {
+    m_camera->setPosition(0.0f, 0.0f, -5.0f);
+
     if (core::ResourceManager::get().loadMesh(m_device, "DamagedHelmet.glb"))
     {
         auto ro  = m_renderObjects.emplace_back(std::make_shared<RenderObject>());

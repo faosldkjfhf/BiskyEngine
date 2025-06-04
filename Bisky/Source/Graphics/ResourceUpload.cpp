@@ -17,10 +17,9 @@ ResourceUpload::~ResourceUpload()
 {
 }
 
-void ResourceUpload::Begin(D3D12_COMMAND_LIST_TYPE cmdListType)
+void ResourceUpload::Begin()
 {
     m_graphicsCommandList->reset();
-    // LOG_VERBOSE("------ Beginning resource upload block ------");
 }
 
 std::future<void> ResourceUpload::Finish()
@@ -32,7 +31,6 @@ std::future<void> ResourceUpload::Finish()
         std::array<const CommandList *const, 1> cmdLists = {m_graphicsCommandList.get()};
         m_device.getDirectCommandQueue()->executeCommandLists(cmdLists);
         m_device.getDirectCommandQueue()->flush();
-        // LOG_VERBOSE("------ Resource upload complete ------");
         p.set_value_at_thread_exit();
     }).join();
 

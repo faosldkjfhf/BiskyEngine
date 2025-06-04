@@ -28,6 +28,7 @@ class Camera
     void         updateViewMatrix();
     void         setPosition(float x, float y, float z);
     void         setLens(float aspectRatio, float nearZ, float farZ);
+    void         setDirty();
 
   public:
     math::XMMATRIX   getView();
@@ -42,6 +43,7 @@ class Camera
     math::XMFLOAT3   getUp3f() const;
     math::XMVECTOR   getRight() const;
     math::XMFLOAT3   getRight3f() const;
+    bool             getDirty() const;
 
   private:
     math::XMFLOAT3   m_position;
@@ -51,10 +53,11 @@ class Camera
     math::XMFLOAT4X4 m_view;
     math::XMFLOAT4X4 m_projection;
     float            m_aspectRatio;
-    float            m_fov   = 90.0f;
-    float            m_near  = 0.1f;
-    float            m_far   = 100.0f;
-    float            m_speed = 10.0f;
+    float            m_fov       = 90.0f;
+    float            m_near      = 0.1f;
+    float            m_far       = 100.0f;
+    float            m_speed     = 10.0f;
+    bool             m_viewDirty = true;
 };
 
 } // namespace bisky::scene

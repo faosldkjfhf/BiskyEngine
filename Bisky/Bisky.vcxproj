@@ -47,7 +47,7 @@
     <EnableASAN>false</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -73,6 +73,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(ProjectDir)Include\;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <PublicIncludeDirectories>$(ProjectDir)Include\</PublicIncludeDirectories>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(ProjectDir)Include\;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <PublicIncludeDirectories>$(ProjectDir)Include\</PublicIncludeDirectories>
   </PropertyGroup>
@@ -132,6 +136,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Common.hpp</PrecompiledHeaderFile>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,6 +147,7 @@
     <ClInclude Include="Include\Bisky.hpp" />
     <ClInclude Include="Include\Common.hpp" />
     <ClInclude Include="Include\Core\Application.hpp" />
+    <ClInclude Include="Include\Core\FrameStats.hpp" />
     <ClInclude Include="Include\Core\GameTimer.hpp" />
     <ClInclude Include="Include\Core\Input.hpp" />
     <ClInclude Include="Include\Core\Logger.hpp" />
@@ -167,7 +173,9 @@
     <ClInclude Include="Include\Graphics\Transform.hpp" />
     <ClInclude Include="Include\Graphics\Utilities.hpp" />
     <ClInclude Include="Include\Graphics\Window.hpp" />
+    <ClInclude Include="Include\Renderer\FinalRenderPass.hpp" />
     <ClInclude Include="Include\Renderer\ForwardRenderer.hpp" />
+    <ClInclude Include="Include\Renderer\RenderLayer.hpp" />
     <ClInclude Include="Include\Scene\Camera.hpp" />
     <ClInclude Include="Include\Scene\Lights.hpp" />
     <ClInclude Include="Include\Scene\Material.hpp" />
@@ -203,6 +211,7 @@
     <ClCompile Include="Source\Graphics\Texture.cpp" />
     <ClCompile Include="Source\Graphics\Transform.cpp" />
     <ClCompile Include="Source\Graphics\Window.cpp" />
+    <ClCompile Include="Source\Renderer\FinalRenderPass.cpp" />
     <ClCompile Include="Source\Renderer\ForwardRenderer.cpp" />
     <ClCompile Include="Source\Scene\Camera.cpp" />
     <ClCompile Include="Source\Scene\Mesh.cpp" />

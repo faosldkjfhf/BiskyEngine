@@ -2,6 +2,11 @@
 
 #include "Common.hpp"
 
+namespace bisky::core
+{
+struct Input;
+}
+
 namespace bisky::gfx
 {
 
@@ -20,7 +25,7 @@ class Window
      * @param height The starting height.
      * @param title The title of the window.
      */
-    explicit Window(uint32_t width, uint32_t height, const std::string &title);
+    explicit Window(core::Input *const input, uint32_t width, uint32_t height, const std::string &title);
 
     /*
      * Unregisters the window class and destroys the window.
@@ -51,6 +56,11 @@ class Window
      * @param enabled set to fullscreen if true.
      */
     void setFullscreenState(bool enabled);
+
+    /*
+     * Signals that the window should close.
+     */
+    void setShouldClose();
 
     /*
      * This method will handle the window messages for this class.
@@ -98,10 +108,7 @@ class Window
 
     float getAspectRatio() const;
 
-    /*
-     * Signals that the window should close.
-     */
-    void setShouldClose();
+    bool getFullscreenState() const;
 
     /*
      * Returns whether or not the window should close.
@@ -119,6 +126,8 @@ class Window
 
   private:
     Window() = default;
+
+    core::Input *const m_input;
 
     uint32_t m_width;
     uint32_t m_height;

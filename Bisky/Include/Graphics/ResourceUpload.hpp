@@ -29,7 +29,7 @@ class ResourceUpload
     const ResourceUpload &&operator=(const ResourceUpload &&) = delete;
 
   public:
-    void              Begin(D3D12_COMMAND_LIST_TYPE cmdListType = D3D12_COMMAND_LIST_TYPE_DIRECT);
+    void              Begin();
     std::future<void> Finish();
 
   public:

@@ -1,5 +1,6 @@
 #include "Common.hpp"
 
+#include "Core/Input.hpp"
 #include "Graphics/Device.hpp"
 #include "Graphics/Window.hpp"
 #include <imgui_impl_win32.h>
@@ -9,7 +10,8 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 namespace bisky::gfx
 {
 
-Window::Window(uint32_t width, uint32_t height, const std::string &title) : m_width(width), m_height(height)
+Window::Window(core::Input *const input, uint32_t width, uint32_t height, const std::string &title)
+    : m_width(width), m_height(height), m_input(input)
 {
     WNDCLASSEXW wc{};
     wc.cbSize        = sizeof(wc);
@@ -33,9 +35,10 @@ Window::Window(uint32_t width, uint32_t height, const std::string &title) : m_wi
 
     std::string  fullTitle = title + " | Bisky 0.1.0";
     std::wstring stemp     = std::wstring(fullTitle.begin(), fullTitle.end());
-    m_window = CreateWindowExW(WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, (LPCWSTR)m_windowClass, stemp.c_str(),
-                               WS_OVERLAPPEDWINDOW | WS_VISIBLE, 50, 50, m_width, m_height, nullptr, nullptr,
-                               GetModuleHandle(nullptr), nullptr);
+    m_window               = CreateWindowExW(
+        WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, (LPCWSTR)m_windowClass, stemp.c_str(),
+        WS_OVERLAPPEDWINDOW | WS_VISIBLE, 50, 50, m_width, m_height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr
+    );
     if (m_window == nullptr)
     {
         LOG_ERROR("Window Creation Failed");
@@ -107,9 +110,10 @@ void Window::setFullscreenState(bool enabled)
         info.cbSize         = sizeof(info);
         if (GetMonitorInfoW(monitor, &info))
         {
-            SetWindowPos(m_window, nullptr, info.rcMonitor.left, info.rcMonitor.top,
-                         info.rcMonitor.right - info.rcMonitor.left, info.rcMonitor.bottom - info.rcMonitor.top,
-                         SWP_NOZORDER);
+            SetWindowPos(
+                m_window, nullptr, info.rcMonitor.left, info.rcMonitor.top, info.rcMonitor.right - info.rcMonitor.left,
+                info.rcMonitor.bottom - info.rcMonitor.top, SWP_NOZORDER
+            );
             LOG_INFO("Entering fullscreen mode");
         }
     }
@@ -120,6 +124,11 @@ void Window::setFullscreenState(bool enabled)
     }
 
     m_fullscreenState = enabled;
+}
+
+void Window::setShouldClose()
+{
+    m_shouldClose = true;
 }
 
 LRESULT CALLBACK Window::onWindowMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -133,16 +142,16 @@ LRESULT CALLBACK Window::onWindowMessage(HWND hwnd, UINT msg, WPARAM wParam, LPA
         m_shouldResize = true;
         break;
     case WM_KEYDOWN:
-        if (wParam == VK_ESCAPE)
-        {
-            m_shouldClose = true;
-            return 0;
-        }
-        else if (wParam == VK_F11)
-        {
-            setFullscreenState(!m_fullscreenState);
-            break;
-        }
+        m_input->OnKeyDown(wParam);
+        break;
+    case WM_LBUTTONDOWN:
+        m_input->OnLeftMouseDown(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        break;
+    case WM_LBUTTONUP:
+        m_input->OnLeftMouseUp();
+        break;
+    case WM_MOUSEMOVE:
+        m_input->OnMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         break;
     default:
         break;
@@ -187,9 +196,9 @@ float Window::getAspectRatio() const
     return static_cast<float>(m_width) / m_height;
 }
 
-void Window::setShouldClose()
+bool Window::getFullscreenState() const
 {
-    m_shouldClose = true;
+    return m_fullscreenState;
 }
 
 bool Window::shouldClose() const
