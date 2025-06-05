@@ -2,6 +2,11 @@
 
 #include "Scene/RenderObject.hpp"
 
+namespace bisky::core
+{
+struct FrameStats;
+}
+
 namespace bisky::gfx
 {
 class Device;
@@ -30,7 +35,7 @@ class FinalRenderPass
     const FinalRenderPass &&operator=(const FinalRenderPass &&) = delete;
 
   public:
-    void draw(gfx::FrameResource *const frameResource, gfx::Texture *const renderTexture);
+    void draw(gfx::FrameResource *const frameResource, core::FrameStats *const frameStats);
 
   private:
     void initRootSignature();

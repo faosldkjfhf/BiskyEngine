@@ -11,6 +11,7 @@ namespace bisky::gfx
 class Device;
 class PipelineState;
 class RootSignature;
+class DescriptorHeap;
 
 /*
  * A wrapper class for a graphics command list.

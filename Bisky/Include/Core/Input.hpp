@@ -5,17 +5,6 @@
 namespace bisky::core
 {
 
-enum Keys
-{
-    Escape,
-    W,
-    A,
-    S,
-    D,
-    Space,
-    LeftShift,
-};
-
 struct Input
 {
     virtual void OnMouseMove(WPARAM key, int x, int y)     = 0;

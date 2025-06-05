@@ -102,6 +102,8 @@ class ResourceManager
      */
     bool loadMesh(gfx::Device *const device, const std::filesystem::path &filename);
 
+    bool loadDDS(gfx::Device *const device, const std::filesystem::path &filename, bool *isCubemap);
+
     /*
      * Adds a mesh from an already created mesh.
      * Returns the name of the mesh.
@@ -114,11 +116,11 @@ class ResourceManager
     const std::string addMesh(std::unique_ptr<scene::Mesh> mesh);
 
   public: // Getter functions
-    scene::Mesh *const           getMesh(std::string_view name);
-    gfx::Texture *const          getTexture(std::string_view name);
-    const std::filesystem::path &getWorkingDirectory() const;
-    const std::filesystem::path &getShaderDirectory() const;
-    const std::filesystem::path &getTextureDirectory() const;
+    scene::Mesh *const            getMesh(std::string_view name);
+    std::shared_ptr<gfx::Texture> getTexture(std::string_view name);
+    const std::filesystem::path  &getWorkingDirectory() const;
+    const std::filesystem::path  &getShaderDirectory() const;
+    const std::filesystem::path  &getTextureDirectory() const;
 
   private:
     explicit ResourceManager() = default;

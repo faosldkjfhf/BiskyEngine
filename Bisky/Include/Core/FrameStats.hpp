@@ -12,6 +12,7 @@ struct FrameStats
     uint32_t drawCount;
     float    sceneUpdateTime;
     float    meshDrawTime;
+    float    finalRenderDrawTime;
 };
 
 } // namespace bisky::core

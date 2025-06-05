@@ -1,5 +1,6 @@
 #include "Common.hpp"
 
+#include "Core/FrameStats.hpp"
 #include "Core/ResourceManager.hpp"
 #include "Graphics/Device.hpp"
 #include "Graphics/ShaderCompiler.hpp"
@@ -26,16 +27,11 @@ FinalRenderPass::~FinalRenderPass()
     m_screenQuad.reset();
 }
 
-void FinalRenderPass::draw(gfx::FrameResource *const frameResource, gfx::Texture *const renderTexture)
+void FinalRenderPass::draw(gfx::FrameResource *const frameResource, core::FrameStats *const frameStats)
 {
+    auto  start   = std::chrono::system_clock::now();
     auto *cmdList = frameResource->graphicsCommandList.get();
     auto *mesh    = m_screenQuad->mesh;
-
-    // -------------- transition from present to render target --------------
-    cmdList->addBarrier(
-        m_device->getRenderTargetBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
-    );
-    cmdList->dispatchBarriers();
 
     // -------------- clear render target --------------
     float color[4] = {0.15f, 0.15f, 0.15f, 1.0f};
@@ -54,7 +50,7 @@ void FinalRenderPass::draw(gfx::FrameResource *const frameResource, gfx::Texture
     gfx::Allocation allocation = frameResource->resourceAllocator->allocate(sizeof(FinalRenderPass::RenderResource));
     FinalRenderPass::RenderResource *resource = (FinalRenderPass::RenderResource *)allocation.cpuBase;
     resource->vertexBufferIndex               = gfx::Buffer::GetSrvIndex(m_screenQuad->mesh->vertexBuffer.get());
-    resource->textureIndex                    = gfx::Texture::GetSrvIndex(renderTexture);
+    resource->textureIndex                    = gfx::Texture::GetSrvIndex(m_device->getHdrRenderTargetBuffer());
     cmdList->set32BitConstants(0, 2u, (void *)resource);
 
     // -------------- input assembly --------------
@@ -70,6 +66,10 @@ void FinalRenderPass::draw(gfx::FrameResource *const frameResource, gfx::Texture
     {
         cmdList->drawIndexedInstanced(submesh);
     }
+
+    auto end                        = std::chrono::system_clock::now();
+    auto elapsed                    = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    frameStats->finalRenderDrawTime = elapsed.count() / 1000.0f;
 }
 
 void FinalRenderPass::initRootSignature()

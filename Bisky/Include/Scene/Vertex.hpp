@@ -7,10 +7,10 @@ namespace bisky::scene
 
 struct Vertex
 {
-    math::XMFLOAT3 position;
-    math::XMFLOAT3 normal;
-    math::XMFLOAT2 texCoord;
-    math::XMFLOAT4 tangent;
+    dx::XMFLOAT3 position;
+    dx::XMFLOAT3 normal;
+    dx::XMFLOAT2 texCoord;
+    dx::XMFLOAT4 tangent;
 };
 
 } // namespace bisky::scene

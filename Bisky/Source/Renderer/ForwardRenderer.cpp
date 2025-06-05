@@ -12,28 +12,16 @@
 namespace bisky::renderer
 {
 
-ForwardRenderer::ForwardRenderer(gfx::Window *const window, gfx::Device *const backend, DXGI_FORMAT renderTextureFormat)
-    : m_backend(backend), m_renderTextureFormat(renderTextureFormat)
+ForwardRenderer::ForwardRenderer(gfx::Window *const window, gfx::Device *const backend) : m_backend(backend)
 {
-    for (uint32_t i = 0u; i < gfx::Device::FramesInFlight; i++)
-    {
-        m_renderTextureSrvs[i] = backend->getCbvSrvUavHeap()->allocate();
-        m_renderTextureRtvs[i] = backend->getRtvHeap()->allocate();
-    }
-
     initRootSignatures();
     initPipelineStateObjects();
-    initRenderResources(window->getWidth(), window->getHeight());
 
     LOG_INFO("Forward Renderer initialized");
 }
 
 ForwardRenderer::~ForwardRenderer()
 {
-    for (auto &renderResource : m_renderTextures)
-    {
-        renderResource.reset();
-    }
 }
 
 void ForwardRenderer::draw(
@@ -47,11 +35,7 @@ void ForwardRenderer::draw(
 
     // -------------- grab the graphics command list --------------
     auto cmdList       = frameResource->graphicsCommandList.get();
-    auto renderTexture = m_renderTextures[m_backend->getCurrentFrameResourceIndex()].get();
-
-    // -------------- prepare render resource --------------
-    cmdList->addBarrier(renderTexture, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    cmdList->dispatchBarriers();
+    auto renderTexture = m_backend->getHdrRenderTargetBuffer();
 
     // -------------- clear render target view --------------
     float color[4] = {0.15f, 0.15f, 0.15f, 1.0f};
@@ -129,8 +113,8 @@ void ForwardRenderer::draw(
         gfx::Allocation    objectAlloc = frameResource->resourceAllocator->allocate(sizeof(gfx::ObjectBuffer));
         gfx::ObjectBuffer *ptr         = (gfx::ObjectBuffer *)objectAlloc.cpuBase;
         XMStoreFloat4x4(&ptr->world, object->transform->getLocalToWorld());
-        XMStoreFloat4x4(&ptr->inverseWorld, math::XMMatrixInverse(nullptr, object->transform->getLocalToWorld()));
-        XMStoreFloat4x4(&ptr->tranposeInverseWorld, math::XMMatrixTranspose(XMLoadFloat4x4(&ptr->inverseWorld)));
+        XMStoreFloat4x4(&ptr->inverseWorld, dx::XMMatrixInverse(nullptr, object->transform->getLocalToWorld()));
+        XMStoreFloat4x4(&ptr->tranposeInverseWorld, dx::XMMatrixTranspose(XMLoadFloat4x4(&ptr->inverseWorld)));
         cmdList->setConstantBufferView(1, objectAlloc.gpuBase);
 
         for (auto &submesh : mesh->submeshes)
@@ -147,29 +131,10 @@ void ForwardRenderer::draw(
         }
     }
 
-    // -------------- transition render resource to common --------------
-    cmdList->addBarrier(renderTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
-    cmdList->dispatchBarriers();
-
     // -------------- calculate mesh draw time --------------
     auto end                 = std::chrono::system_clock::now();
     auto elapsed             = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     frameStats->meshDrawTime = elapsed.count() / 1000.0f;
-}
-
-void ForwardRenderer::resize(uint32_t width, uint32_t height)
-{
-    for (auto &renderResource : m_renderTextures)
-    {
-        renderResource.reset();
-    }
-
-    initRenderResources(width, height);
-}
-
-gfx::Texture *const ForwardRenderer::getRenderTexture(uint32_t index) const
-{
-    return m_renderTextures[index].get();
 }
 
 void ForwardRenderer::initRootSignatures()
@@ -198,7 +163,7 @@ void ForwardRenderer::initRootSignatures()
 void ForwardRenderer::initPipelineStateObjects()
 {
     std::array<DXGI_FORMAT, 1> formats;
-    formats[0] = m_renderTextureFormat;
+    formats[0] = m_backend->getHdrRenderTargetFormat();
 
     gfx::GraphicsPipelineStateDesc psoDesc = {
         .rootSignature = m_backend->getRootSignature("opaque")->getRootSignature(),
@@ -213,44 +178,6 @@ void ForwardRenderer::initPipelineStateObjects()
     };
 
     m_backend->addGraphicsPipelineState("opaque", psoDesc);
-}
-
-void ForwardRenderer::initRenderResources(uint32_t width, uint32_t height)
-{
-    for (uint32_t i = 0; i < gfx::Device::FramesInFlight; i++)
-    {
-        m_renderTextures[i] =
-            m_backend->createTexture2D(width, height, m_renderTextureFormat, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-
-        // ------------- create render target view -------------
-        m_renderTextures[i]->rtvDescriptor = m_renderTextureRtvs[i];
-
-        D3D12_RENDER_TARGET_VIEW_DESC rtv = {
-            .Format        = m_renderTextureFormat,
-            .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
-            .Texture2D     = {.MipSlice = 0, .PlaneSlice = 0}
-        };
-        m_backend->getDevice()->CreateRenderTargetView(
-            m_renderTextures[i]->resource.Get(), &rtv, m_renderTextures[i]->rtvDescriptor.cpu
-        );
-
-        // ------------- create shader resource view -------------
-        m_renderTextures[i]->srvDescriptor = m_renderTextureSrvs[i];
-
-        D3D12_SHADER_RESOURCE_VIEW_DESC srv = {
-            .Format                  = m_renderTextureFormat,
-            .ViewDimension           = D3D12_SRV_DIMENSION_TEXTURE2D,
-            .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-            .Texture2D =
-                {.MostDetailedMip     = 0u,
-                 .MipLevels           = m_renderTextures[i]->resource->GetDesc().MipLevels,
-                 .PlaneSlice          = 0u,
-                 .ResourceMinLODClamp = 0.0f},
-        };
-        m_backend->getDevice()->CreateShaderResourceView(
-            m_renderTextures[i]->resource.Get(), &srv, m_renderTextures[i]->srvDescriptor.cpu
-        );
-    }
 }
 
 } // namespace bisky::renderer

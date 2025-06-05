@@ -8,7 +8,8 @@
 namespace bisky::gfx
 {
 
-Device::Device(Window *window, DXGI_FORMAT backBufferFormat) : m_backBufferFormat(backBufferFormat)
+Device::Device(Window *window, DXGI_FORMAT backBufferFormat, DXGI_FORMAT hdrRenderTargetFormat)
+    : m_backBufferFormat(backBufferFormat), m_hdrRenderTargetFormat(hdrRenderTargetFormat)
 {
     initDevice();
     initDescriptorHeaps();
@@ -41,9 +42,25 @@ Device::~Device()
     m_device.Reset();
 }
 
-void Device::update()
+void Device::beginFrame(GraphicsCommandList *const cmdList)
 {
     m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+
+    cmdList->addBarrier(getRenderTargetBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    cmdList->addBarrier(getHdrRenderTargetBuffer(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    cmdList->dispatchBarriers();
+}
+
+void Device::endFrame(GraphicsCommandList *const cmdList)
+{
+    cmdList->addBarrier(getRenderTargetBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    cmdList->dispatchBarriers();
+}
+
+void Device::endHdrFrame(GraphicsCommandList *const cmdList)
+{
+    cmdList->addBarrier(getHdrRenderTargetBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
+    cmdList->dispatchBarriers();
 }
 
 void Device::resize(uint32_t width, uint32_t height)
@@ -64,6 +81,7 @@ void Device::releaseBuffers()
     for (uint32_t i = 0; i < FramesInFlight; i++)
     {
         m_renderTargetBuffers[i].reset();
+        m_hdrRenderTargetBuffers[i].reset();
     }
 
     m_depthStencilBuffer.reset();
@@ -73,17 +91,50 @@ void Device::getBuffers(uint32_t width, uint32_t height)
 {
     for (uint32_t i = 0; i < FramesInFlight; i++)
     {
+        // -------------- get swapchain buffers --------------
         m_renderTargetBuffers[i]                = std::make_unique<Texture>();
         m_renderTargetBuffers[i]->rtvDescriptor = m_renderTargetHandles[i];
 
         m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_renderTargetBuffers[i]->resource));
 
+        // -------------- create RTV for swapchain buffers --------------
         D3D12_RENDER_TARGET_VIEW_DESC rtv{};
         rtv.ViewDimension        = D3D12_RTV_DIMENSION_TEXTURE2D;
         rtv.Format               = m_backBufferFormat;
         rtv.Texture2D.MipSlice   = 0;
         rtv.Texture2D.PlaneSlice = 0;
         m_device->CreateRenderTargetView(m_renderTargetBuffers[i]->resource.Get(), &rtv, m_renderTargetHandles[i].cpu);
+
+        // -------------- create HDR render targets --------------
+        m_hdrRenderTargetBuffers[i] =
+            createTexture2D(width, height, m_hdrRenderTargetFormat, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        m_hdrRenderTargetBuffers[i]->rtvDescriptor = m_hdrRenderTargetRtvHandles[i];
+        m_hdrRenderTargetBuffers[i]->srvDescriptor = m_hdrRenderTargetSrvHandles[i];
+
+        // -------------- create RTVs for HDR render targets --------------
+        rtv = {
+            .Format        = m_hdrRenderTargetFormat,
+            .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
+            .Texture2D     = {.MipSlice = 0, .PlaneSlice = 0}
+        };
+        m_device->CreateRenderTargetView(
+            m_hdrRenderTargetBuffers[i]->resource.Get(), &rtv, m_hdrRenderTargetBuffers[i]->rtvDescriptor.cpu
+        );
+
+        // -------------- create SRVs for HDR render targets --------------
+        D3D12_SHADER_RESOURCE_VIEW_DESC srv = {
+            .Format                  = m_hdrRenderTargetFormat,
+            .ViewDimension           = D3D12_SRV_DIMENSION_TEXTURE2D,
+            .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+            .Texture2D =
+                {.MostDetailedMip     = 0,
+                 .MipLevels           = m_hdrRenderTargetBuffers[i]->resource->GetDesc().MipLevels,
+                 .PlaneSlice          = 0,
+                 .ResourceMinLODClamp = 0.0f},
+        };
+        m_device->CreateShaderResourceView(
+            m_hdrRenderTargetBuffers[i]->resource.Get(), &srv, m_hdrRenderTargetBuffers[i]->srvDescriptor.cpu
+        );
     }
 
     m_depthStencilBuffer =
@@ -186,7 +237,7 @@ std::unique_ptr<Texture> Device::createTexture2D(
             IID_PPV_ARGS(&texture->resource)
         );
     }
-    else if (flags == D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+    else if (flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
     {
         optClear.Color[0] = 0.15f;
         optClear.Color[1] = 0.15f;
@@ -318,14 +369,29 @@ Texture *const Device::getRenderTargetBuffer() const
     return m_renderTargetBuffers[m_currentBackBufferIndex].get();
 }
 
+Texture *const Device::getHdrRenderTargetBuffer() const
+{
+    return m_hdrRenderTargetBuffers[m_currentBackBufferIndex].get();
+}
+
 const D3D12_CPU_DESCRIPTOR_HANDLE &Device::getRenderTargetView() const
 {
     return m_renderTargetHandles[m_currentBackBufferIndex].cpu;
 }
 
+const D3D12_CPU_DESCRIPTOR_HANDLE &Device::getHdrRenderTargetView() const
+{
+    return m_hdrRenderTargetRtvHandles[m_currentBackBufferIndex].cpu;
+}
+
 DXGI_FORMAT Device::getBackBufferFormat() const
 {
     return m_backBufferFormat;
+}
+
+DXGI_FORMAT Device::getHdrRenderTargetFormat() const
+{
+    return m_hdrRenderTargetFormat;
 }
 
 RootSignature *const Device::getRootSignature(std::string_view name) const
@@ -407,6 +473,13 @@ void Device::initDescriptorHeaps()
     }
 
     m_depthStencilHandle = m_dsvHeap->allocate();
+
+    for (uint32_t i = 0; i < FramesInFlight; i++)
+    {
+        m_hdrRenderTargetRtvHandles[i] = m_rtvHeap->allocate();
+        m_hdrRenderTargetSrvHandles[i] = m_cbvSrvUavHeap->allocate();
+    }
+
     LOG_VERBOSE("Descriptor Heaps created");
 }
 

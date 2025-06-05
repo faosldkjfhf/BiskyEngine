@@ -1,7 +1,16 @@
 {
   "dependencies": [
-    "fastgltf",
     "directx-dxc",
+    "directxtk12",
+    "directx-headers",
+    {
+      "name": "directxtex",
+      "features": [
+        "dx12",
+        "openexr"
+      ]
+    },
+    "fastgltf",
     "fmt",
     {
       "name": "imgui",
@@ -11,7 +20,6 @@
         "win32-binding"
       ]
     },
-    "stb",
-    "directx-headers"
+    "stb"
   ]
 }

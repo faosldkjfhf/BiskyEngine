@@ -6,7 +6,7 @@ struct Vertex
     float2 texCoord : TEXCOORD;
 };
 
-struct VSOutput
+struct VsOutput
 {
     float4 position : SV_Position;
     float2 texCoord : TEXCOORD;
@@ -21,21 +21,20 @@ struct RenderResource
 
 ConstantBuffer<RenderResource> renderResource : register(b0);
 
-VSOutput VsMain(uint vertexId : SV_VertexID)
+VsOutput VsMain(uint vertexId : SV_VertexID)
 {
     StructuredBuffer<Vertex> vertices = ResourceDescriptorHeap[renderResource.vertexBufferIndex];
     
-    VSOutput output;
-    
+    VsOutput output;
     output.position = float4(vertices[vertexId].position, 1.0);
     output.texCoord = vertices[vertexId].texCoord;
-    
     return output;
 }
 
-float4 PsMain(VSOutput input) : SV_Target
+float4 PsMain(VsOutput input) : SV_Target
 {
     Texture2D<float4> rtvTexture = ResourceDescriptorHeap[renderResource.textureIndex];
     
-    return rtvTexture.SampleLevel(linearWrapSampler, input.texCoord, 0.0);
+    float3 hdr = rtvTexture.SampleLevel(linearWrapSampler, input.texCoord, 0.0).xyz;
+    return float4(hdr, 1.0);
 }

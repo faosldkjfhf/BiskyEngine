@@ -48,10 +48,10 @@ bool Camera::input(const core::GameTimer *const timer)
 
 void Camera::reset()
 {
-    math::XMStoreFloat3(&m_position, math::FXMVECTOR{0.0f, 0.0f, 0.0f});
-    math::XMStoreFloat3(&m_forward, math::FXMVECTOR{0.0f, 0.0f, 1.0f});
-    math::XMStoreFloat3(&m_right, math::FXMVECTOR{1.0f, 0.0f, 0.0f});
-    math::XMStoreFloat3(&m_up, math::FXMVECTOR{0.0f, 1.0f, 0.0f});
+    dx::XMStoreFloat3(&m_position, dx::FXMVECTOR{0.0f, 0.0f, 0.0f});
+    dx::XMStoreFloat3(&m_forward, dx::FXMVECTOR{0.0f, 0.0f, 1.0f});
+    dx::XMStoreFloat3(&m_right, dx::FXMVECTOR{1.0f, 0.0f, 0.0f});
+    dx::XMStoreFloat3(&m_up, dx::FXMVECTOR{0.0f, 1.0f, 0.0f});
     m_viewDirty = true;
 
     updateViewMatrix();
@@ -61,23 +61,23 @@ void Camera::updateViewMatrix()
 {
     if (m_viewDirty)
     {
-        math::XMVECTOR r = XMLoadFloat3(&m_right);
-        math::XMVECTOR u = XMLoadFloat3(&m_up);
-        math::XMVECTOR f = XMLoadFloat3(&m_forward);
-        math::XMVECTOR p = XMLoadFloat3(&m_position);
+        dx::XMVECTOR r = XMLoadFloat3(&m_right);
+        dx::XMVECTOR u = XMLoadFloat3(&m_up);
+        dx::XMVECTOR f = XMLoadFloat3(&m_forward);
+        dx::XMVECTOR p = XMLoadFloat3(&m_position);
 
-        f = math::XMVector3Normalize(f);
-        u = math::XMVector3Normalize(math::XMVector3Cross(f, r));
-        r = math::XMVector3Cross(u, f);
+        f = dx::XMVector3Normalize(f);
+        u = dx::XMVector3Normalize(dx::XMVector3Cross(f, r));
+        r = dx::XMVector3Cross(u, f);
 
-        XMStoreFloat4x4(&m_view, math::XMMatrixLookAtLH(p, math::XMVectorAdd(p, f), u));
+        XMStoreFloat4x4(&m_view, dx::XMMatrixLookAtLH(p, dx::XMVectorAdd(p, f), u));
         m_viewDirty = false;
     }
 }
 
 void Camera::setPosition(float x, float y, float z)
 {
-    XMStoreFloat3(&m_position, math::FXMVECTOR{x, y, z});
+    XMStoreFloat3(&m_position, dx::FXMVECTOR{x, y, z});
     m_viewDirty = true;
 }
 
@@ -87,8 +87,8 @@ void Camera::setLens(float aspectRatio, float nearZ, float farZ)
     m_near        = nearZ;
     m_far         = farZ;
 
-    math::XMStoreFloat4x4(
-        &m_projection, math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(m_fov), aspectRatio, nearZ, farZ)
+    dx::XMStoreFloat4x4(
+        &m_projection, dx::XMMatrixPerspectiveFovLH(dx::XMConvertToRadians(m_fov), aspectRatio, nearZ, farZ)
     );
     m_viewDirty = true;
 }
@@ -98,62 +98,62 @@ void Camera::setDirty()
     m_viewDirty = true;
 }
 
-math::XMMATRIX Camera::getView()
+dx::XMMATRIX Camera::getView()
 {
     return XMLoadFloat4x4(&m_view);
 }
 
-math::XMFLOAT4X4 Camera::getView4x4f()
+dx::XMFLOAT4X4 Camera::getView4x4f()
 {
     return m_view;
 }
 
-math::XMMATRIX Camera::getProjection() const
+dx::XMMATRIX Camera::getProjection() const
 {
     return XMLoadFloat4x4(&m_projection);
 }
 
-math::XMFLOAT4X4 Camera::getProjection4x4f() const
+dx::XMFLOAT4X4 Camera::getProjection4x4f() const
 {
     return m_projection;
 }
 
-math::XMVECTOR Camera::getPosition() const
+dx::XMVECTOR Camera::getPosition() const
 {
-    return math::XMLoadFloat3(&m_position);
+    return dx::XMLoadFloat3(&m_position);
 }
 
-math::XMFLOAT3 Camera::getPosition3f() const
+dx::XMFLOAT3 Camera::getPosition3f() const
 {
     return m_position;
 }
 
-math::XMVECTOR Camera::getForward() const
+dx::XMVECTOR Camera::getForward() const
 {
-    return math::XMLoadFloat3(&m_forward);
+    return dx::XMLoadFloat3(&m_forward);
 }
 
-math::XMFLOAT3 Camera::getForward3f() const
+dx::XMFLOAT3 Camera::getForward3f() const
 {
     return m_forward;
 }
 
-math::XMVECTOR Camera::getUp() const
+dx::XMVECTOR Camera::getUp() const
 {
-    return math::XMLoadFloat3(&m_up);
+    return dx::XMLoadFloat3(&m_up);
 }
 
-math::XMFLOAT3 Camera::getUp3f() const
+dx::XMFLOAT3 Camera::getUp3f() const
 {
     return m_up;
 }
 
-math::XMVECTOR Camera::getRight() const
+dx::XMVECTOR Camera::getRight() const
 {
-    return math::XMLoadFloat3(&m_right);
+    return dx::XMLoadFloat3(&m_right);
 }
 
-math::XMFLOAT3 Camera::getRight3f() const
+dx::XMFLOAT3 Camera::getRight3f() const
 {
     return m_right;
 }

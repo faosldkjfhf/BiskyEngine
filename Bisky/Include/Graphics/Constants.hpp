@@ -16,10 +16,10 @@ namespace bisky::gfx
  */
 struct SceneBuffer
 {
-    math::XMFLOAT4X4 view;
-    math::XMFLOAT4X4 projection;
-    math::XMFLOAT4X4 viewProjection;
-    math::XMFLOAT4   viewPosition;
+    dx::XMFLOAT4X4 view;
+    dx::XMFLOAT4X4 projection;
+    dx::XMFLOAT4X4 viewProjection;
+    dx::XMFLOAT4   viewPosition;
 };
 
 /*
@@ -27,9 +27,9 @@ struct SceneBuffer
  */
 struct ObjectBuffer
 {
-    math::XMFLOAT4X4 world;
-    math::XMFLOAT4X4 inverseWorld;
-    math::XMFLOAT4X4 tranposeInverseWorld;
+    dx::XMFLOAT4X4 world;
+    dx::XMFLOAT4X4 inverseWorld;
+    dx::XMFLOAT4X4 tranposeInverseWorld;
 };
 
 struct LightBuffer

@@ -176,6 +176,7 @@
     <ClInclude Include="Include\Renderer\FinalRenderPass.hpp" />
     <ClInclude Include="Include\Renderer\ForwardRenderer.hpp" />
     <ClInclude Include="Include\Renderer\RenderLayer.hpp" />
+    <ClInclude Include="Include\Renderer\SkyboxRenderPass.hpp" />
     <ClInclude Include="Include\Scene\Camera.hpp" />
     <ClInclude Include="Include\Scene\Lights.hpp" />
     <ClInclude Include="Include\Scene\Material.hpp" />
@@ -183,6 +184,7 @@
     <ClInclude Include="Include\Scene\RenderObject.hpp" />
     <ClInclude Include="Include\Scene\Scene.hpp" />
     <ClInclude Include="Include\Scene\ScreenQuad.hpp" />
+    <ClInclude Include="Include\Scene\Skybox.hpp" />
     <ClInclude Include="Include\Scene\Vertex.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -213,10 +215,12 @@
     <ClCompile Include="Source\Graphics\Window.cpp" />
     <ClCompile Include="Source\Renderer\FinalRenderPass.cpp" />
     <ClCompile Include="Source\Renderer\ForwardRenderer.cpp" />
+    <ClCompile Include="Source\Renderer\SkyboxRenderPass.cpp" />
     <ClCompile Include="Source\Scene\Camera.cpp" />
     <ClCompile Include="Source\Scene\Mesh.cpp" />
     <ClCompile Include="Source\Scene\Scene.cpp" />
     <ClCompile Include="Source\Scene\RenderObject.cpp" />
+    <ClCompile Include="Source\Scene\Skybox.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

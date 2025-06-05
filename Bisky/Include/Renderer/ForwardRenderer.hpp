@@ -25,10 +25,7 @@ namespace bisky::renderer
 class ForwardRenderer
 {
   public:
-    explicit ForwardRenderer(
-        gfx::Window *const window, gfx::Device *const backend,
-        DXGI_FORMAT renderTextureFormat = DXGI_FORMAT_R16G16B16A16_FLOAT
-    );
+    explicit ForwardRenderer(gfx::Window *const window, gfx::Device *const backend);
     ~ForwardRenderer();
 
     ForwardRenderer(const ForwardRenderer &)                    = delete;
@@ -41,21 +38,14 @@ class ForwardRenderer
         const RenderLayer &renderLayer, gfx::FrameResource *frameResource, const scene::Scene *const scene,
         core::FrameStats *const frameStats
     );
-    void                resize(uint32_t width, uint32_t height);
-    gfx::Texture *const getRenderTexture(uint32_t index) const;
 
+  public:
   private:
     void initRootSignatures();
     void initPipelineStateObjects();
-    void initRenderResources(uint32_t width, uint32_t height);
 
   private:
     gfx::Device *const m_backend;
-
-    std::array<std::unique_ptr<gfx::Texture>, gfx::Device::FramesInFlight> m_renderTextures;
-    std::array<gfx::Descriptor, gfx::Device::FramesInFlight>               m_renderTextureSrvs;
-    std::array<gfx::Descriptor, gfx::Device::FramesInFlight>               m_renderTextureRtvs;
-    DXGI_FORMAT m_renderTextureFormat = DXGI_FORMAT_R16G16B16A16_FLOAT;
 };
 
 } // namespace bisky::renderer

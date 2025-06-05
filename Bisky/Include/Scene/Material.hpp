@@ -8,7 +8,7 @@ namespace bisky::scene
 
 struct Material
 {
-    math::XMFLOAT3 diffuse;
+    dx::XMFLOAT3 diffuse;
     float          metallic;
     float          roughness;
     float          ambientOcclusion;

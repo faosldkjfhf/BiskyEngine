@@ -55,7 +55,7 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
     if (path.extension() == ".glb")
         flags = fastgltf::Options::None;
     else
-        flags = fastgltf::Options::LoadExternalBuffers;
+        flags = fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages;
 
     // -------------- attempt to load the file --------------
     auto data = fastgltf::GltfDataBuffer::FromPath(path);
@@ -89,7 +89,7 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
         std::shared_ptr<gfx::Texture> texture = std::make_shared<gfx::Texture>();
         std::visit(
             fastgltf::visitor(
-                [&](auto &arg) {},
+                [&](auto &arg) {}, [&](fastgltf::sources::Array &array) { LOG_INFO("hi"); },
                 [&](fastgltf::sources::BufferView &view) {
                     auto &bufferView = asset->bufferViews[view.bufferViewIndex];
                     auto &buffer     = asset->buffers[bufferView.bufferIndex];
@@ -133,13 +133,19 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
         if (mat.pbrData.baseColorTexture.has_value())
         {
             size_t image = asset->textures[mat.pbrData.baseColorTexture.value().textureIndex].imageIndex.value();
-            newMat->diffuseTexture = textures[image].get();
+            if (image < textures.size())
+            {
+                newMat->diffuseTexture = textures[image].get();
+            }
         }
         if (mat.pbrData.metallicRoughnessTexture.has_value())
         {
             size_t image =
                 asset->textures[mat.pbrData.metallicRoughnessTexture.value().textureIndex].imageIndex.value();
-            newMat->metallicRoughnessTexture = textures[image].get();
+            if (image < textures.size())
+            {
+                newMat->metallicRoughnessTexture = textures[image].get();
+            }
         }
 
         materials.push_back(newMat);
@@ -198,9 +204,9 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
             {
                 auto &accessor = asset->accessors[p.findAttribute("POSITION")->accessorIndex];
                 vertices.resize(vertices.size() + accessor.count);
-                fastgltf::iterateAccessorWithIndex<math::XMFLOAT3>(
+                fastgltf::iterateAccessorWithIndex<dx::XMFLOAT3>(
                     asset.get(), accessor,
-                    [&](math::XMFLOAT3 position, size_t index) {
+                    [&](dx::XMFLOAT3 position, size_t index) {
                         scene::Vertex v;
                         v.position = position;
 
@@ -215,9 +221,9 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
                 if (normals != p.attributes.end())
                 {
                     auto &accessor = asset->accessors[normals->accessorIndex];
-                    fastgltf::iterateAccessorWithIndex<math::XMFLOAT3>(
+                    fastgltf::iterateAccessorWithIndex<dx::XMFLOAT3>(
                         asset.get(), accessor,
-                        [&](math::XMFLOAT3 normal, size_t index) {
+                        [&](dx::XMFLOAT3 normal, size_t index) {
                             vertices[submesh.baseVertexLocation + index].normal = normal;
                         }
                     );
@@ -230,9 +236,9 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
                 if (uvs != p.attributes.end())
                 {
                     auto &accessor = asset->accessors[uvs->accessorIndex];
-                    fastgltf::iterateAccessorWithIndex<math::XMFLOAT2>(
+                    fastgltf::iterateAccessorWithIndex<dx::XMFLOAT2>(
                         asset.get(), accessor,
-                        [&](math::XMFLOAT2 texCoord, size_t index) {
+                        [&](dx::XMFLOAT2 texCoord, size_t index) {
                             vertices[submesh.baseVertexLocation + index].texCoord = texCoord;
                         }
                     );
@@ -246,9 +252,9 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
                 if (tangents != p.attributes.end())
                 {
                     auto &accessor = asset->accessors[tangents->accessorIndex];
-                    fastgltf::iterateAccessorWithIndex<math::XMFLOAT4>(
+                    fastgltf::iterateAccessorWithIndex<dx::XMFLOAT4>(
                         asset.get(), accessor,
-                        [&](math::XMFLOAT4 tangent, size_t index) {
+                        [&](dx::XMFLOAT4 tangent, size_t index) {
                             vertices[submesh.baseVertexLocation + index].tangent = tangent;
                         }
                     );
@@ -295,6 +301,40 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
     return true;
 }
 
+bool ResourceManager::loadDDS(gfx::Device *const device, const std::filesystem::path &filename, bool *isCubemap)
+{
+    const std::filesystem::path path = m_textureDirectory / filename;
+
+    dx::ResourceUploadBatch upload(device->getDevice());
+    upload.Begin();
+
+    std::shared_ptr<gfx::Texture> texture = std::make_shared<gfx::Texture>();
+    HRESULT                       hr;
+    hr = dx::CreateDDSTextureFromFile(
+        device->getDevice(), upload, path.c_str(), &texture->resource, false, 0u, nullptr, isCubemap
+    );
+
+    auto finish = upload.End(device->getDirectCommandQueue()->getCommandQueue());
+    finish.wait();
+
+    if (FAILED(hr))
+    {
+        LOG_WARNING("Failed to load " + path.string());
+        return false;
+    }
+
+    auto it = m_textures.find(path.string());
+    if (it != m_textures.end())
+    {
+        LOG_INFO("Texture " + path.string() + " already loaded");
+        return true;
+    }
+
+    m_textures[path.string()] = texture;
+    LOG_INFO("Loaded " + path.string());
+    return true;
+}
+
 const std::string ResourceManager::addMesh(std::unique_ptr<scene::Mesh> mesh)
 {
     auto it = m_meshes.find(mesh->name);
@@ -324,17 +364,18 @@ scene::Mesh *const ResourceManager::getMesh(std::string_view name)
     return it->second.get();
 }
 
-gfx::Texture *const ResourceManager::getTexture(std::string_view name)
+std::shared_ptr<gfx::Texture> ResourceManager::getTexture(std::string_view name)
 {
-    auto it = m_textures.find(std::string(name));
+    auto path = m_textureDirectory / name;
+    auto it   = m_textures.find(path.string());
     if (it == m_textures.end())
     {
-        LOG_WARNING("Texture " + std::string(name) + " not found");
+        LOG_WARNING("Texture " + path.string() + " not found");
         return nullptr;
     }
 
-    LOG_VERBOSE("Found texture " + std::string(name));
-    return it->second.get();
+    LOG_VERBOSE("Found texture " + path.string());
+    return it->second;
 }
 
 const std::filesystem::path &ResourceManager::getWorkingDirectory() const

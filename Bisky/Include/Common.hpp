@@ -25,6 +25,8 @@
 #include <d3dcompiler.h>
 #include <directx-dxc/dxcapi.h>
 #include <directx/d3dx12.h>
+#include <directxtk12/DDSTextureLoader.h>
+#include <directxtk12/ResourceUploadBatch.h>
 #include <dxgi1_6.h>
 
 #ifdef _DEBUG
@@ -40,8 +42,8 @@
 #include <windowsx.h>
 #include <wrl.h>
 
-namespace wrl  = Microsoft::WRL;
-namespace math = DirectX;
+namespace wrl = Microsoft::WRL;
+namespace dx  = DirectX;
 
 #include "Core/Logger.hpp"
 #include "Graphics/ResourceUpload.hpp"

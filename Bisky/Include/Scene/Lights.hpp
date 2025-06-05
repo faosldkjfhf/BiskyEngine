@@ -7,18 +7,18 @@ namespace bisky::scene
 
 struct Light
 {
-    math::XMFLOAT4 strength;
+    dx::XMFLOAT4 strength;
 };
 
 struct PointLight
 {
-    math::XMFLOAT4 position;
-    math::XMFLOAT4 strength;
+    dx::XMFLOAT4 position;
+    dx::XMFLOAT4 strength;
 };
 
 struct DirectionalLight : public Light
 {
-    math::XMFLOAT4 direction;
+    dx::XMFLOAT4 direction;
 };
 
 } // namespace bisky::scene

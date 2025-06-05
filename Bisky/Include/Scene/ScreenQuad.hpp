@@ -12,8 +12,8 @@ struct ScreenQuad
 {
     struct Vertex
     {
-        math::XMFLOAT3 Position;
-        math::XMFLOAT2 TexCoord;
+        dx::XMFLOAT3 Position;
+        dx::XMFLOAT2 TexCoord;
     };
 
     inline static std::unique_ptr<Mesh> mesh(gfx::Device *const device)

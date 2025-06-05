@@ -26,7 +26,10 @@ class Device
      * @param window The window to use for the swap chain.
      * @param backBufferFormat The format to use for the back buffers.
      */
-    explicit Device(Window *window, DXGI_FORMAT backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM);
+    explicit Device(
+        Window *window, DXGI_FORMAT backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM,
+        DXGI_FORMAT hdrRenderTargetFormat = DXGI_FORMAT_R16G16B16A16_FLOAT
+    );
 
     /*
      * Resets the core D3D12 objects.
@@ -42,10 +45,11 @@ class Device
     constexpr static uint32_t FramesInFlight = 3u;
 
   public: // Public methods
-    /*
-     * Fetches the current back buffer index from the swap chain.
-     */
-    void update();
+    void beginFrame(GraphicsCommandList *const cmdList);
+
+    void endFrame(GraphicsCommandList *const cmdList);
+
+    void endHdrFrame(GraphicsCommandList *const cmdList);
 
     /*
      * Resizes the swap chain and the buffers.
@@ -192,6 +196,8 @@ class Device
      */
     Texture *const getRenderTargetBuffer() const;
 
+    Texture *const getHdrRenderTargetBuffer() const;
+
     /*
      * Gets the current render target view handle.
      *
@@ -199,12 +205,16 @@ class Device
      */
     const D3D12_CPU_DESCRIPTOR_HANDLE &getRenderTargetView() const;
 
+    const D3D12_CPU_DESCRIPTOR_HANDLE &getHdrRenderTargetView() const;
+
     /*
      * Returns the back buffer format.
      *
      * @return The back buffer format.
      */
     DXGI_FORMAT getBackBufferFormat() const;
+
+    DXGI_FORMAT getHdrRenderTargetFormat() const;
 
     /*
      * Gets the root signature with the given name.
@@ -286,6 +296,12 @@ class Device
     DXGI_FORMAT                                          m_backBufferFormat;
     uint32_t                                             m_currentBackBufferIndex    = 0;
     uint32_t                                             m_currentFrameResourceIndex = 0;
+
+    // HDR render targets
+    std::array<std::unique_ptr<Texture>, FramesInFlight> m_hdrRenderTargetBuffers;
+    std::array<Descriptor, FramesInFlight>               m_hdrRenderTargetSrvHandles;
+    std::array<Descriptor, FramesInFlight>               m_hdrRenderTargetRtvHandles;
+    DXGI_FORMAT                                          m_hdrRenderTargetFormat;
 
     // depth stencil stuff
     std::unique_ptr<Texture> m_depthStencilBuffer;

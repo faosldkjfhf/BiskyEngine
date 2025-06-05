@@ -69,7 +69,7 @@ void Editor::beginFrame()
 void Editor::render(scene::Scene *const scene)
 {
     scene::Camera *camera        = scene->getCamera();
-    math::XMFLOAT3 position      = camera->getPosition3f();
+    dx::XMFLOAT3   position      = camera->getPosition3f();
     auto          &renderObjects = scene->getRenderObjects();
     auto          &lights        = scene->getLights();
 
@@ -81,19 +81,16 @@ void Editor::render(scene::Scene *const scene)
             if (ImGui::SliderFloat("X", (float *)&position.x, -10.0f, 10.0f))
             {
                 camera->setPosition(position.x, position.y, position.z);
-                scene->updateSceneBuffer();
             }
 
             if (ImGui::SliderFloat("Y", (float *)&position.y, -10.0f, 10.0f))
             {
                 camera->setPosition(position.x, position.y, position.z);
-                scene->updateSceneBuffer();
             }
 
             if (ImGui::SliderFloat("Z", (float *)&position.z, -10.0f, 10.0f))
             {
                 camera->setPosition(position.x, position.y, position.z);
-                scene->updateSceneBuffer();
             }
         }
     }

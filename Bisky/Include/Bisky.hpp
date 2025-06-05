@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Application.hpp"
+#include "Core/FrameStats.hpp"
 #include "Core/GameTimer.hpp"
 #include "Core/Input.hpp"
 #include "Core/Logger.hpp"
@@ -29,8 +30,13 @@
 #include "Graphics/Utilities.hpp"
 #include "Graphics/Window.hpp"
 
+#include "Renderer/FinalRenderPass.hpp"
 #include "Renderer/ForwardRenderer.hpp"
+#include "Renderer/RenderLayer.hpp"
+#include "Renderer/SkyboxRenderPass.hpp"
 
+#include "Scene/Camera.hpp"
+#include "Scene/Lights.hpp"
 #include "Scene/Material.hpp"
 #include "Scene/Mesh.hpp"
 #include "Scene/RenderObject.hpp"

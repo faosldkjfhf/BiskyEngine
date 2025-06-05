@@ -11,6 +11,7 @@
 #include "Graphics/Window.hpp"
 #include "Renderer/FinalRenderPass.hpp"
 #include "Renderer/ForwardRenderer.hpp"
+#include "Renderer/SkyboxRenderPass.hpp"
 #include "Scene/Scene.hpp"
 
 namespace bisky::core
@@ -38,6 +39,12 @@ class Application : public Input
      */
     ~Application();
 
+    Application(const Application &)                    = delete;
+    const Application &operator=(const Application &)   = delete;
+    Application(const Application &&)                   = delete;
+    const Application &&operator=(const Application &&) = delete;
+
+  public:
     /*
      * Runs the application.
      * This can be overriden.
@@ -49,19 +56,15 @@ class Application : public Input
     virtual void OnLeftMouseUp() override;
     virtual void OnKeyDown(WPARAM key) override;
 
-    Application(const Application &)                    = delete;
-    const Application &operator=(const Application &)   = delete;
-    Application(const Application &&)                   = delete;
-    const Application &&operator=(const Application &&) = delete;
-
   protected:
     std::unique_ptr<gfx::DebugLayer> m_debug;
     std::unique_ptr<gfx::Window>     m_window;
     std::unique_ptr<gfx::Device>     m_backend;
 
-    std::unique_ptr<renderer::ForwardRenderer> m_renderer;
-    std::unique_ptr<renderer::FinalRenderPass> m_finalRenderPass;
-    std::unique_ptr<scene::Scene>              m_scene;
+    std::unique_ptr<renderer::ForwardRenderer>  m_renderer;
+    std::unique_ptr<renderer::FinalRenderPass>  m_finalRenderPass;
+    std::unique_ptr<renderer::SkyboxRenderPass> m_skyboxRenderPass;
+    std::unique_ptr<scene::Scene>               m_scene;
 
     std::unique_ptr<editor::Editor>   m_editor;
     std::unique_ptr<core::FrameStats> m_frameStats;

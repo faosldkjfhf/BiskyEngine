@@ -23,21 +23,21 @@ class Transform
     void setRotation(float x, float y, float z);
 
   public:
-    math::XMMATRIX getLocalToWorld() const;
-    math::XMVECTOR getScale() const;
-    math::XMFLOAT3 getScale3f() const;
-    math::XMMATRIX getScaleMatrix() const;
-    math::XMVECTOR getRotation() const;
-    math::XMFLOAT3 getRotation3f() const;
-    math::XMMATRIX getRotationMatrix() const;
-    math::XMVECTOR getTranslation() const;
-    math::XMFLOAT3 getTranslation3f() const;
-    math::XMMATRIX getTranslationMatrix() const;
+    dx::XMMATRIX getLocalToWorld() const;
+    dx::XMVECTOR getScale() const;
+    dx::XMFLOAT3 getScale3f() const;
+    dx::XMMATRIX getScaleMatrix() const;
+    dx::XMVECTOR getRotation() const;
+    dx::XMFLOAT3 getRotation3f() const;
+    dx::XMMATRIX getRotationMatrix() const;
+    dx::XMVECTOR getTranslation() const;
+    dx::XMFLOAT3 getTranslation3f() const;
+    dx::XMMATRIX getTranslationMatrix() const;
 
   private:
-    math::XMFLOAT3 m_scale;
-    math::XMFLOAT3 m_rotation;
-    math::XMFLOAT3 m_translation;
+    dx::XMFLOAT3 m_scale;
+    dx::XMFLOAT3 m_rotation;
+    dx::XMFLOAT3 m_translation;
 };
 
 } // namespace bisky::gfx

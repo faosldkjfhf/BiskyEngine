@@ -22,6 +22,7 @@
   <ItemGroup>
     <FxCompile Include="Shaders\Geometry\Shader.hlsl" />
     <FxCompile Include="Shaders\RenderPass\FinalRenderPass.hlsl" />
+    <FxCompile Include="Shaders\RenderPass\Skybox.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="imgui.ini" />
@@ -30,5 +31,9 @@
     <None Include="Assets\Models\Box.glb" />
     <None Include="Assets\Models\DamagedHelmet.glb" />
     <None Include="Shaders\Include\Lighting\BlinnPhong.hlsli" />
+    <None Include="Shaders\Include\Lighting\PBR.hlsli" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\Textures\Skybox\cubemap.dds" />
   </ItemGroup>
 </Project>

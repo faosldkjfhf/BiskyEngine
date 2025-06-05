@@ -17,9 +17,10 @@ Application::Application(uint32_t width, uint32_t height, const std::string &tit
     m_timer = std::make_unique<core::GameTimer>();
 
     // -------------- initialize our renderer and scene --------------
-    m_renderer        = std::make_unique<renderer::ForwardRenderer>(m_window.get(), m_backend.get());
-    m_finalRenderPass = std::make_unique<renderer::FinalRenderPass>(m_backend.get());
-    m_scene           = std::make_unique<scene::Scene>(m_window.get(), m_backend.get(), "test");
+    m_renderer         = std::make_unique<renderer::ForwardRenderer>(m_window.get(), m_backend.get());
+    m_finalRenderPass  = std::make_unique<renderer::FinalRenderPass>(m_backend.get());
+    m_skyboxRenderPass = std::make_unique<renderer::SkyboxRenderPass>(m_backend.get());
+    m_scene            = std::make_unique<scene::Scene>(m_window.get(), m_backend.get(), "test");
 
     // -------------- initialize the editor --------------
     m_editor     = std::make_unique<editor::Editor>(m_window.get(), m_backend.get());
@@ -59,9 +60,7 @@ void Application::run()
         {
             m_backend->getDirectCommandQueue()->flush();
             m_window->resize(m_backend.get());
-            m_renderer->resize(m_window->getWidth(), m_window->getHeight());
             m_scene->getCamera()->setLens(m_window->getAspectRatio(), 0.1f, 100.0f);
-            m_scene->updateSceneBuffer();
         }
 
         // -------------- reset the command list --------------
@@ -79,50 +78,36 @@ void Application::run()
             m_frameStats->sceneUpdateTime = elapsed.count() / 1000.0f;
         }
 
-        // -------------- get next swapchain buffer index --------------
-        m_backend->update();
-
-        //// -------------- transition resource to render target --------------
-        // cmdList->addBarrier(
-        //     m_backend->getRenderTargetBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
-        //);
-        // cmdList->dispatchBarriers();
-
-        //// -------------- clear render target view --------------
-        // float color[4] = {0.15f, 0.15f, 0.15f, 1.0f};
-        // cmdList->clearRenderTargetView(m_backend->getRenderTargetView(), color);
-        // cmdList->clearDepthStencilView(m_backend->getDepthStencilView(), 1.0f, 0);
-
-        //// -------------- set viewport and scissor --------------
-        // cmdList->setViewport(m_backend->getViewport());
-        // cmdList->setScissorRect(m_backend->getScissor());
-
-        //// -------------- set render targets --------------
-        // cmdList->setRenderTargets(m_backend->getRenderTargetView(), m_backend->getDepthStencilView());
+        // -------------- get next swapchain buffer index and transition render targets --------------
+        m_backend->beginFrame(cmdList);
 
         // -------------- draw with our renderer --------------
         m_renderer->draw(renderer::RenderLayer::Opaque, frameResource, m_scene.get(), m_frameStats.get());
 
-        // -------------- draw to final render pass --------------
-        m_finalRenderPass->draw(frameResource, m_renderer->getRenderTexture(m_backend->getCurrentFrameResourceIndex()));
+        // -------------- draw skybox --------------
+        m_skyboxRenderPass->draw(frameResource, m_scene.get(), m_frameStats.get());
+
+        // -------------- transition the HDR render target to common state --------------
+        m_backend->endHdrFrame(cmdList);
+
+        // -------------- draw final render pass --------------
+        m_finalRenderPass->draw(frameResource, m_frameStats.get());
 
         // -------------- draw imgui --------------
         m_editor->beginFrame();
         ImGui::Begin("Debug");
+        ImGui::Text("Triangle Count: %i", m_frameStats->triangleCount);
+        ImGui::Text("Draw Count: %i", m_frameStats->drawCount);
         ImGui::Text("Frame Time: %f", m_frameStats->frameTime);
         ImGui::Text("Scene Update Time: %f", m_frameStats->sceneUpdateTime);
         ImGui::Text("Mesh Draw Time: %f", m_frameStats->meshDrawTime);
-        ImGui::Text("Triangle Count: %i", m_frameStats->triangleCount);
-        ImGui::Text("Draw Count: %i", m_frameStats->drawCount);
+        ImGui::Text("Final Render Draw Time: %f", m_frameStats->finalRenderDrawTime);
         ImGui::End();
         m_editor->render(m_scene.get());
         m_editor->endFrame(cmdList, m_backend.get());
 
         // -------------- transition resource to present --------------
-        cmdList->addBarrier(
-            m_backend->getRenderTargetBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT
-        );
-        cmdList->dispatchBarriers();
+        m_backend->endFrame(cmdList);
 
         // -------------- execute command list --------------
         std::array<const bisky::gfx::CommandList *const, 1> commandLists = {cmdList};
