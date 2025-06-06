@@ -15,17 +15,20 @@ class Camera
 {
   public:
     explicit Camera(float aspectRatio, float nearZ, float farZ);
-    ~Camera();
+    virtual ~Camera();
 
     Camera(const Camera &)                    = delete;
     const Camera &operator=(const Camera &)   = delete;
     Camera(const Camera &&)                   = delete;
     const Camera &&operator=(const Camera &&) = delete;
 
+  protected:
+    explicit Camera() = default;
+
   public:
     virtual bool input(const core::GameTimer *const timer);
+    virtual void updateViewMatrix();
     void         reset();
-    void         updateViewMatrix();
     void         setPosition(float x, float y, float z);
     void         setLens(float aspectRatio, float nearZ, float farZ);
     void         setDirty();
@@ -43,21 +46,21 @@ class Camera
     dx::XMFLOAT3   getUp3f() const;
     dx::XMVECTOR   getRight() const;
     dx::XMFLOAT3   getRight3f() const;
-    bool             getDirty() const;
+    bool           getDirty() const;
 
-  private:
+  protected:
     dx::XMFLOAT3   m_position;
     dx::XMFLOAT3   m_right;
     dx::XMFLOAT3   m_up;
     dx::XMFLOAT3   m_forward;
     dx::XMFLOAT4X4 m_view;
     dx::XMFLOAT4X4 m_projection;
-    float            m_aspectRatio;
-    float            m_fov       = 90.0f;
-    float            m_near      = 0.1f;
-    float            m_far       = 100.0f;
-    float            m_speed     = 10.0f;
-    bool             m_viewDirty = true;
+    float          m_aspectRatio;
+    float          m_fov       = 90.0f;
+    float          m_near      = 0.1f;
+    float          m_far       = 100.0f;
+    float          m_speed     = 10.0f;
+    bool           m_viewDirty = true;
 };
 
 } // namespace bisky::scene

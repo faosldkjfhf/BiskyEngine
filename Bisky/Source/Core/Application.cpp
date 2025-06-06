@@ -60,7 +60,7 @@ void Application::run()
         {
             m_backend->getDirectCommandQueue()->flush();
             m_window->resize(m_backend.get());
-            m_scene->getCamera()->setLens(m_window->getAspectRatio(), 0.1f, 100.0f);
+            m_scene->getArcball()->setLens(m_window->getAspectRatio(), 0.1f, 100.0f);
         }
 
         // -------------- reset the command list --------------
@@ -133,16 +133,44 @@ void Application::run()
     LOG_INFO("Exiting");
 }
 
+inline static dx::XMFLOAT2 convertToNdc(gfx::Window *const window, int x, int y)
+{
+    dx::XMFLOAT2 ndc{};
+
+    // map between [0, 1]
+    ndc.x = static_cast<float>(x) / window->getWidth();
+    ndc.y = 1.0f - (static_cast<float>(y) / window->getHeight());
+
+    // map to ndc [-1, 1]
+    ndc.x = std::clamp(ndc.x * 2.0f - 1.0f, -1.0f, 1.0f);
+    ndc.y = std::clamp(ndc.y * 2.0f - 1.0f, -1.0f, 1.0f);
+
+    return ndc;
+}
+
 void Application::OnMouseMove(WPARAM key, int x, int y)
 {
+    if (m_lmbDown)
+    {
+        auto *arcball = m_scene->getArcball();
+
+        auto end   = convertToNdc(m_window.get(), x, y);
+        auto start = convertToNdc(m_window.get(), m_lastMousePosition.x, m_lastMousePosition.y);
+        arcball->rotate(start, end);
+
+        m_lastMousePosition = {.x = x, .y = y};
+    }
 }
 
 void Application::OnLeftMouseDown(WPARAM key, int x, int y)
 {
+    m_lmbDown           = true;
+    m_lastMousePosition = {.x = x, .y = y};
 }
 
 void Application::OnLeftMouseUp()
 {
+    m_lmbDown = false;
 }
 
 void Application::OnKeyDown(WPARAM key)

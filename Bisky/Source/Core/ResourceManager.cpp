@@ -55,7 +55,7 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
     if (path.extension() == ".glb")
         flags = fastgltf::Options::None;
     else
-        flags = fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages;
+        flags = fastgltf::Options::LoadExternalBuffers;
 
     // -------------- attempt to load the file --------------
     auto data = fastgltf::GltfDataBuffer::FromPath(path);

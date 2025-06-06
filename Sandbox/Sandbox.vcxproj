@@ -169,6 +169,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Models\Box.glb" />
+    <None Include="Assets\Models\Cube\Cube.bin" />
+    <None Include="Assets\Models\Cube\Cube.gltf" />
     <None Include="Assets\Models\DamagedHelmet.glb" />
     <None Include="imgui.ini" />
     <None Include="Shaders\Include\Common.hlsli" />

@@ -3,6 +3,7 @@
 #include "Graphics/Constants.hpp"
 #include "Graphics/Device.hpp"
 #include "Graphics/Texture.hpp"
+#include "Scene/Arcball.hpp"
 #include "Scene/Camera.hpp"
 #include "Scene/Lights.hpp"
 #include "Scene/RenderObject.hpp"
@@ -43,9 +44,10 @@ class Scene
 
   public: // Getter functions
     const std::vector<std::shared_ptr<RenderObject>> &getRenderObjects() const;
-    Camera *const                                     getCamera() const;
-    const std::vector<PointLight>                    &getLights() const;
-    Skybox *const                                     getSkybox() const;
+    // Camera *const                                     getCamera() const;
+    Arcball *const                 getArcball() const;
+    const std::vector<PointLight> &getLights() const;
+    Skybox *const                  getSkybox() const;
 
   private: // Private functions
     void initDefaultScene();
@@ -56,8 +58,9 @@ class Scene
     std::string_view                           m_name;
     std::vector<std::shared_ptr<RenderObject>> m_renderObjects;
     std::unique_ptr<Skybox>                    m_skybox;
-    std::unique_ptr<Camera>                    m_camera; // every scene has a camera - later hold more cameras
-    std::vector<PointLight>                    m_lights;
+    // std::unique_ptr<Camera>                    m_camera;  // every scene has a camera - later hold more cameras
+    std::unique_ptr<Arcball> m_arcball; // use an arcball camera for now
+    std::vector<PointLight>  m_lights;
 };
 
 } // namespace bisky::scene

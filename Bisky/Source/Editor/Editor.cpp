@@ -68,10 +68,10 @@ void Editor::beginFrame()
 
 void Editor::render(scene::Scene *const scene)
 {
-    scene::Camera *camera        = scene->getCamera();
-    dx::XMFLOAT3   position      = camera->getPosition3f();
-    auto          &renderObjects = scene->getRenderObjects();
-    auto          &lights        = scene->getLights();
+    scene::Arcball *camera        = scene->getArcball();
+    dx::XMFLOAT3    position      = camera->getPosition3f();
+    auto           &renderObjects = scene->getRenderObjects();
+    auto           &lights        = scene->getLights();
 
     ImGui::Begin("Scene");
     if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
@@ -80,17 +80,17 @@ void Editor::render(scene::Scene *const scene)
         {
             if (ImGui::SliderFloat("X", (float *)&position.x, -10.0f, 10.0f))
             {
-                camera->setPosition(position.x, position.y, position.z);
+                // camera->setPosition(position.x, position.y, position.z);
             }
 
             if (ImGui::SliderFloat("Y", (float *)&position.y, -10.0f, 10.0f))
             {
-                camera->setPosition(position.x, position.y, position.z);
+                // camera->setPosition(position.x, position.y, position.z);
             }
 
             if (ImGui::SliderFloat("Z", (float *)&position.z, -10.0f, 10.0f))
             {
-                camera->setPosition(position.x, position.y, position.z);
+                // camera->setPosition(position.x, position.y, position.z);
             }
         }
     }

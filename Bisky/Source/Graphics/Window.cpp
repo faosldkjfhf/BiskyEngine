@@ -145,9 +145,11 @@ LRESULT CALLBACK Window::onWindowMessage(HWND hwnd, UINT msg, WPARAM wParam, LPA
         m_input->OnKeyDown(wParam);
         break;
     case WM_LBUTTONDOWN:
+        SetCapture(m_window);
         m_input->OnLeftMouseDown(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         break;
     case WM_LBUTTONUP:
+        ReleaseCapture();
         m_input->OnLeftMouseUp();
         break;
     case WM_MOUSEMOVE:

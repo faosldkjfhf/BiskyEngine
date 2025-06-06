@@ -16,7 +16,8 @@ namespace bisky::scene
 Scene::Scene(gfx::Window *const window, gfx::Device *const device, std::string_view name)
     : m_name(name), m_device(device), m_window(window)
 {
-    m_camera = std::make_unique<Camera>(window->getAspectRatio(), 0.1f, 100.0f);
+    // m_camera  = std::make_unique<Camera>(window->getAspectRatio(), 0.1f, 100.0f);
+    m_arcball = std::make_unique<Arcball>(window->getAspectRatio(), 0.1f, 100.0f);
     initDefaultScene();
     LOG_INFO("Scene " + std::string(name) + " created");
 }
@@ -25,12 +26,13 @@ Scene::~Scene()
 {
     m_skybox.reset();
     m_renderObjects.clear();
-    m_camera.reset();
+    m_arcball.reset();
+    // m_camera.reset();
 }
 
 void Scene::update(const core::GameTimer *const timer)
 {
-    m_camera->input(timer);
+    // m_camera->input(timer);
 }
 
 const std::vector<std::shared_ptr<RenderObject>> &Scene::getRenderObjects() const
@@ -38,9 +40,14 @@ const std::vector<std::shared_ptr<RenderObject>> &Scene::getRenderObjects() cons
     return m_renderObjects;
 }
 
-Camera *const Scene::getCamera() const
+// Camera *const Scene::getCamera() const
+//{
+//     return m_camera.get();
+// }
+
+Arcball *const Scene::getArcball() const
 {
-    return m_camera.get();
+    return m_arcball.get();
 }
 
 const std::vector<PointLight> &Scene::getLights() const
@@ -55,7 +62,7 @@ Skybox *const Scene::getSkybox() const
 
 void Scene::initDefaultScene()
 {
-    m_camera->setPosition(0.0f, 0.0f, -5.0f);
+    // m_camera->setPosition(0.0f, 0.0f, -5.0f);
 
     if (core::ResourceManager::get().loadMesh(m_device, "DamagedHelmet.glb"))
     {

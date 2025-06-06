@@ -32,6 +32,10 @@
     <None Include="Assets\Models\DamagedHelmet.glb" />
     <None Include="Shaders\Include\Lighting\BlinnPhong.hlsli" />
     <None Include="Shaders\Include\Lighting\PBR.hlsli" />
+    <None Include="Assets\Models\Cube\Cube.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Assets\Models\Cube\Cube.gltf" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\Textures\Skybox\cubemap.dds" />

@@ -12,6 +12,7 @@
 #include "Renderer/FinalRenderPass.hpp"
 #include "Renderer/ForwardRenderer.hpp"
 #include "Renderer/SkyboxRenderPass.hpp"
+#include "Scene/Arcball.hpp"
 #include "Scene/Scene.hpp"
 
 namespace bisky::core
@@ -69,6 +70,9 @@ class Application : public Input
     std::unique_ptr<editor::Editor>   m_editor;
     std::unique_ptr<core::FrameStats> m_frameStats;
     std::unique_ptr<core::GameTimer>  m_timer;
+
+    bool  m_lmbDown           = false;
+    POINT m_lastMousePosition = {};
 };
 
 } // namespace bisky::core

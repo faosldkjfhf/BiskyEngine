@@ -46,17 +46,6 @@ bool Camera::input(const core::GameTimer *const timer)
     return m_viewDirty;
 }
 
-void Camera::reset()
-{
-    dx::XMStoreFloat3(&m_position, dx::FXMVECTOR{0.0f, 0.0f, 0.0f});
-    dx::XMStoreFloat3(&m_forward, dx::FXMVECTOR{0.0f, 0.0f, 1.0f});
-    dx::XMStoreFloat3(&m_right, dx::FXMVECTOR{1.0f, 0.0f, 0.0f});
-    dx::XMStoreFloat3(&m_up, dx::FXMVECTOR{0.0f, 1.0f, 0.0f});
-    m_viewDirty = true;
-
-    updateViewMatrix();
-}
-
 void Camera::updateViewMatrix()
 {
     if (m_viewDirty)
@@ -73,6 +62,17 @@ void Camera::updateViewMatrix()
         XMStoreFloat4x4(&m_view, dx::XMMatrixLookAtLH(p, dx::XMVectorAdd(p, f), u));
         m_viewDirty = false;
     }
+}
+
+void Camera::reset()
+{
+    dx::XMStoreFloat3(&m_position, dx::FXMVECTOR{0.0f, 0.0f, 0.0f});
+    dx::XMStoreFloat3(&m_forward, dx::FXMVECTOR{0.0f, 0.0f, 1.0f});
+    dx::XMStoreFloat3(&m_right, dx::FXMVECTOR{1.0f, 0.0f, 0.0f});
+    dx::XMStoreFloat3(&m_up, dx::FXMVECTOR{0.0f, 1.0f, 0.0f});
+    m_viewDirty = true;
+
+    updateViewMatrix();
 }
 
 void Camera::setPosition(float x, float y, float z)
