@@ -49,10 +49,15 @@ VOutput VsMain(uint vertexId : SV_VertexID)
 
 float4 PsMain(VOutput input) : SV_Target
 {
-    Texture2D diffuse = ResourceDescriptorHeap[renderResource.diffuseTextureIndex];
-    Texture2D metalRoughness = ResourceDescriptorHeap[renderResource.metallicRoughnessTextureIndex];
+    Texture2D<float4> diffuse = ResourceDescriptorHeap[renderResource.diffuseTextureIndex];
+    Texture2D<float4> metalRoughness = ResourceDescriptorHeap[renderResource.metallicRoughnessTextureIndex];
     
-    float3 color = diffuse.Sample(linearWrapSampler, input.texCoord).xyz;
+    float3 color = float3(1.0, 1.0, 1.0);
+    if (renderResource.diffuseTextureIndex >= 0)
+    {
+        color = diffuse.Sample(linearWrapSampler, input.texCoord).xyz;
+    }
+
     
     float3 Lo = float3(0.0, 0.0, 0.0);
     for (uint i = 0; i < lightBuffer.numLights; i++)

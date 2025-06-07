@@ -46,4 +46,5 @@ namespace wrl = Microsoft::WRL;
 namespace dx  = DirectX;
 
 #include "Core/Logger.hpp"
+#include "Core/StringHelpers.hpp"
 #include "Graphics/ResourceUpload.hpp"

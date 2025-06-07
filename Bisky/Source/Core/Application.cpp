@@ -60,7 +60,8 @@ void Application::run()
         {
             m_backend->getDirectCommandQueue()->flush();
             m_window->resize(m_backend.get());
-            m_scene->getArcball()->setLens(m_window->getAspectRatio(), 0.1f, 100.0f);
+            m_scene->getCamera()->setLens(m_window->getAspectRatio(), 0.1f, 100.0f);
+            m_scene->getOrbitCamera()->resize(m_window->getWidth(), m_window->getHeight());
         }
 
         // -------------- reset the command list --------------
@@ -133,6 +134,10 @@ void Application::run()
     LOG_INFO("Exiting");
 }
 
+/*
+ * Should be correct.
+ * Maps x and y screen coordinates to ndc space.
+ */
 inline static dx::XMFLOAT2 convertToNdc(gfx::Window *const window, int x, int y)
 {
     dx::XMFLOAT2 ndc{};
@@ -152,25 +157,21 @@ void Application::OnMouseMove(WPARAM key, int x, int y)
 {
     if (m_lmbDown)
     {
-        auto *arcball = m_scene->getArcball();
-
-        auto end   = convertToNdc(m_window.get(), x, y);
-        auto start = convertToNdc(m_window.get(), m_lastMousePosition.x, m_lastMousePosition.y);
-        arcball->rotate(start, end);
-
-        m_lastMousePosition = {.x = x, .y = y};
     }
+
+    m_scene->getOrbitCamera()->onMove(x, y);
 }
 
 void Application::OnLeftMouseDown(WPARAM key, int x, int y)
 {
-    m_lmbDown           = true;
-    m_lastMousePosition = {.x = x, .y = y};
+    m_lmbDown = true;
+    m_scene->getOrbitCamera()->onBegin(x, y);
 }
 
 void Application::OnLeftMouseUp()
 {
     m_lmbDown = false;
+    m_scene->getOrbitCamera()->onEnd();
 }
 
 void Application::OnKeyDown(WPARAM key)

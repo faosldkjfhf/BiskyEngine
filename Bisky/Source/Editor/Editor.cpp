@@ -68,10 +68,10 @@ void Editor::beginFrame()
 
 void Editor::render(scene::Scene *const scene)
 {
-    scene::Arcball *camera        = scene->getArcball();
-    dx::XMFLOAT3    position      = camera->getPosition3f();
-    auto           &renderObjects = scene->getRenderObjects();
-    auto           &lights        = scene->getLights();
+    scene::Camera *camera        = scene->getCamera();
+    dx::XMFLOAT3   position      = camera->getPosition3f();
+    auto          &renderObjects = scene->getRenderObjects();
+    auto          &lights        = scene->getLights();
 
     ImGui::Begin("Scene");
     if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
@@ -92,6 +92,20 @@ void Editor::render(scene::Scene *const scene)
             {
                 // camera->setPosition(position.x, position.y, position.z);
             }
+        }
+
+        ImGui::SeparatorText("View Matrix");
+        {
+            /*
+             * Display as row-major.
+             */
+            dx::XMFLOAT4X4 view;
+            XMStoreFloat4x4(&view, camera->getView());
+
+            ImGui::Text("%f %f %f %f", view._11, view._12, view._13, view._14);
+            ImGui::Text("%f %f %f %f", view._21, view._22, view._23, view._24);
+            ImGui::Text("%f %f %f %f", view._31, view._32, view._33, view._34);
+            ImGui::Text("%f %f %f %f", view._41, view._42, view._43, view._44);
         }
     }
     if (ImGui::CollapsingHeader("Objects", ImGuiTreeNodeFlags_DefaultOpen))

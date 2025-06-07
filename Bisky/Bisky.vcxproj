@@ -152,6 +152,7 @@
     <ClInclude Include="Include\Core\Input.hpp" />
     <ClInclude Include="Include\Core\Logger.hpp" />
     <ClInclude Include="Include\Core\ResourceManager.hpp" />
+    <ClInclude Include="Include\Core\StringHelpers.hpp" />
     <ClInclude Include="Include\Editor\Editor.hpp" />
     <ClInclude Include="Include\Graphics\Allocator.hpp" />
     <ClInclude Include="Include\Graphics\Buffer.hpp" />
@@ -177,11 +178,11 @@
     <ClInclude Include="Include\Renderer\ForwardRenderer.hpp" />
     <ClInclude Include="Include\Renderer\RenderLayer.hpp" />
     <ClInclude Include="Include\Renderer\SkyboxRenderPass.hpp" />
-    <ClInclude Include="Include\Scene\Arcball.hpp" />
     <ClInclude Include="Include\Scene\Camera.hpp" />
     <ClInclude Include="Include\Scene\Lights.hpp" />
     <ClInclude Include="Include\Scene\Material.hpp" />
     <ClInclude Include="Include\Scene\Mesh.hpp" />
+    <ClInclude Include="Include\Scene\ArcballCamera.hpp" />
     <ClInclude Include="Include\Scene\RenderObject.hpp" />
     <ClInclude Include="Include\Scene\Scene.hpp" />
     <ClInclude Include="Include\Scene\ScreenQuad.hpp" />
@@ -198,6 +199,7 @@
     <ClCompile Include="Source\Core\Input.cpp" />
     <ClCompile Include="Source\Core\Logger.cpp" />
     <ClCompile Include="Source\Core\ResourceManager.cpp" />
+    <ClCompile Include="Source\Core\StringHelpers.cpp" />
     <ClCompile Include="Source\Editor\Editor.cpp" />
     <ClCompile Include="Source\Graphics\Allocator.cpp" />
     <ClCompile Include="Source\Graphics\Buffer.cpp" />
@@ -217,7 +219,7 @@
     <ClCompile Include="Source\Renderer\FinalRenderPass.cpp" />
     <ClCompile Include="Source\Renderer\ForwardRenderer.cpp" />
     <ClCompile Include="Source\Renderer\SkyboxRenderPass.cpp" />
-    <ClCompile Include="Source\Scene\Arcball.cpp" />
+    <ClCompile Include="Source\Scene\ArcballCamera.cpp" />
     <ClCompile Include="Source\Scene\Camera.cpp" />
     <ClCompile Include="Source\Scene\Mesh.cpp" />
     <ClCompile Include="Source\Scene\Scene.cpp" />

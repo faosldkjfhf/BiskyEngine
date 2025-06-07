@@ -6,6 +6,7 @@
 #include "Core/Input.hpp"
 #include "Core/Logger.hpp"
 #include "Core/ResourceManager.hpp"
+#include "Core/StringHelpers.hpp"
 
 #include "Editor/Editor.hpp"
 

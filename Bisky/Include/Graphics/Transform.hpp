@@ -5,6 +5,11 @@
 namespace bisky::gfx
 {
 
+/*
+ * A basic set of transforms (scaling, rotation, translation).
+ *
+ * FIXME: Currently suffers from gimbal lock since using euler angles.
+ */
 class Transform
 {
   public:

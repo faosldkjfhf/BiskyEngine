@@ -137,6 +137,8 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
             {
                 newMat->diffuseTexture = textures[image].get();
             }
+
+            XMStoreFloat3(&newMat->diffuse, dx::FXMVECTOR{1.0f, 0.0f, 0.0f});
         }
         if (mat.pbrData.metallicRoughnessTexture.has_value())
         {

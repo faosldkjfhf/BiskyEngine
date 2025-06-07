@@ -70,8 +70,7 @@ void ForwardRenderer::draw(
     cmdList->setRootSignature(m_backend->getRootSignature("opaque"));
 
     // -------------- allocate scene buffer --------------
-    auto *camera = scene->getArcball();
-    // camera->updateViewMatrix();
+    auto             *camera      = scene->getOrbitCamera();
     gfx::Allocation   sceneAlloc  = frameResource->resourceAllocator->allocate(sizeof(gfx::SceneBuffer));
     gfx::SceneBuffer *sceneBuffer = reinterpret_cast<gfx::SceneBuffer *>(sceneAlloc.cpuBase);
     XMStoreFloat4x4(&sceneBuffer->view, camera->getView());

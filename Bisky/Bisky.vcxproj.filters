@@ -141,7 +141,10 @@
     <ClInclude Include="Include\Scene\Skybox.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Scene\Arcball.hpp">
+    <ClInclude Include="Include\Core\StringHelpers.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Scene\ArcballCamera.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -236,7 +239,10 @@
     <ClCompile Include="Source\Scene\Skybox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Scene\Arcball.cpp">
+    <ClCompile Include="Source\Core\StringHelpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\ArcballCamera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
