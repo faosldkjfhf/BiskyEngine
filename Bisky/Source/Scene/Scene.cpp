@@ -16,13 +16,13 @@ namespace bisky::scene
 Scene::Scene(gfx::Window *const window, gfx::Device *const device, std::string_view name)
     : m_name(name), m_device(device), m_window(window)
 {
-    m_camera      = std::make_unique<Camera>(window->getAspectRatio(), 0.1f, 100.0f);
-    m_orbitCamera = std::make_unique<ArcballCamera>(window->getWidth(), window->getHeight());
+    m_camera        = std::make_unique<Camera>(window->getAspectRatio(), 0.1f, 100.0f);
+    m_arcballCamera = std::make_unique<ArcballCamera>(window->getWidth(), window->getHeight());
 
-    LOG_INFO(core::float4(m_orbitCamera->getRight()));
-    LOG_INFO(core::float4(m_orbitCamera->getUp()));
-    LOG_INFO(core::float4(m_orbitCamera->getForward()));
-    LOG_INFO(core::float4(m_orbitCamera->getPosition()));
+    LOG_INFO(core::float4(m_arcballCamera->getRight()));
+    LOG_INFO(core::float4(m_arcballCamera->getUp()));
+    LOG_INFO(core::float4(m_arcballCamera->getForward()));
+    LOG_INFO(core::float4(m_arcballCamera->getPosition()));
 
     initDefaultScene();
     LOG_INFO("Scene " + std::string(name) + " created");
@@ -32,7 +32,7 @@ Scene::~Scene()
 {
     m_skybox.reset();
     m_renderObjects.clear();
-    m_orbitCamera.reset();
+    m_arcballCamera.reset();
     m_camera.reset();
 }
 
@@ -52,9 +52,9 @@ Camera *const Scene::getCamera() const
     return m_camera.get();
 }
 
-ArcballCamera *const Scene::getOrbitCamera() const
+ArcballCamera *const Scene::getArcballCamera() const
 {
-    return m_orbitCamera.get();
+    return m_arcballCamera.get();
 }
 
 const std::vector<PointLight> &Scene::getLights() const
@@ -74,9 +74,9 @@ void Scene::initDefaultScene()
     if (core::ResourceManager::get().loadMesh(m_device, "DamagedHelmet.glb"))
     {
         auto ro  = m_renderObjects.emplace_back(std::make_shared<RenderObject>());
-        ro->mesh = core::ResourceManager::get().getMesh("Cube");
+        ro->mesh = core::ResourceManager::get().getMesh("mesh_helmet_LP_13930damagedHelmet");
         ro->transform->setScale(1.0f, 1.0f, 1.0f);
-        ro->transform->setRotation(0.0f, 0.0f, 0.0f);
+        ro->transform->setRotation(90.0f, 0.0f, 180.0f);
         LOG_INFO("Added new render object");
     }
 

@@ -61,7 +61,7 @@ void Application::run()
             m_backend->getDirectCommandQueue()->flush();
             m_window->resize(m_backend.get());
             m_scene->getCamera()->setLens(m_window->getAspectRatio(), 0.1f, 100.0f);
-            m_scene->getOrbitCamera()->resize(m_window->getWidth(), m_window->getHeight());
+            m_scene->getArcballCamera()->resize(m_window->getWidth(), m_window->getHeight());
         }
 
         // -------------- reset the command list --------------
@@ -159,19 +159,19 @@ void Application::OnMouseMove(WPARAM key, int x, int y)
     {
     }
 
-    m_scene->getOrbitCamera()->onMove(x, y);
+    m_scene->getArcballCamera()->onMove(x, y);
 }
 
 void Application::OnLeftMouseDown(WPARAM key, int x, int y)
 {
     m_lmbDown = true;
-    m_scene->getOrbitCamera()->onBegin(x, y);
+    m_scene->getArcballCamera()->onBegin(x, y);
 }
 
 void Application::OnLeftMouseUp()
 {
     m_lmbDown = false;
-    m_scene->getOrbitCamera()->onEnd();
+    m_scene->getArcballCamera()->onEnd();
 }
 
 void Application::OnKeyDown(WPARAM key)

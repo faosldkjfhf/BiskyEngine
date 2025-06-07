@@ -45,7 +45,7 @@ class Scene
   public: // Getter functions
     const std::vector<std::shared_ptr<RenderObject>> &getRenderObjects() const;
     Camera *const                                     getCamera() const;
-    ArcballCamera *const                              getOrbitCamera() const;
+    ArcballCamera *const                              getArcballCamera() const;
     const std::vector<PointLight>                    &getLights() const;
     Skybox *const                                     getSkybox() const;
 
@@ -59,7 +59,7 @@ class Scene
     std::vector<std::shared_ptr<RenderObject>> m_renderObjects;
     std::unique_ptr<Skybox>                    m_skybox;
     std::unique_ptr<Camera>                    m_camera; // every scene has a camera - later hold more cameras
-    std::unique_ptr<ArcballCamera>             m_orbitCamera;
+    std::unique_ptr<ArcballCamera>             m_arcballCamera;
     std::vector<PointLight>                    m_lights;
 };
 

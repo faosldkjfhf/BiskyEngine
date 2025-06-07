@@ -58,7 +58,6 @@ float4 PsMain(VOutput input) : SV_Target
         color = diffuse.Sample(linearWrapSampler, input.texCoord).xyz;
     }
 
-    
     float3 Lo = float3(0.0, 0.0, 0.0);
     for (uint i = 0; i < lightBuffer.numLights; i++)
     {

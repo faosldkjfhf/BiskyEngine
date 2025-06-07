@@ -32,7 +32,7 @@ void SkyboxRenderPass::draw(
 {
     auto *cmdList = frameResource->graphicsCommandList.get();
     auto *skybox  = scene->getSkybox();
-    auto *camera  = scene->getOrbitCamera();
+    auto *camera  = scene->getArcballCamera();
     if (skybox)
     {
         cmdList->setPipelineState(m_device->getPipelineState("skyboxRenderPass"));
