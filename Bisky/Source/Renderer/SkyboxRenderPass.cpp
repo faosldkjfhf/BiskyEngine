@@ -44,7 +44,7 @@ void SkyboxRenderPass::draw(
             (SkyboxRenderPass::RenderResource *)renderResourceAlloc.cpuBase;
         renderResource->vertexBufferIndex = gfx::Buffer::GetSrvIndex(m_cube->mesh->vertexBuffer.get());
         renderResource->textureIndex      = gfx::Texture::GetSrvIndex(skybox->getTexture());
-        cmdList->set32BitConstants(0, 2u, renderResource);
+        cmdList->set32BitConstants(1u, 2u, renderResource);
 
         cmdList->setIndexBuffer({
             .bufferLocation = m_cube->mesh->indexBuffer->resource->GetGPUVirtualAddress(),
@@ -60,7 +60,7 @@ void SkyboxRenderPass::draw(
         XMStoreFloat4x4(&sceneBuffer->projection, camera->getProjection());
         XMStoreFloat4x4(&sceneBuffer->viewProjection, camera->getView() * camera->getProjection());
         XMStoreFloat4(&sceneBuffer->viewPosition, camera->getPosition());
-        cmdList->setConstantBufferView(1, sceneBufferAlloc.gpuBase);
+        cmdList->setConstantBufferView(0u, sceneBufferAlloc.gpuBase);
 
         for (auto &submesh : m_cube->mesh->submeshes)
         {
@@ -72,8 +72,8 @@ void SkyboxRenderPass::draw(
 void SkyboxRenderPass::initRootSignature()
 {
     gfx::RootParameters parameters{};
-    parameters.add32BitConstants(0, 2);
-    parameters.addDescriptor(1, D3D12_ROOT_PARAMETER_TYPE_CBV);
+    parameters.addDescriptor(0u, D3D12_ROOT_PARAMETER_TYPE_CBV);
+    parameters.add32BitConstants(1u, 2);
     parameters.addStaticSampler({
         .Filter           = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR,
         .AddressU         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,

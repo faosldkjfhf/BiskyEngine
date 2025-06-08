@@ -24,12 +24,13 @@ struct RenderResource
     int sceneBufferIndex;
     int diffuseTextureIndex;
     int metallicRoughnessTextureIndex;
+    int normalTextureIndex;
 };
 
-ConstantBuffer<RenderResource> renderResource : register(b0);
-ConstantBuffer<ObjectBuffer> objectBuffer : register(b1);
-ConstantBuffer<LightBuffer> lightBuffer : register(b2);
-ConstantBuffer<SceneBuffer> sceneBuffer : register(b3);
+ConstantBuffer<SceneBuffer> sceneBuffer : register(b0);
+ConstantBuffer<LightBuffer> lightBuffer : register(b1);
+ConstantBuffer<ObjectBuffer> objectBuffer : register(b2);
+ConstantBuffer<RenderResource> renderResource : register(b3);
 
 VOutput VsMain(uint vertexId : SV_VertexID)
 {
@@ -51,6 +52,7 @@ float4 PsMain(VOutput input) : SV_Target
 {
     Texture2D<float4> diffuse = ResourceDescriptorHeap[renderResource.diffuseTextureIndex];
     Texture2D<float4> metalRoughness = ResourceDescriptorHeap[renderResource.metallicRoughnessTextureIndex];
+    Texture2D<float4> normal = ResourceDescriptorHeap[renderResource.normalTextureIndex];
     
     float3 color = float3(1.0, 1.0, 1.0);
     if (renderResource.diffuseTextureIndex >= 0)

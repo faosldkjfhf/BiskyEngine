@@ -7,17 +7,26 @@ namespace bisky::gfx
 
 int Buffer::GetSrvIndex(const Buffer *const buffer)
 {
-    return buffer->srvDescriptor.index;
+    if (buffer)
+        return buffer->srvDescriptor.index;
+
+    return -1;
 }
 
 int Buffer::GetUavIndex(const Buffer *const buffer)
 {
-    return buffer->uavDescriptor.index;
+    if (buffer)
+        return buffer->uavDescriptor.index;
+
+    return -1;
 }
 
 int Buffer::GetCbvIndex(const Buffer *const buffer)
 {
-    return buffer->cbvDescriptor.index;
+    if (buffer)
+        return buffer->cbvDescriptor.index;
+
+    return -1;
 }
 
 Buffer::Buffer()

@@ -29,7 +29,7 @@ struct ObjectBuffer
 {
     dx::XMFLOAT4X4 world;
     dx::XMFLOAT4X4 inverseWorld;
-    dx::XMFLOAT4X4 tranposeInverseWorld;
+    dx::XMFLOAT4X4 transposeInverseWorld;
 };
 
 struct LightBuffer
@@ -56,6 +56,7 @@ struct RenderResource
     int32_t sceneBufferIndex              = -1;
     int32_t diffuseTextureIndex           = -1;
     int32_t metallicRoughnessTextureIndex = -1;
+    int32_t normalTextureIndex            = -1;
 };
 
 } // namespace bisky::gfx

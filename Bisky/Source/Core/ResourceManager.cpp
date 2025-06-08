@@ -149,6 +149,14 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
                 newMat->metallicRoughnessTexture = textures[image].get();
             }
         }
+        if (mat.normalTexture.has_value())
+        {
+            size_t image = asset->textures[mat.normalTexture.value().textureIndex].imageIndex.value();
+            if (image < textures.size())
+            {
+                newMat->normalTexture = textures[image].get();
+            }
+        }
 
         materials.push_back(newMat);
         m_materials[mat.name.data()] = newMat;
@@ -157,11 +165,13 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
     // -------------- load the vertices and indices --------------
     std::vector<scene::Vertex> vertices;
     std::vector<uint32_t>      indices;
+    bool                       includesTangents = false;
     for (auto &&mesh : asset->meshes)
     {
         // -------------- reset vertices and indices --------------
         vertices.clear();
         indices.clear();
+        includesTangents = false;
 
         // -------------- create a mesh --------------
         std::unique_ptr<scene::Mesh> newMesh = std::make_unique<scene::Mesh>();
@@ -248,7 +258,6 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
             }
 
             // -------------- get tangents --------------
-            // TODO: calculate tangents if not included
             {
                 auto tangents = p.findAttribute("TANGENT");
                 if (tangents != p.attributes.end())
@@ -260,9 +269,26 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
                             vertices[submesh.baseVertexLocation + index].tangent = tangent;
                         }
                     );
+
+                    includesTangents = true;
                 }
             }
         }
+
+        // TODO: calculate tangents if not included
+        // if (!includesTangents)
+        //{
+        //    for (size_t i = 0; i < indices.size(); i += 3)
+        //    {
+        //        auto i0 = indices[i];
+        //        auto i1 = indices[i + 1];
+        //        auto i2 = indices[i + 2];
+
+        //        auto v0 = vertices[i0];
+        //        auto v1 = vertices[i1];
+        //        auto v2 = vertices[i2];
+        //    }
+        //}
 
         // -------------- begin resource upload block --------------
         gfx::ResourceUpload upload(device);

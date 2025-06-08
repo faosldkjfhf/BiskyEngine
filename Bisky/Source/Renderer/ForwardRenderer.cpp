@@ -77,7 +77,7 @@ void ForwardRenderer::draw(
     XMStoreFloat4x4(&sceneBuffer->projection, camera->getProjection());
     XMStoreFloat4x4(&sceneBuffer->viewProjection, camera->getView() * camera->getProjection());
     XMStoreFloat4(&sceneBuffer->viewPosition, camera->getPosition());
-    cmdList->setConstantBufferView(3, sceneAlloc.gpuBase);
+    cmdList->setConstantBufferView(0u, sceneAlloc.gpuBase);
 
     // -------------- allocate lights --------------
     auto             &lights      = scene->getLights();
@@ -88,7 +88,7 @@ void ForwardRenderer::draw(
         lightBuffer->lights[i] = lights[i];
     }
     lightBuffer->numLights = static_cast<uint32_t>(min(lights.size(), 10));
-    cmdList->setConstantBufferView(2, alloc.gpuBase);
+    cmdList->setConstantBufferView(1u, alloc.gpuBase);
 
     for (auto &object : scene->getRenderObjects())
     {
@@ -113,15 +113,16 @@ void ForwardRenderer::draw(
         gfx::ObjectBuffer *ptr         = (gfx::ObjectBuffer *)objectAlloc.cpuBase;
         XMStoreFloat4x4(&ptr->world, object->transform->getLocalToWorld());
         XMStoreFloat4x4(&ptr->inverseWorld, dx::XMMatrixInverse(nullptr, object->transform->getLocalToWorld()));
-        XMStoreFloat4x4(&ptr->tranposeInverseWorld, dx::XMMatrixTranspose(XMLoadFloat4x4(&ptr->inverseWorld)));
-        cmdList->setConstantBufferView(1, objectAlloc.gpuBase);
+        XMStoreFloat4x4(&ptr->transposeInverseWorld, dx::XMMatrixTranspose(XMLoadFloat4x4(&ptr->inverseWorld)));
+        cmdList->setConstantBufferView(2u, objectAlloc.gpuBase);
 
         for (auto &submesh : mesh->submeshes)
         {
             // ------------- finish setting 32-bit constants -------------
             rr->diffuseTextureIndex           = gfx::Texture::GetSrvIndex(submesh.material->diffuseTexture);
             rr->metallicRoughnessTextureIndex = gfx::Texture::GetSrvIndex(submesh.material->metallicRoughnessTexture);
-            cmdList->set32BitConstants(0, 4u, reinterpret_cast<void *>(rr));
+            rr->normalTextureIndex            = gfx::Texture::GetSrvIndex(submesh.material->normalTexture);
+            cmdList->set32BitConstants(3u, 5u, reinterpret_cast<void *>(rr));
 
             // -------------- draw submesh --------------
             cmdList->drawIndexedInstanced(submesh);
@@ -139,10 +140,10 @@ void ForwardRenderer::draw(
 void ForwardRenderer::initRootSignatures()
 {
     gfx::RootParameters parameters{};
-    parameters.add32BitConstants(0, 4);
-    parameters.addDescriptor(1, D3D12_ROOT_PARAMETER_TYPE_CBV);
-    parameters.addDescriptor(2, D3D12_ROOT_PARAMETER_TYPE_CBV);
-    parameters.addDescriptor(3, D3D12_ROOT_PARAMETER_TYPE_CBV);
+    parameters.addDescriptor(0u, D3D12_ROOT_PARAMETER_TYPE_CBV);
+    parameters.addDescriptor(1u, D3D12_ROOT_PARAMETER_TYPE_CBV);
+    parameters.addDescriptor(2u, D3D12_ROOT_PARAMETER_TYPE_CBV);
+    parameters.add32BitConstants(3u, 5u);
     parameters.addStaticSampler({
         .Filter           = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR,
         .AddressU         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
@@ -152,8 +153,8 @@ void ForwardRenderer::initRootSignatures()
         .ComparisonFunc   = D3D12_COMPARISON_FUNC_ALWAYS,
         .MinLOD           = 0.0f,
         .MaxLOD           = D3D12_FLOAT32_MAX,
-        .ShaderRegister   = 0,
-        .RegisterSpace    = 0,
+        .ShaderRegister   = 0u,
+        .RegisterSpace    = 0u,
         .ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL,
     });
     m_backend->addRootSignature("opaque", parameters);

@@ -20,8 +20,8 @@ struct RenderResource
     int textureIndex;
 };
 
-ConstantBuffer<RenderResource> renderResource : register(b0);
-ConstantBuffer<SceneBuffer> sceneBuffer: register(b1);
+ConstantBuffer<SceneBuffer> sceneBuffer: register(b0);
+ConstantBuffer<RenderResource> renderResource : register(b1);
 
 VsOutput VsMain(uint vertexId : SV_VertexID)
 {

@@ -36,6 +36,7 @@
 #include "Renderer/RenderLayer.hpp"
 #include "Renderer/SkyboxRenderPass.hpp"
 
+#include "Scene/ArcballCamera.hpp"
 #include "Scene/Camera.hpp"
 #include "Scene/Lights.hpp"
 #include "Scene/Material.hpp"
