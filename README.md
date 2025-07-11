@@ -8,14 +8,17 @@ Currently a work in progress and for me to learn and play with D3D12.
 
 - [x] Filetypes
   - [x] GLTF 2.0
+  - [ ] FBX
 - [ ] Lighting
   - [x] Blinn-Phong
   - [ ] Shadow mapping
     - [ ] Percentage-closer filtering
   - [ ] PBR
-  - [ ] Cubemap/Image-Based Lighting
+  - [X] Cubemap
+  - [ ] Image Based Lighting
   - [ ] HDR/Tonemapping
-  - [ ] Gamma correction
+    - [X] Reinhard
+  - [X] Gamma correction
   - [ ] Bloom
 - [ ] Editor
   - [ ] Switch between preloaded models
