@@ -54,11 +54,6 @@ void Device::beginFrame(GraphicsCommandList *const cmdList)
 void Device::endFrame(GraphicsCommandList *const cmdList)
 {
     cmdList->addBarrier(getRenderTargetBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-    cmdList->dispatchBarriers();
-}
-
-void Device::endHdrFrame(GraphicsCommandList *const cmdList)
-{
     cmdList->addBarrier(getHdrRenderTargetBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
     cmdList->dispatchBarriers();
 }

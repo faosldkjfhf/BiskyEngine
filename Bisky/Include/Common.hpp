@@ -16,9 +16,12 @@
 #include <fastgltf/core.hpp>
 #include <fastgltf/dxmath_element_traits.hpp>
 #include <fastgltf/tools.hpp>
-
 #include <fmt/color.h>
 #include <fmt/core.h>
+#include <imgui.h>
+#include <imgui_impl_dx12.h>
+#include <imgui_impl_win32.h>
+#include <stb_image.h>
 
 #include <DirectXMath.h>
 #include <d3d12.h>
@@ -33,8 +36,6 @@
 #include <d3d12sdklayers.h>
 #include <dxgidebug.h>
 #endif
-
-#include <stb_image.h>
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Editor/IRenderable.hpp"
 #include "Graphics/Constants.hpp"
 #include "Graphics/Device.hpp"
 #include "Graphics/Texture.hpp"
@@ -28,7 +29,7 @@ class Window;
 namespace bisky::scene
 {
 
-class Scene
+class Scene : public editor::IRenderable
 {
   public:
     explicit Scene(gfx::Window *const window, gfx::Device *const device, std::string_view name);
@@ -40,7 +41,8 @@ class Scene
     const Scene &&operator=(const Scene &&) = delete;
 
   public: // Public functions
-    void update(const core::GameTimer *const timer);
+    void         update(const core::GameTimer *const timer);
+    virtual void draw() override;
 
   public: // Getter functions
     const std::vector<std::shared_ptr<RenderObject>> &getRenderObjects() const;

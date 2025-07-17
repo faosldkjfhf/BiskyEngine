@@ -2,7 +2,6 @@
 
 #include "Common.hpp"
 
-#include "Core/Application.hpp"
 #include "Core/FrameStats.hpp"
 #include "Core/GameTimer.hpp"
 #include "Core/Input.hpp"

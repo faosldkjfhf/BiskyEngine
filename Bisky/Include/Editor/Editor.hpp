@@ -1,10 +1,10 @@
 #pragma once
 
+#include "Editor/IRenderable.hpp"
+#include "Graphics/DescriptorHeap.hpp"
 #include <imgui.h>
 #include <imgui_impl_dx12.h>
 #include <imgui_impl_win32.h>
-
-#include "Graphics/DescriptorHeap.hpp"
 
 namespace bisky::gfx
 {
@@ -116,11 +116,11 @@ class Editor
     void beginFrame();
 
     /*
-     * Renders scene data to a window.
+     * Draws an IRenderable object.
      *
-     * @param scene The scene to render data for.
+     * @param object The object to render UI for.
      */
-    void render(scene::Scene *const scene);
+    void draw(IRenderable *object);
 
     /*
      * Ends a draw pass and submits it to the command queue.

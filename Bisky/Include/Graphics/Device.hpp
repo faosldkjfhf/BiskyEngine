@@ -49,8 +49,6 @@ class Device
 
     void endFrame(GraphicsCommandList *const cmdList);
 
-    void endHdrFrame(GraphicsCommandList *const cmdList);
-
     /*
      * Resizes the swap chain and the buffers.
      * This is automatically called by the window.

@@ -146,7 +146,6 @@
   <ItemGroup>
     <ClInclude Include="Include\Bisky.hpp" />
     <ClInclude Include="Include\Common.hpp" />
-    <ClInclude Include="Include\Core\Application.hpp" />
     <ClInclude Include="Include\Core\FrameStats.hpp" />
     <ClInclude Include="Include\Core\GameTimer.hpp" />
     <ClInclude Include="Include\Core\Input.hpp" />
@@ -165,6 +164,7 @@
     <ClInclude Include="Include\Graphics\DescriptorHeap.hpp" />
     <ClInclude Include="Include\Graphics\Device.hpp" />
     <ClInclude Include="Include\Graphics\FrameResource.hpp" />
+    <ClInclude Include="Include\Graphics\GpuResources.hpp" />
     <ClInclude Include="Include\Graphics\GraphicsCommandList.hpp" />
     <ClInclude Include="Include\Graphics\PipelineState.hpp" />
     <ClInclude Include="Include\Graphics\Resources.hpp" />
@@ -195,7 +195,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\Core\Application.cpp" />
     <ClCompile Include="Source\Core\GameTimer.cpp" />
     <ClCompile Include="Source\Core\Input.cpp" />
     <ClCompile Include="Source\Core\Logger.cpp" />
