@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Common.hpp"
 #include "Graphics/Resources.hpp"
 #include "Graphics/ShaderCompiler.hpp"
+#include <wrl.h>
 
 namespace bisky::gfx
 {
@@ -27,7 +27,7 @@ class PipelineState
   private:
     explicit PipelineState() = default;
 
-    wrl::ComPtr<ID3D12PipelineState> m_pipelineState;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
 };
 
 } // namespace bisky::gfx

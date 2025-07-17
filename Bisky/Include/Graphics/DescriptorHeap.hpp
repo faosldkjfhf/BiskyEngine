@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Common.hpp"
-#include "Descriptor.hpp"
+#include "Graphics/Descriptor.hpp"
+#include <wrl.h>
 
 namespace bisky::gfx
 {
@@ -44,8 +44,10 @@ class DescriptorHeap
      * @param numDescriptors The maximum number of descriptors in the heap.
      * @param flags The flag to set.
      */
-    explicit DescriptorHeap(ID3D12Device10 *device, DescriptorType type, uint32_t numDescriptors,
-                            DescriptorFlags flags = DescriptorFlags::None);
+    explicit DescriptorHeap(
+        ID3D12Device10 *device, DescriptorType type, uint32_t numDescriptors,
+        DescriptorFlags flags = DescriptorFlags::None
+    );
 
     /*
      * Resets the descriptor heap.
@@ -96,12 +98,12 @@ class DescriptorHeap
     Descriptor allocate();
 
   private:
-    wrl::ComPtr<ID3D12DescriptorHeap> m_heap;
-    D3D12_CPU_DESCRIPTOR_HANDLE       m_cpuHeapStart;
-    D3D12_GPU_DESCRIPTOR_HANDLE       m_gpuHeapStart;
-    uint32_t                          m_descriptorSize = 0u;
-    uint32_t                          m_capacity       = 0u;
-    uint32_t                          m_at             = 0u;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_heap;
+    D3D12_CPU_DESCRIPTOR_HANDLE                  m_cpuHeapStart;
+    D3D12_GPU_DESCRIPTOR_HANDLE                  m_gpuHeapStart;
+    uint32_t                                     m_descriptorSize = 0u;
+    uint32_t                                     m_capacity       = 0u;
+    uint32_t                                     m_at             = 0u;
 };
 
 } // namespace bisky::gfx

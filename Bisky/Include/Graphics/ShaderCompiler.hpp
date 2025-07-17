@@ -1,6 +1,11 @@
 #pragma once
 
-#include "Common.hpp"
+#include <dxcapi.h>
+#include <optional>
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <wrl.h>
 
 namespace bisky::gfx
 {
@@ -14,11 +19,20 @@ enum class ShaderType
     Geometry,
 };
 
+struct Shader
+{
+    Microsoft::WRL::ComPtr<IDxcBlob>      shader                = {};
+    std::unordered_map<std::string, UINT> rootParameterIndexMap = {};
+    std::vector<D3D12_ROOT_PARAMETER>     rootParameters        = {};
+};
+
 namespace ShaderCompiler
 {
 
-bool compile(const ShaderType &shaderType, const std::filesystem::path &filename, const std::wstring_view entryPoint,
-             wrl::ComPtr<IDxcBlob> &resultBlob, wrl::ComPtr<IDxcBlob> &errorBlob);
+bool compile(
+    const ShaderType &shaderType, const std::filesystem::path &filename, const std::wstring_view entryPoint,
+    Microsoft::WRL::ComPtr<IDxcBlob> &resultBlob, Microsoft::WRL::ComPtr<IDxcBlob> &errorBlob
+);
 
 }
 

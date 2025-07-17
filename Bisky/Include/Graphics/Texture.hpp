@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Common.hpp"
 #include "Graphics/Descriptor.hpp"
+#include <wrl.h>
 
 namespace bisky::gfx
 {
@@ -33,11 +33,11 @@ struct Texture
 {
     static int32_t GetSrvIndex(const Texture *const texture);
 
-    wrl::ComPtr<ID3D12Resource> resource;
-    gfx::Descriptor             srvDescriptor = {};
-    gfx::Descriptor             uavDescriptor = {};
-    gfx::Descriptor             rtvDescriptor = {};
-    gfx::Descriptor             dsvDescriptor = {};
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+    gfx::Descriptor                        srvDescriptor = {};
+    gfx::Descriptor                        uavDescriptor = {};
+    gfx::Descriptor                        rtvDescriptor = {};
+    gfx::Descriptor                        dsvDescriptor = {};
 };
 
 } // namespace bisky::gfx

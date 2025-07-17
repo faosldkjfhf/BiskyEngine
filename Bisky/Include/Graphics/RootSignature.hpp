@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Common.hpp"
+#include <d3d12.h>
+#include <vector>
+#include <wrl.h>
 
 namespace bisky::gfx
 {
@@ -23,12 +25,17 @@ class RootParameters
     ~RootParameters()         = default;
 
   public:
-    void add32BitConstants(UINT shaderRegister, UINT numConstants, UINT registerSpace = 0,
-                           D3D12_SHADER_VISIBILITY shaderVisibility = D3D12_SHADER_VISIBILITY_ALL);
-    void addDescriptor(UINT shaderRegister, D3D12_ROOT_PARAMETER_TYPE type, UINT registerSpace = 0,
-                       D3D12_SHADER_VISIBILITY shaderVisibility = D3D12_SHADER_VISIBILITY_ALL);
-    void addDescriptorTable(const DescriptorRange  &DescriptorRange,
-                            D3D12_SHADER_VISIBILITY shaderVisibility = D3D12_SHADER_VISIBILITY_ALL);
+    void add32BitConstants(
+        UINT shaderRegister, UINT numConstants, UINT registerSpace = 0,
+        D3D12_SHADER_VISIBILITY shaderVisibility = D3D12_SHADER_VISIBILITY_ALL
+    );
+    void addDescriptor(
+        UINT shaderRegister, D3D12_ROOT_PARAMETER_TYPE type, UINT registerSpace = 0,
+        D3D12_SHADER_VISIBILITY shaderVisibility = D3D12_SHADER_VISIBILITY_ALL
+    );
+    void addDescriptorTable(
+        const DescriptorRange &DescriptorRange, D3D12_SHADER_VISIBILITY shaderVisibility = D3D12_SHADER_VISIBILITY_ALL
+    );
     void addStaticSampler(const D3D12_STATIC_SAMPLER_DESC desc);
     void clear();
 
@@ -59,7 +66,7 @@ class RootSignature
     ID3D12RootSignature *const getRootSignature() const;
 
   private:
-    wrl::ComPtr<ID3D12RootSignature> m_rootSignature;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
 };
 
 } // namespace bisky::gfx

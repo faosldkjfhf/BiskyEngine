@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common.hpp"
+#include <DirectXMath.h>
 
 namespace bisky::gfx
 {
@@ -28,21 +28,21 @@ class Transform
     void setRotation(float x, float y, float z);
 
   public:
-    dx::XMMATRIX getLocalToWorld() const;
-    dx::XMVECTOR getScale() const;
-    dx::XMFLOAT3 getScale3f() const;
-    dx::XMMATRIX getScaleMatrix() const;
-    dx::XMVECTOR getRotation() const;
-    dx::XMFLOAT3 getRotation3f() const;
-    dx::XMMATRIX getRotationMatrix() const;
-    dx::XMVECTOR getTranslation() const;
-    dx::XMFLOAT3 getTranslation3f() const;
-    dx::XMMATRIX getTranslationMatrix() const;
+    DirectX::XMMATRIX getLocalToWorld() const;
+    DirectX::XMVECTOR getScale() const;
+    DirectX::XMFLOAT3 getScale3f() const;
+    DirectX::XMMATRIX getScaleMatrix() const;
+    DirectX::XMVECTOR getRotation() const;
+    DirectX::XMFLOAT3 getRotation3f() const;
+    DirectX::XMMATRIX getRotationMatrix() const;
+    DirectX::XMVECTOR getTranslation() const;
+    DirectX::XMFLOAT3 getTranslation3f() const;
+    DirectX::XMMATRIX getTranslationMatrix() const;
 
   private:
-    dx::XMFLOAT3 m_scale;
-    dx::XMFLOAT3 m_rotation;
-    dx::XMFLOAT3 m_translation;
+    DirectX::XMFLOAT3 m_scale;
+    DirectX::XMFLOAT3 m_rotation;
+    DirectX::XMFLOAT3 m_translation;
 };
 
 } // namespace bisky::gfx

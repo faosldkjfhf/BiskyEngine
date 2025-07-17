@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Common.hpp"
+
 #include "Core/Application.hpp"
 #include "Core/FrameStats.hpp"
 #include "Core/GameTimer.hpp"
@@ -9,6 +11,7 @@
 #include "Core/StringHelpers.hpp"
 
 #include "Editor/Editor.hpp"
+#include "Editor/IRenderable.hpp"
 
 #include "Graphics/Allocator.hpp"
 #include "Graphics/Buffer.hpp"

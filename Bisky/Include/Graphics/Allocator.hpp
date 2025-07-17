@@ -1,7 +1,9 @@
 #pragma once
 
-#include "Common.hpp"
 #include "Graphics/Buffer.hpp"
+#include <cstdint>
+#include <d3d12.h>
+#include <memory>
 
 namespace bisky::gfx
 {

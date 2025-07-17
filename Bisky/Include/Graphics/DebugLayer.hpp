@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Common.hpp"
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <wrl.h>
 
 namespace bisky::gfx
 {
@@ -32,8 +34,8 @@ class DebugLayer
 
   private:
 #ifdef _DEBUG
-    wrl::ComPtr<ID3D12Debug6> m_d3d12Debug;
-    wrl::ComPtr<IDXGIDebug1>  m_dxgiDebug;
+    Microsoft::WRL::ComPtr<ID3D12Debug6> m_d3d12Debug;
+    Microsoft::WRL::ComPtr<IDXGIDebug1>  m_dxgiDebug;
 #endif
 };
 

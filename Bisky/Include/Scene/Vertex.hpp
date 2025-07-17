@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Common.hpp"
+#include <DirectXMath.h>
 
 namespace bisky::scene
 {
 
 struct Vertex
 {
-    dx::XMFLOAT3 position;
-    dx::XMFLOAT3 normal;
-    dx::XMFLOAT2 texCoord;
-    dx::XMFLOAT4 tangent;
+    DirectX::XMFLOAT3 position;
+    DirectX::XMFLOAT3 normal;
+    DirectX::XMFLOAT2 texCoord;
+    DirectX::XMFLOAT4 tangent;
 };
 
 } // namespace bisky::scene

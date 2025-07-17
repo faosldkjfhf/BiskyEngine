@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Common.hpp"
 #include "Scene/Lights.hpp"
+#include <DirectXMath.h>
+#include <cstdint>
 
 /*
  * A collection of types of constants.
@@ -16,10 +17,10 @@ namespace bisky::gfx
  */
 struct SceneBuffer
 {
-    dx::XMFLOAT4X4 view;
-    dx::XMFLOAT4X4 projection;
-    dx::XMFLOAT4X4 viewProjection;
-    dx::XMFLOAT4   viewPosition;
+    DirectX::XMFLOAT4X4 view;
+    DirectX::XMFLOAT4X4 projection;
+    DirectX::XMFLOAT4X4 viewProjection;
+    DirectX::XMFLOAT4   viewPosition;
 };
 
 /*
@@ -27,9 +28,9 @@ struct SceneBuffer
  */
 struct ObjectBuffer
 {
-    dx::XMFLOAT4X4 world;
-    dx::XMFLOAT4X4 inverseWorld;
-    dx::XMFLOAT4X4 transposeInverseWorld;
+    DirectX::XMFLOAT4X4 world;
+    DirectX::XMFLOAT4X4 inverseWorld;
+    DirectX::XMFLOAT4X4 transposeInverseWorld;
 };
 
 struct LightBuffer

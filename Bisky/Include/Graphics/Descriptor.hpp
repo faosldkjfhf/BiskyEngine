@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cmath>
+#include <cstdint>
 #include <d3d12.h>
 
 namespace bisky::gfx

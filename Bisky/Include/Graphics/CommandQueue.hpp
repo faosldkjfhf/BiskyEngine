@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Common.hpp"
+#include <cstdint>
+#include <d3d12.h>
+#include <wrl.h>
 
 namespace bisky::gfx
 {
@@ -20,8 +22,9 @@ class CommandQueue
      * @param device The device to use.
      * @param commandListType The type of command list this queue is for.
      */
-    explicit CommandQueue(ID3D12Device10 *const   device,
-                          D3D12_COMMAND_LIST_TYPE commandListType = D3D12_COMMAND_LIST_TYPE_DIRECT);
+    explicit CommandQueue(
+        ID3D12Device10 *const device, D3D12_COMMAND_LIST_TYPE commandListType = D3D12_COMMAND_LIST_TYPE_DIRECT
+    );
 
     /*
      * Resets all stored variables
@@ -83,9 +86,9 @@ class CommandQueue
     void flush();
 
   private: // Private variables
-    wrl::ComPtr<ID3D12CommandQueue> m_commandQueue;
-    wrl::ComPtr<ID3D12Fence>        m_fence;
-    uint64_t                        m_fenceValue = 0u;
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_commandQueue;
+    Microsoft::WRL::ComPtr<ID3D12Fence>        m_fence;
+    uint64_t                                   m_fenceValue = 0u;
 };
 
 } // namespace bisky::gfx

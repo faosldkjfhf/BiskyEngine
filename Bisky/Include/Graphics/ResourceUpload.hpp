@@ -2,6 +2,7 @@
 
 #include <d3d12.h>
 #include <future>
+#include <memory>
 
 namespace bisky::gfx
 {

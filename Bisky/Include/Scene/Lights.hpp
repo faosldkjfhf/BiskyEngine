@@ -1,24 +1,24 @@
 #pragma once
 
-#include "Common.hpp"
+#include <DirectXMath.h>
 
 namespace bisky::scene
 {
 
 struct Light
 {
-    dx::XMFLOAT4 strength;
+    DirectX::XMFLOAT4 strength;
 };
 
 struct PointLight
 {
-    dx::XMFLOAT4 position;
-    dx::XMFLOAT4 strength;
+    DirectX::XMFLOAT4 position;
+    DirectX::XMFLOAT4 strength;
 };
 
 struct DirectionalLight : public Light
 {
-    dx::XMFLOAT4 direction;
+    DirectX::XMFLOAT4 direction;
 };
 
 } // namespace bisky::scene

@@ -1,6 +1,9 @@
 #pragma once
 
-#include "Common.hpp"
+#include <cstdint>
+#include <d3d12.h>
+#include <filesystem>
+#include <string_view>
 
 namespace bisky::gfx
 {

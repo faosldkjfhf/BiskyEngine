@@ -154,6 +154,7 @@
     <ClInclude Include="Include\Core\ResourceManager.hpp" />
     <ClInclude Include="Include\Core\StringHelpers.hpp" />
     <ClInclude Include="Include\Editor\Editor.hpp" />
+    <ClInclude Include="Include\Editor\IRenderable.hpp" />
     <ClInclude Include="Include\Graphics\Allocator.hpp" />
     <ClInclude Include="Include\Graphics\Buffer.hpp" />
     <ClInclude Include="Include\Graphics\CommandQueue.hpp" />

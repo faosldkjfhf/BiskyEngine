@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Graphics/Descriptor.hpp"
+#include <wrl.h>
 
 namespace bisky::gfx
 {
@@ -40,10 +41,10 @@ struct Buffer
     explicit Buffer();
     ~Buffer();
 
-    wrl::ComPtr<ID3D12Resource> resource      = nullptr;
-    gfx::Descriptor             srvDescriptor = {};
-    gfx::Descriptor             uavDescriptor = {};
-    gfx::Descriptor             cbvDescriptor = {};
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource      = nullptr;
+    gfx::Descriptor                        srvDescriptor = {};
+    gfx::Descriptor                        uavDescriptor = {};
+    gfx::Descriptor                        cbvDescriptor = {};
 
     /*
      * Rule of 5 deletors.

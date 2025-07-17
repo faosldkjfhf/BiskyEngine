@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Common.hpp"
+#include <d3d12.h>
+#include <vector>
+#include <wrl.h>
 
 namespace bisky::gfx
 {
@@ -56,9 +58,9 @@ class CommandList
     explicit CommandList() = default;
     virtual ~CommandList() = default;
 
-    wrl::ComPtr<ID3D12GraphicsCommandList10> m_commandList;
-    wrl::ComPtr<ID3D12CommandAllocator>      m_commandAllocator;
-    std::vector<D3D12_RESOURCE_BARRIER>      m_barriers;
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList10> m_commandList;
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator>      m_commandAllocator;
+    std::vector<D3D12_RESOURCE_BARRIER>                 m_barriers;
 };
 
 } // namespace bisky::gfx
