@@ -54,7 +54,6 @@ struct MaterialInfo
 struct RenderResource
 {
     int32_t vertexBufferIndex             = -1;
-    int32_t sceneBufferIndex              = -1;
     int32_t diffuseTextureIndex           = -1;
     int32_t metallicRoughnessTextureIndex = -1;
     int32_t normalTextureIndex            = -1;

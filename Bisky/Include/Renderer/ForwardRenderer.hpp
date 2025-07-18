@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Graphics/GraphicsPipeline.hpp"
 #include "Renderer/RenderLayer.hpp"
 
 namespace bisky::core
@@ -45,7 +46,8 @@ class ForwardRenderer
     void initPipelineStateObjects();
 
   private:
-    gfx::Device *const m_backend;
+    gfx::Device *const                     m_backend;
+    std::unique_ptr<gfx::GraphicsPipeline> m_graphicsPipeline;
 };
 
 } // namespace bisky::renderer

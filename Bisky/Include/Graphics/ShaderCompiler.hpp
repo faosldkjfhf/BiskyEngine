@@ -34,6 +34,10 @@ bool compile(
     Microsoft::WRL::ComPtr<IDxcBlob> &resultBlob, Microsoft::WRL::ComPtr<IDxcBlob> &errorBlob
 );
 
-}
+std::optional<Shader> compile(
+    const ShaderType &shaderType, const std::filesystem::path &filename, const std::wstring_view entryPoint
+);
+
+} // namespace ShaderCompiler
 
 } // namespace bisky::gfx

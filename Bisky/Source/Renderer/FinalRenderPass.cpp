@@ -47,11 +47,12 @@ void FinalRenderPass::draw(gfx::FrameResource *const frameResource, core::FrameS
     cmdList->setRootSignature(m_device->getRootSignature("finalRenderPass"));
 
     // -------------- allocate constants --------------
-    gfx::Allocation allocation = frameResource->resourceAllocator->allocate(sizeof(FinalRenderPass::RenderResource));
-    FinalRenderPass::RenderResource *resource = (FinalRenderPass::RenderResource *)allocation.cpuBase;
-    resource->vertexBufferIndex               = gfx::Buffer::GetSrvIndex(m_screenQuad->mesh->vertexBuffer.get());
-    resource->textureIndex                    = gfx::Texture::GetSrvIndex(m_device->getHdrRenderTargetBuffer());
-    cmdList->set32BitConstants(0, 2u, (void *)resource);
+    // gfx::Allocation allocation = frameResource->resourceAllocator->allocate(sizeof(FinalRenderPass::RenderResource));
+    // FinalRenderPass::RenderResource *resource = (FinalRenderPass::RenderResource *)allocation.cpuBase;
+    FinalRenderPass::RenderResource renderResource{};
+    renderResource.vertexBufferIndex = gfx::Buffer::GetSrvIndex(m_screenQuad->mesh->vertexBuffer.get());
+    renderResource.textureIndex      = gfx::Texture::GetSrvIndex(m_device->getHdrRenderTargetBuffer());
+    cmdList->set32BitConstants(0u, 2u, (void *)&renderResource);
 
     // -------------- input assembly --------------
     cmdList->setIndexBuffer({
@@ -75,7 +76,7 @@ void FinalRenderPass::draw(gfx::FrameResource *const frameResource, core::FrameS
 void FinalRenderPass::initRootSignature()
 {
     gfx::RootParameters parameters{};
-    parameters.add32BitConstants(0, 2);
+    parameters.add32BitConstants(0u, 2u);
     parameters.addStaticSampler({
         .Filter           = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR,
         .AddressU         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,

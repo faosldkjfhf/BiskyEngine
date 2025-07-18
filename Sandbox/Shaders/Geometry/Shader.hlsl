@@ -21,16 +21,16 @@ struct Vertex
 struct RenderResource
 {
     int vertexBufferIndex;
-    int sceneBufferIndex;
     int diffuseTextureIndex;
     int metallicRoughnessTextureIndex;
     int normalTextureIndex;
 };
 
-ConstantBuffer<SceneBuffer> sceneBuffer : register(b0);
-ConstantBuffer<LightBuffer> lightBuffer : register(b1);
-ConstantBuffer<ObjectBuffer> objectBuffer : register(b2);
-ConstantBuffer<RenderResource> renderResource : register(b3);
+ConstantBuffer<RenderResource> renderResource : register(b0);
+ConstantBuffer<SceneBuffer> sceneBuffer : register(b1);
+ConstantBuffer<LightBuffer> lightBuffer : register(b2);
+ConstantBuffer<ObjectBuffer> objectBuffer : register(b3);
+
 
 VOutput VsMain(uint vertexId : SV_VertexID)
 {

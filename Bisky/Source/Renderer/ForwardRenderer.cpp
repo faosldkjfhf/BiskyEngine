@@ -50,24 +50,16 @@ void ForwardRenderer::draw(
     cmdList->setRenderTargets(renderTexture->rtvDescriptor.cpu, m_backend->getDepthStencilView());
 
     // -------------- bind the pipeline state --------------
-    switch (renderLayer)
-    {
-    case RenderLayer::Skybox:
-        break;
-    case RenderLayer::Transparent:
-        break;
-    case RenderLayer::Opaque:
-    default:
-        cmdList->setPipelineState(m_backend->getPipelineState("opaque"));
-        break;
-    }
+    // cmdList->setPipelineState(m_backend->getPipelineState("opaque"));
+    cmdList->getCommandList()->SetPipelineState(m_graphicsPipeline->getPipelineState());
 
     // -------------- set descriptor heaps --------------
     std::array<const gfx::DescriptorHeap *const, 1> heaps = {m_backend->getCbvSrvUavHeap()};
     cmdList->setDescriptorHeaps(heaps);
 
     // -------------- bind root signature --------------
-    cmdList->setRootSignature(m_backend->getRootSignature("opaque"));
+    cmdList->getCommandList()->SetGraphicsRootSignature(m_graphicsPipeline->getRootSignature());
+    // cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());
 
     // -------------- allocate scene buffer --------------
     auto             *camera      = scene->getArcballCamera();
@@ -77,7 +69,7 @@ void ForwardRenderer::draw(
     XMStoreFloat4x4(&sceneBuffer->projection, camera->getProjection());
     XMStoreFloat4x4(&sceneBuffer->viewProjection, camera->getView() * camera->getProjection());
     XMStoreFloat4(&sceneBuffer->viewPosition, camera->getPosition());
-    cmdList->setConstantBufferView(0u, sceneAlloc.gpuBase);
+    cmdList->setConstantBufferView(m_graphicsPipeline->getRootParameter("sceneBuffer"), sceneAlloc.gpuBase);
 
     // -------------- allocate lights --------------
     auto             &lights      = scene->getLights();
@@ -88,7 +80,7 @@ void ForwardRenderer::draw(
         lightBuffer->lights[i] = lights[i];
     }
     lightBuffer->numLights = static_cast<uint32_t>(min(lights.size(), 10));
-    cmdList->setConstantBufferView(1u, alloc.gpuBase);
+    cmdList->setConstantBufferView(m_graphicsPipeline->getRootParameter("lightBuffer"), alloc.gpuBase);
 
     for (auto &object : scene->getRenderObjects())
     {
@@ -106,7 +98,6 @@ void ForwardRenderer::draw(
         gfx::Allocation      alloc = frameResource->resourceAllocator->allocate(sizeof(gfx::RenderResource));
         gfx::RenderResource *rr    = (gfx::RenderResource *)alloc.cpuBase;
         rr->vertexBufferIndex      = gfx::Buffer::GetSrvIndex(mesh->vertexBuffer.get());
-        rr->sceneBufferIndex       = -1;
 
         // -------------- allocate object constants --------------
         gfx::Allocation    objectAlloc = frameResource->resourceAllocator->allocate(sizeof(gfx::ObjectBuffer));
@@ -114,7 +105,7 @@ void ForwardRenderer::draw(
         XMStoreFloat4x4(&ptr->world, object->transform->getLocalToWorld());
         XMStoreFloat4x4(&ptr->inverseWorld, dx::XMMatrixInverse(nullptr, object->transform->getLocalToWorld()));
         XMStoreFloat4x4(&ptr->transposeInverseWorld, dx::XMMatrixTranspose(XMLoadFloat4x4(&ptr->inverseWorld)));
-        cmdList->setConstantBufferView(2u, objectAlloc.gpuBase);
+        cmdList->setConstantBufferView(m_graphicsPipeline->getRootParameter("objectBuffer"), objectAlloc.gpuBase);
 
         for (auto &submesh : mesh->submeshes)
         {
@@ -122,7 +113,9 @@ void ForwardRenderer::draw(
             rr->diffuseTextureIndex           = gfx::Texture::GetSrvIndex(submesh.material->diffuseTexture);
             rr->metallicRoughnessTextureIndex = gfx::Texture::GetSrvIndex(submesh.material->metallicRoughnessTexture);
             rr->normalTextureIndex            = gfx::Texture::GetSrvIndex(submesh.material->normalTexture);
-            cmdList->set32BitConstants(3u, 5u, reinterpret_cast<void *>(rr));
+            cmdList->set32BitConstants(
+                m_graphicsPipeline->getRootParameter("renderResource"), 4u, reinterpret_cast<void *>(rr)
+            );
 
             // -------------- draw submesh --------------
             cmdList->drawIndexedInstanced(submesh);
@@ -139,11 +132,11 @@ void ForwardRenderer::draw(
 
 void ForwardRenderer::initRootSignatures()
 {
-    gfx::RootParameters parameters{};
-    parameters.addDescriptor(0u, D3D12_ROOT_PARAMETER_TYPE_CBV);
+    /*gfx::RootParameters parameters{};
+    parameters.add32BitConstants(0u, 5u);
     parameters.addDescriptor(1u, D3D12_ROOT_PARAMETER_TYPE_CBV);
     parameters.addDescriptor(2u, D3D12_ROOT_PARAMETER_TYPE_CBV);
-    parameters.add32BitConstants(3u, 5u);
+    parameters.addDescriptor(3u, D3D12_ROOT_PARAMETER_TYPE_CBV);
     parameters.addStaticSampler({
         .Filter           = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR,
         .AddressU         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
@@ -157,7 +150,7 @@ void ForwardRenderer::initRootSignatures()
         .RegisterSpace    = 0u,
         .ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL,
     });
-    m_backend->addRootSignature("opaque", parameters);
+    m_backend->addRootSignature("opaque", parameters);*/
 }
 
 void ForwardRenderer::initPipelineStateObjects()
@@ -166,18 +159,20 @@ void ForwardRenderer::initPipelineStateObjects()
     formats[0] = m_backend->getHdrRenderTargetFormat();
 
     gfx::GraphicsPipelineStateDesc psoDesc = {
-        .rootSignature = m_backend->getRootSignature("opaque")->getRootSignature(),
-        .vertexShader  = {.name = "Geometry\\Shader.hlsl", .entryPoint = L"VsMain"},
-        .pixelShader   = {.name = "Geometry\\Shader.hlsl", .entryPoint = L"PsMain"},
-        .rtvCount      = 1,
-        .rtvFormats    = formats,
-        .dsvFormat     = m_backend->getDepthStencilFormat(),
-        .cullMode      = gfx::CullMode::Back,
-        .frontFace     = gfx::FrontFace::Clockwise,
-        .depthFunc     = gfx::ComparisonFunc::Less,
+        // .rootSignature = m_backend->getRootSignature("opaque")->getRootSignature(),
+        .vertexShader = {.name = "Geometry\\Shader.hlsl", .entryPoint = L"VsMain"},
+        .pixelShader  = {.name = "Geometry\\Shader.hlsl", .entryPoint = L"PsMain"},
+        .rtvCount     = 1,
+        .rtvFormats   = formats,
+        .dsvFormat    = m_backend->getDepthStencilFormat(),
+        .cullMode     = gfx::CullMode::Back,
+        .frontFace    = gfx::FrontFace::Clockwise,
+        .depthFunc    = gfx::ComparisonFunc::Less,
     };
 
-    m_backend->addGraphicsPipelineState("opaque", psoDesc);
+    m_graphicsPipeline = std::make_unique<gfx::GraphicsPipeline>(m_backend, psoDesc);
+
+    // m_backend->addGraphicsPipelineState("opaque", psoDesc);
 }
 
 } // namespace bisky::renderer

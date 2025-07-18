@@ -166,6 +166,7 @@
     <ClInclude Include="Include\Graphics\FrameResource.hpp" />
     <ClInclude Include="Include\Graphics\GpuResources.hpp" />
     <ClInclude Include="Include\Graphics\GraphicsCommandList.hpp" />
+    <ClInclude Include="Include\Graphics\GraphicsPipeline.hpp" />
     <ClInclude Include="Include\Graphics\PipelineState.hpp" />
     <ClInclude Include="Include\Graphics\Resources.hpp" />
     <ClInclude Include="Include\Graphics\ResourceUpload.hpp" />
@@ -209,6 +210,7 @@
     <ClCompile Include="Source\Graphics\DescriptorHeap.cpp" />
     <ClCompile Include="Source\Graphics\Device.cpp" />
     <ClCompile Include="Source\Graphics\GraphicsCommandList.cpp" />
+    <ClCompile Include="Source\Graphics\GraphicsPipeline.cpp" />
     <ClCompile Include="Source\Graphics\PipelineState.cpp" />
     <ClCompile Include="Source\Graphics\ResourceUpload.cpp" />
     <ClCompile Include="Source\Graphics\RootSignature.cpp" />
