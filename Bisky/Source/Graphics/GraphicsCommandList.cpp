@@ -118,6 +118,11 @@ void GraphicsCommandList::setPipelineState(gfx::PipelineState *const pipelineSta
     }
 }
 
+void GraphicsCommandList::setPipelineState(ID3D12PipelineState *const pipelineState)
+{
+    m_commandList->SetPipelineState(pipelineState);
+}
+
 void GraphicsCommandList::setRootSignature(gfx::RootSignature *const rootSignature)
 {
     if (rootSignature)
@@ -126,13 +131,9 @@ void GraphicsCommandList::setRootSignature(gfx::RootSignature *const rootSignatu
     }
 }
 
-void GraphicsCommandList::setVertexBuffers(const VertexBufferView &vertexBufferView)
+void GraphicsCommandList::setRootSignature(ID3D12RootSignature *const rootSignature)
 {
-    D3D12_VERTEX_BUFFER_VIEW vbv{};
-    vbv.BufferLocation = vertexBufferView.bufferLocation;
-    vbv.SizeInBytes    = vertexBufferView.sizeInBytes;
-    vbv.StrideInBytes  = vertexBufferView.strideInBytes;
-    m_commandList->IASetVertexBuffers(0, 1, &vbv);
+    m_commandList->SetGraphicsRootSignature(rootSignature);
 }
 
 void GraphicsCommandList::setIndexBuffer(const IndexBufferView &indexBufferView)

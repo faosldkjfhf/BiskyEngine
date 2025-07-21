@@ -14,10 +14,10 @@ struct Material;
  */
 struct Submesh
 {
-    uint32_t  baseVertexLocation;
-    uint32_t  startIndexLocation;
-    uint32_t  indexCount;
-    Material *material;
+    uint32_t                  baseVertexLocation;
+    uint32_t                  startIndexLocation;
+    uint32_t                  indexCount;
+    std::shared_ptr<Material> material;
 };
 
 /*

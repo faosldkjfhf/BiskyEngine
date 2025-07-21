@@ -7,6 +7,11 @@
 #include <string>
 #include <unordered_map>
 
+namespace bisky::scene
+{
+struct RenderObject;
+}
+
 namespace bisky::gfx
 {
 class Device;
@@ -101,6 +106,10 @@ class ResourceManager
      * @return True if successfully loaded.
      */
     bool loadMesh(gfx::Device *const device, const std::filesystem::path &filename);
+
+    std::optional<std::vector<std::shared_ptr<scene::RenderObject>>> loadGltfMeshes(
+        gfx::Device *const device, const std::filesystem::path &filename
+    );
 
     bool loadDDS(gfx::Device *const device, const std::filesystem::path &filename, bool *isCubemap);
 

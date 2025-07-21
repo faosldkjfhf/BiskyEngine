@@ -319,6 +319,15 @@ void Device::incrementFrameResourceIndex()
     m_currentFrameResourceIndex = (m_currentFrameResourceIndex + 1) % FramesInFlight;
 }
 
+FrameResource *const Device::nextFrameResource()
+{
+    incrementFrameResourceIndex();
+    auto *frame = m_frameResources[m_currentFrameResourceIndex].get();
+    m_directCommandQueue->waitForFence(frame->fenceValue);
+    frame->resourceAllocator->reset();
+    return frame;
+}
+
 ID3D12Device10 *const Device::getDevice() const
 {
     return m_device.Get();

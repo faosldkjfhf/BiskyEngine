@@ -131,6 +131,8 @@ class Device
      */
     void incrementFrameResourceIndex();
 
+    FrameResource *const nextFrameResource();
+
   public: // Getter methods
     /*
      * Gets a pointer to the inner device.

@@ -18,12 +18,12 @@ FinalRenderPass::FinalRenderPass(gfx::Device *const device) : m_device(device)
     core::ResourceManager::get().addMesh(scene::ScreenQuad::mesh(device));
     m_screenQuad->mesh = core::ResourceManager::get().getMesh("ScreenQuad");
 
-    initRootSignature();
-    initPipelineState();
+    initGraphicsPipeline();
 }
 
 FinalRenderPass::~FinalRenderPass()
 {
+    m_graphicsPipeline.reset();
     m_screenQuad.reset();
 }
 
@@ -41,18 +41,16 @@ void FinalRenderPass::draw(gfx::FrameResource *const frameResource, core::FrameS
     cmdList->setRenderTargets(m_device->getRenderTargetView());
 
     // -------------- set pipeline state --------------
-    cmdList->setPipelineState(m_device->getPipelineState("finalRenderPass"));
+    cmdList->setPipelineState(m_graphicsPipeline->getPipelineState());
 
     // -------------- bind root signature --------------
-    cmdList->setRootSignature(m_device->getRootSignature("finalRenderPass"));
+    cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());
 
     // -------------- allocate constants --------------
-    // gfx::Allocation allocation = frameResource->resourceAllocator->allocate(sizeof(FinalRenderPass::RenderResource));
-    // FinalRenderPass::RenderResource *resource = (FinalRenderPass::RenderResource *)allocation.cpuBase;
     FinalRenderPass::RenderResource renderResource{};
     renderResource.vertexBufferIndex = gfx::Buffer::GetSrvIndex(m_screenQuad->mesh->vertexBuffer.get());
     renderResource.textureIndex      = gfx::Texture::GetSrvIndex(m_device->getHdrRenderTargetBuffer());
-    cmdList->set32BitConstants(0u, 2u, (void *)&renderResource);
+    cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 2u, (void *)&renderResource);
 
     // -------------- input assembly --------------
     cmdList->setIndexBuffer({
@@ -73,43 +71,23 @@ void FinalRenderPass::draw(gfx::FrameResource *const frameResource, core::FrameS
     frameStats->finalRenderDrawTime = elapsed.count() / 1000.0f;
 }
 
-void FinalRenderPass::initRootSignature()
-{
-    gfx::RootParameters parameters{};
-    parameters.add32BitConstants(0u, 2u);
-    parameters.addStaticSampler({
-        .Filter           = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR,
-        .AddressU         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-        .AddressV         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-        .AddressW         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-        .MipLODBias       = 0.0f,
-        .ComparisonFunc   = D3D12_COMPARISON_FUNC_ALWAYS,
-        .MinLOD           = 0.0f,
-        .MaxLOD           = D3D12_FLOAT32_MAX,
-        .ShaderRegister   = 0,
-        .RegisterSpace    = 0,
-        .ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL,
-    });
-    m_device->addRootSignature("finalRenderPass", parameters);
-}
-
-void FinalRenderPass::initPipelineState()
+void FinalRenderPass::initGraphicsPipeline()
 {
     std::array<DXGI_FORMAT, 1> formats;
     formats[0] = m_device->getBackBufferFormat();
 
     gfx::GraphicsPipelineStateDesc psoDesc = {
-        .rootSignature = m_device->getRootSignature("finalRenderPass")->getRootSignature(),
-        .vertexShader  = {.name = "RenderPass\\FinalRenderPass.hlsl", .entryPoint = L"VsMain"},
-        .pixelShader   = {.name = "RenderPass\\FinalRenderPass.hlsl", .entryPoint = L"PsMain"},
-        .rtvCount      = 1,
-        .rtvFormats    = formats,
-        .dsvFormat     = DXGI_FORMAT_UNKNOWN,
-        .cullMode      = gfx::CullMode::Back,
-        .frontFace     = gfx::FrontFace::Clockwise,
-        .depthFunc     = gfx::ComparisonFunc::Less,
+        .vertexShader = {.name = "RenderPass\\FinalRenderPass.hlsl", .entryPoint = L"VsMain"},
+        .pixelShader  = {.name = "RenderPass\\FinalRenderPass.hlsl", .entryPoint = L"PsMain"},
+        .rtvCount     = 1u,
+        .rtvFormats   = formats,
+        .dsvFormat    = DXGI_FORMAT_UNKNOWN,
+        .cullMode     = gfx::CullMode::Back,
+        .frontFace    = gfx::FrontFace::Clockwise,
+        .depthFunc    = gfx::ComparisonFunc::Less,
     };
-    m_device->addGraphicsPipelineState("finalRenderPass", psoDesc);
+
+    m_graphicsPipeline = std::make_unique<gfx::GraphicsPipeline>(m_device, psoDesc);
 }
 
 } // namespace bisky::renderer

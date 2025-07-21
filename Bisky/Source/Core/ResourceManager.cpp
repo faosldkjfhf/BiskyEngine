@@ -3,7 +3,10 @@
 #include "Core/ResourceManager.hpp"
 #include "Graphics/Device.hpp"
 #include "Scene/Material.hpp"
+#include "Scene/RenderObject.hpp"
 #include "Scene/Vertex.hpp"
+#include <format>
+#include <ranges>
 
 namespace bisky::core
 {
@@ -49,6 +52,7 @@ void ResourceManager::setTextureDirectory(const std::filesystem::path &path)
 bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem::path &filename)
 {
     const std::filesystem::path path = m_modelDirectory / filename;
+    const std::filesystem::path name = path.filename().replace_extension();
 
     // -------------- use no flags if .glb, other load buffers --------------
     fastgltf::Options flags;
@@ -108,13 +112,15 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
                                     return;
                                 }
 
-                                std::string name = image.name.data();
-                                if (name.empty())
-                                    name = "texture_" + std::to_string(m_textures.size());
+                                std::string texturename = image.name.data();
+                                if (texturename.empty())
+                                {
+                                    texturename = name.string() + "." + std::format("{:03d}", m_textures.size());
+                                }
 
-                                m_textures[name] = texture;
+                                m_textures[texturename] = texture;
                                 textures.push_back(texture);
-                                LOG_INFO("Loaded texture: " + name);
+                                LOG_INFO("Loaded texture: " + texturename);
                             }
                         ),
                         buffer.data
@@ -129,13 +135,13 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
     std::vector<std::shared_ptr<scene::Material>> materials;
     for (auto &&mat : asset->materials)
     {
-        std::shared_ptr<scene::Material> newMat = std::make_shared<scene::Material>();
+        auto newMat = std::make_shared<scene::Material>();
         if (mat.pbrData.baseColorTexture.has_value())
         {
             size_t image = asset->textures[mat.pbrData.baseColorTexture.value().textureIndex].imageIndex.value();
             if (image < textures.size())
             {
-                newMat->diffuseTexture = textures[image].get();
+                newMat->diffuseTexture = textures[image];
             }
 
             XMStoreFloat3(&newMat->diffuse, dx::FXMVECTOR{1.0f, 0.0f, 0.0f});
@@ -146,7 +152,7 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
                 asset->textures[mat.pbrData.metallicRoughnessTexture.value().textureIndex].imageIndex.value();
             if (image < textures.size())
             {
-                newMat->metallicRoughnessTexture = textures[image].get();
+                newMat->metallicRoughnessTexture = textures[image];
             }
         }
         if (mat.normalTexture.has_value())
@@ -154,7 +160,7 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
             size_t image = asset->textures[mat.normalTexture.value().textureIndex].imageIndex.value();
             if (image < textures.size())
             {
-                newMat->normalTexture = textures[image].get();
+                newMat->normalTexture = textures[image];
             }
         }
 
@@ -166,8 +172,10 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
     std::vector<scene::Vertex> vertices;
     std::vector<uint32_t>      indices;
     bool                       includesTangents = false;
-    for (auto &&mesh : asset->meshes)
+    for (const size_t i : std::views::iota(0u, asset->meshes.size()))
     {
+        auto mesh = asset->meshes[i];
+
         // -------------- reset vertices and indices --------------
         vertices.clear();
         indices.clear();
@@ -178,6 +186,11 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
         newMesh->name                        = mesh.name;
         newMesh->indexFormat                 = DXGI_FORMAT_R32_UINT;
         newMesh->vertexByteStride            = sizeof(scene::Vertex);
+
+        if (newMesh->name.empty())
+        {
+            newMesh->name = name.string() + "." + std::format("{:03d}", i);
+        }
 
         // -------------- if mesh exists, skip over it --------------
         auto it = m_meshes.find(newMesh->name);
@@ -201,7 +214,7 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
             // -------------- add material --------------
             if (p.materialIndex.has_value())
             {
-                submesh.material = materials[p.materialIndex.value()].get();
+                submesh.material = materials[p.materialIndex.value()];
             }
 
             newMesh->submeshes.push_back(submesh);
@@ -327,6 +340,299 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
 
     LOG_INFO("Loaded " + path.string());
     return true;
+}
+
+std::optional<std::vector<std::shared_ptr<scene::RenderObject>>> ResourceManager::loadGltfMeshes(
+    gfx::Device *const device, const std::filesystem::path &filename
+)
+{
+    const std::filesystem::path path = m_modelDirectory / filename;
+    const std::filesystem::path name = path.filename().replace_extension();
+
+    // -------------- use no flags if .glb, other load buffers --------------
+    fastgltf::Options flags;
+    if (path.extension() == ".glb")
+        flags = fastgltf::Options::None;
+    else
+        flags = fastgltf::Options::LoadExternalBuffers;
+
+    // -------------- attempt to load the file --------------
+    auto data = fastgltf::GltfDataBuffer::FromPath(path);
+    if (data.error() != fastgltf::Error::None)
+    {
+        LOG_WARNING("Failed to find " + path.string());
+        return std::nullopt;
+    }
+
+    // -------------- attempt to parse the .gltf or .glb file --------------
+    fastgltf::Parser parser;
+    auto             asset = parser.loadGltf(data.get(), path.parent_path(), flags);
+    if (auto error = asset.error(); error != fastgltf::Error::None)
+    {
+        LOG_WARNING("Failed to parse " + path.string());
+        return std::nullopt;
+    }
+
+    // -------------- validate the file --------------
+    auto error = fastgltf::validate(asset.get());
+    if (error != fastgltf::Error::None)
+    {
+        LOG_WARNING("File is not a valid glTF file");
+        return std::nullopt;
+    }
+
+    // -------------- load textures --------------
+    std::vector<std::shared_ptr<gfx::Texture>> textures;
+    for (auto &image : asset->images)
+    {
+        std::shared_ptr<gfx::Texture> texture = std::make_shared<gfx::Texture>();
+        std::visit(
+            fastgltf::visitor(
+                [&](auto &arg) {}, [&](fastgltf::sources::Array &array) { LOG_INFO("hi"); },
+                [&](fastgltf::sources::BufferView &view) {
+                    auto &bufferView = asset->bufferViews[view.bufferViewIndex];
+                    auto &buffer     = asset->buffers[bufferView.bufferIndex];
+                    std::visit(
+                        fastgltf::visitor(
+                            [&](auto &arg) {}, [&](fastgltf::sources::URI &filePath) {},
+                            [&](fastgltf::sources::Array &array) {
+                                auto texture = device->createImageFromMemory(
+                                    reinterpret_cast<stbi_uc *>(array.bytes.data() + bufferView.byteOffset),
+                                    array.bytes.size()
+                                );
+
+                                if (!texture)
+                                {
+                                    LOG_WARNING("Failed to create image from memory");
+                                    return;
+                                }
+
+                                std::string texturename = image.name.data();
+                                if (texturename.empty())
+                                {
+                                    texturename = name.string() + "." + std::format("{:03d}", textures.size());
+                                }
+
+                                // m_textures[texturename] = texture;
+                                textures.push_back(texture);
+                                LOG_INFO("Loaded texture: " + texturename);
+                            }
+                        ),
+                        buffer.data
+                    );
+                }
+            ),
+            image.data
+        );
+    }
+
+    // -------------- create materials --------------
+    std::vector<std::shared_ptr<scene::Material>> materials;
+    for (auto &&mat : asset->materials)
+    {
+        std::shared_ptr<scene::Material> newMat = std::make_shared<scene::Material>();
+        if (mat.pbrData.baseColorTexture.has_value())
+        {
+            size_t image = asset->textures[mat.pbrData.baseColorTexture.value().textureIndex].imageIndex.value();
+            if (image < textures.size())
+            {
+                newMat->diffuseTexture = textures[image];
+            }
+
+            XMStoreFloat3(&newMat->diffuse, dx::FXMVECTOR{1.0f, 0.0f, 0.0f});
+        }
+        if (mat.pbrData.metallicRoughnessTexture.has_value())
+        {
+            size_t image =
+                asset->textures[mat.pbrData.metallicRoughnessTexture.value().textureIndex].imageIndex.value();
+            if (image < textures.size())
+            {
+                newMat->metallicRoughnessTexture = textures[image];
+            }
+        }
+        if (mat.normalTexture.has_value())
+        {
+            size_t image = asset->textures[mat.normalTexture.value().textureIndex].imageIndex.value();
+            if (image < textures.size())
+            {
+                newMat->normalTexture = textures[image];
+            }
+        }
+
+        materials.push_back(newMat);
+        // m_materials[mat.name.data()] = newMat;
+    }
+
+    // -------------- load the vertices and indices --------------
+    std::vector<scene::Vertex>                        vertices;
+    std::vector<uint32_t>                             indices;
+    std::vector<std::shared_ptr<scene::RenderObject>> renderObjects;
+    bool                                              includesTangents = false;
+    for (auto &&mesh : asset->meshes)
+    {
+        // -------------- reset vertices and indices --------------
+        vertices.clear();
+        indices.clear();
+        includesTangents = false;
+
+        // -------------- create a mesh --------------
+        std::unique_ptr<scene::Mesh> newMesh = std::make_unique<scene::Mesh>();
+        newMesh->name                        = mesh.name;
+        newMesh->indexFormat                 = DXGI_FORMAT_R32_UINT;
+        newMesh->vertexByteStride            = sizeof(scene::Vertex);
+
+        // -------------- if mesh exists, skip over it --------------
+        auto it = m_meshes.find(newMesh->name);
+        if (it != m_meshes.end())
+        {
+            continue;
+        }
+
+        // -------------- load each primitive as a submesh --------------
+        newMesh->submeshes.reserve(mesh.primitives.size());
+        for (auto &&p : mesh.primitives)
+        {
+            auto indexAccessor = p.indicesAccessor.value();
+
+            // -------------- add a submesh --------------
+            scene::Submesh submesh;
+            submesh.baseVertexLocation = static_cast<uint32_t>(vertices.size());
+            submesh.startIndexLocation = static_cast<uint32_t>(indices.size());
+            submesh.indexCount         = static_cast<uint32_t>(asset->accessors[indexAccessor].count);
+
+            // -------------- add material --------------
+            if (p.materialIndex.has_value())
+            {
+                submesh.material = materials[p.materialIndex.value()];
+            }
+
+            newMesh->submeshes.push_back(submesh);
+
+            // -------------- get indices --------------
+            indices.reserve(indices.size() + submesh.indexCount);
+            fastgltf::iterateAccessor<uint32_t>(asset.get(), asset->accessors[indexAccessor], [&](uint32_t index) {
+                indices.push_back(index + submesh.baseVertexLocation);
+            });
+
+            // -------------- get vertices --------------
+            {
+                auto &accessor = asset->accessors[p.findAttribute("POSITION")->accessorIndex];
+                vertices.resize(vertices.size() + accessor.count);
+                fastgltf::iterateAccessorWithIndex<dx::XMFLOAT3>(
+                    asset.get(), accessor,
+                    [&](dx::XMFLOAT3 position, size_t index) {
+                        scene::Vertex v;
+                        v.position = position;
+
+                        vertices[submesh.baseVertexLocation + index] = v;
+                    }
+                );
+            }
+
+            // -------------- get normals --------------
+            {
+                auto normals = p.findAttribute("NORMAL");
+                if (normals != p.attributes.end())
+                {
+                    auto &accessor = asset->accessors[normals->accessorIndex];
+                    fastgltf::iterateAccessorWithIndex<dx::XMFLOAT3>(
+                        asset.get(), accessor,
+                        [&](dx::XMFLOAT3 normal, size_t index) {
+                            vertices[submesh.baseVertexLocation + index].normal = normal;
+                        }
+                    );
+                }
+            }
+
+            // -------------- get texcoords --------------
+            {
+                auto uvs = p.findAttribute("TEXCOORD_0");
+                if (uvs != p.attributes.end())
+                {
+                    auto &accessor = asset->accessors[uvs->accessorIndex];
+                    fastgltf::iterateAccessorWithIndex<dx::XMFLOAT2>(
+                        asset.get(), accessor,
+                        [&](dx::XMFLOAT2 texCoord, size_t index) {
+                            vertices[submesh.baseVertexLocation + index].texCoord = texCoord;
+                        }
+                    );
+                }
+            }
+
+            // -------------- get tangents --------------
+            {
+                auto tangents = p.findAttribute("TANGENT");
+                if (tangents != p.attributes.end())
+                {
+                    auto &accessor = asset->accessors[tangents->accessorIndex];
+                    fastgltf::iterateAccessorWithIndex<dx::XMFLOAT4>(
+                        asset.get(), accessor,
+                        [&](dx::XMFLOAT4 tangent, size_t index) {
+                            vertices[submesh.baseVertexLocation + index].tangent = tangent;
+                        }
+                    );
+
+                    includesTangents = true;
+                }
+            }
+        }
+
+        // TODO: calculate tangents if not included
+        // if (!includesTangents)
+        //{
+        //    for (size_t i = 0; i < indices.size(); i += 3)
+        //    {
+        //        auto i0 = indices[i];
+        //        auto i1 = indices[i + 1];
+        //        auto i2 = indices[i + 2];
+
+        //        auto v0 = vertices[i0];
+        //        auto v1 = vertices[i1];
+        //        auto v2 = vertices[i2];
+        //    }
+        //}
+
+        // -------------- begin resource upload block --------------
+        gfx::ResourceUpload upload(device);
+        upload.Begin();
+
+        // -------------- create upload buffers --------------
+        newMesh->vertexBufferByteSize = static_cast<uint32_t>(vertices.size()) * sizeof(scene::Vertex);
+        newMesh->indexBufferByteSize  = static_cast<uint32_t>(indices.size()) * sizeof(uint32_t);
+        newMesh->vertexBuffer         = device->createUploadBuffer(newMesh->vertexBufferByteSize, vertices.data());
+        newMesh->indexBuffer          = device->createUploadBuffer(newMesh->indexBufferByteSize, indices.data());
+
+        // -------------- create shader resource view --------------
+        newMesh->vertexBuffer->srvDescriptor = device->getCbvSrvUavHeap()->allocate();
+        D3D12_SHADER_RESOURCE_VIEW_DESC desc = {
+            .Format                  = DXGI_FORMAT_UNKNOWN,
+            .ViewDimension           = D3D12_SRV_DIMENSION_BUFFER,
+            .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+            .Buffer =
+                {
+                    .FirstElement        = 0u,
+                    .NumElements         = static_cast<UINT>(vertices.size()),
+                    .StructureByteStride = sizeof(scene::Vertex),
+                    .Flags               = D3D12_BUFFER_SRV_FLAG_NONE,
+                },
+        };
+        device->createShaderResourceView(newMesh->vertexBuffer.get(), &desc);
+
+        // -------------- end resource upload block --------------
+        auto finish = upload.Finish();
+        finish.wait();
+
+        // ----- create render object from mesh -----
+        auto ro  = renderObjects.emplace_back(std::make_shared<scene::RenderObject>());
+        ro->mesh = newMesh.get();
+
+        // -------------- mesh loaded successfully --------------
+        LOG_INFO("Loaded mesh: " + newMesh->name);
+        m_meshes[newMesh->name] = std::move(newMesh);
+    }
+
+    LOG_INFO("Loaded " + path.string());
+    return renderObjects;
 }
 
 bool ResourceManager::loadDDS(gfx::Device *const device, const std::filesystem::path &filename, bool *isCubemap)

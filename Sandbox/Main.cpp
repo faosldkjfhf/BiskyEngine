@@ -48,10 +48,11 @@ int main()
     auto  device     = std::make_unique<gfx::Device>(window.get());
 
     // ----- initializer renderer and scene -----
-    auto geometryRenderPass = std::make_unique<renderer::ForwardRenderer>(window.get(), device.get());
-    auto finalRenderPass    = std::make_unique<renderer::FinalRenderPass>(device.get());
-    auto skyboxRenderPass   = std::make_unique<renderer::SkyboxRenderPass>(device.get());
-    auto scene              = std::make_unique<scene::Scene>(window.get(), device.get(), "test scene");
+    auto geometryRenderPass   = std::make_unique<renderer::ForwardRenderer>(window.get(), device.get());
+    auto lightDebugRenderPass = std::make_unique<renderer::LightDebugRenderPass>(device.get());
+    auto skyboxRenderPass     = std::make_unique<renderer::SkyboxRenderPass>(device.get());
+    auto finalRenderPass      = std::make_unique<renderer::FinalRenderPass>(device.get());
+    auto scene                = std::make_unique<scene::Scene>(window.get(), device.get(), "test scene");
 
     // ----- initialize input -----
     input.window = window.get();
@@ -85,10 +86,7 @@ int main()
         frameStats->sceneUpdateTime = sceneElapsed.count() / 1000.0f;
 
         // ----- wait for previous commands to finish -----
-        device->incrementFrameResourceIndex();
-        auto *frame = device->getFrameResource();
-        device->getDirectCommandQueue()->waitForFence(frame->fenceValue);
-        frame->resourceAllocator->reset();
+        auto *frame = device->nextFrameResource();
 
         // ----- reset command list -----
         auto *cmdList = frame->graphicsCommandList.get();
@@ -99,6 +97,9 @@ int main()
 
         // ----- draw geometry -----
         geometryRenderPass->draw(renderer::RenderLayer::Opaque, frame, scene.get(), frameStats.get());
+
+        // ----- draw light debug -----
+        lightDebugRenderPass->draw(frame, scene.get(), frameStats.get());
 
         // ----- draw skybox -----
         skyboxRenderPass->draw(frame, scene.get(), frameStats.get());

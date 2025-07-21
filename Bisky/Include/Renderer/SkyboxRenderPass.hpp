@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Graphics/GraphicsPipeline.hpp"
 #include "Scene/RenderObject.hpp"
 
 namespace bisky::core
@@ -42,12 +43,12 @@ class SkyboxRenderPass
     void draw(gfx::FrameResource *const frameResource, scene::Scene *const scene, core::FrameStats *const frameStats);
 
   private:
-    void initRootSignature();
-    void initPipelineState();
+    void initGraphicsPipeline();
 
   private:
-    gfx::Device *const                   m_device;
-    std::unique_ptr<scene::RenderObject> m_cube;
+    gfx::Device *const                     m_device;
+    std::unique_ptr<scene::RenderObject>   m_cube;
+    std::unique_ptr<gfx::GraphicsPipeline> m_graphicsPipeline;
 };
 
 } // namespace bisky::renderer

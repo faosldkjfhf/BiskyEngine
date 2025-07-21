@@ -178,6 +178,7 @@
     <ClInclude Include="Include\Graphics\Window.hpp" />
     <ClInclude Include="Include\Renderer\FinalRenderPass.hpp" />
     <ClInclude Include="Include\Renderer\ForwardRenderer.hpp" />
+    <ClInclude Include="Include\Renderer\LightDebugRenderPass.hpp" />
     <ClInclude Include="Include\Renderer\RenderLayer.hpp" />
     <ClInclude Include="Include\Renderer\SkyboxRenderPass.hpp" />
     <ClInclude Include="Include\Scene\Camera.hpp" />
@@ -223,6 +224,7 @@
     <ClCompile Include="Source\Renderer\SkyboxRenderPass.cpp" />
     <ClCompile Include="Source\Scene\ArcballCamera.cpp" />
     <ClCompile Include="Source\Scene\Camera.cpp" />
+    <ClCompile Include="Source\Renderer\LightDebugRenderPass.cpp" />
     <ClCompile Include="Source\Scene\Mesh.cpp" />
     <ClCompile Include="Source\Scene\Scene.cpp" />
     <ClCompile Include="Source\Scene\RenderObject.cpp" />

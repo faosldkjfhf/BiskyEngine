@@ -159,6 +159,7 @@ GraphicsPipeline::GraphicsPipeline(Device *const device, GraphicsPipelineStateDe
         };
 
         gps.RasterizerState.CullMode = static_cast<D3D12_CULL_MODE>(gfxD.cullMode);
+        gps.RasterizerState.FillMode = gfxD.fillMode;
 
         if (gfxD.frontFace == gfx::FrontFace::CounterClockwise)
         {
@@ -170,7 +171,10 @@ GraphicsPipeline::GraphicsPipeline(Device *const device, GraphicsPipelineStateDe
             gps.RTVFormats[i] = gfxD.rtvFormats[i];
         }
 
-        device->getDevice()->CreateGraphicsPipelineState(&gps, IID_PPV_ARGS(&m_pipelineState));
+        if (FAILED(device->getDevice()->CreateGraphicsPipelineState(&gps, IID_PPV_ARGS(&m_pipelineState))))
+        {
+            LOG_ERROR("Failed to create pipeline state");
+        }
     }
 }
 

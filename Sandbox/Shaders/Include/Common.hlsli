@@ -1,5 +1,7 @@
 #pragma once
 
+#define PI 3.1415926538
+
 struct ObjectBuffer
 {
     float4x4 world;
@@ -25,6 +27,14 @@ struct LightBuffer
 {
     Light lights[10];
     int numLights;
+};
+
+struct Vertex
+{
+    float3 position : POSITION;
+    float3 normal : NORMAL;
+    float2 texCoord : TEXCOORD;
+    float4 tangent : TANGENT;
 };
 
 SamplerState linearWrapSampler: register(s0);

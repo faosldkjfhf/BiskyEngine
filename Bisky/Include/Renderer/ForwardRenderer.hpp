@@ -42,8 +42,7 @@ class ForwardRenderer
 
   public:
   private:
-    void initRootSignatures();
-    void initPipelineStateObjects();
+    void initPipeline();
 
   private:
     gfx::Device *const                     m_backend;

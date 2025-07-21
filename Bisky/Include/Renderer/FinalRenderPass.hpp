@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Graphics/GraphicsPipeline.hpp"
 #include "Scene/RenderObject.hpp"
 
 namespace bisky::core
@@ -38,11 +39,11 @@ class FinalRenderPass
     void draw(gfx::FrameResource *const frameResource, core::FrameStats *const frameStats);
 
   private:
-    void initRootSignature();
-    void initPipelineState();
+    void initGraphicsPipeline();
 
     gfx::Device *const                   m_device;
     std::unique_ptr<scene::RenderObject> m_screenQuad;
+    std::unique_ptr<gfx::GraphicsPipeline> m_graphicsPipeline;
 };
 
 } // namespace bisky::renderer

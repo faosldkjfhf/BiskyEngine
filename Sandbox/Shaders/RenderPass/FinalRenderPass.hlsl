@@ -1,6 +1,6 @@
 #include "Common.hlsli"
 
-struct Vertex
+struct SimpleVertex
 {
     float3 position : POSITION;
     float2 texCoord : TEXCOORD;
@@ -23,7 +23,7 @@ ConstantBuffer<RenderResource> renderResource : register(b0);
 
 VsOutput VsMain(uint vertexId : SV_VertexID)
 {
-    StructuredBuffer<Vertex> vertices = ResourceDescriptorHeap[renderResource.vertexBufferIndex];
+    StructuredBuffer<SimpleVertex> vertices = ResourceDescriptorHeap[renderResource.vertexBufferIndex];
     
     VsOutput output;
     output.position = float4(vertices[vertexId].position, 1.0);

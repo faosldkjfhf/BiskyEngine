@@ -19,11 +19,6 @@ Scene::Scene(gfx::Window *const window, gfx::Device *const device, std::string_v
     m_camera        = std::make_unique<Camera>(window->getAspectRatio(), 0.1f, 100.0f);
     m_arcballCamera = std::make_unique<ArcballCamera>(window->getWidth(), window->getHeight());
 
-    LOG_INFO(core::float4(m_arcballCamera->getRight()));
-    LOG_INFO(core::float4(m_arcballCamera->getUp()));
-    LOG_INFO(core::float4(m_arcballCamera->getForward()));
-    LOG_INFO(core::float4(m_arcballCamera->getPosition()));
-
     initDefaultScene();
     LOG_INFO("Scene " + std::string(name) + " created");
 }
@@ -109,13 +104,14 @@ void Scene::draw()
     if (ImGui::CollapsingHeader("Lights", ImGuiTreeNodeFlags_DefaultOpen))
     {
         ImGui::Text("Number of lights: %i", lights.size());
-        for (auto &light : lights)
+        for (const size_t i : std::views::iota(0u, lights.size()))
         {
-            if (ImGui::TreeNode("Light"))
+            std::string title = "Light##" + std::to_string(i);
+            if (ImGui::TreeNode(title.c_str()))
             {
                 ImGui::Unindent();
-                ImGui::SliderFloat3("Position", (float *)&light.position, -10.0f, 10.0f);
-                ImGui::ColorEdit3("Strength", (float *)&light.strength);
+                ImGui::SliderFloat3("Position", (float *)&lights[i].position, -10.0f, 10.0f);
+                ImGui::ColorEdit3("Strength", (float *)&lights[i].strength);
                 ImGui::Indent();
                 ImGui::TreePop();
             }
@@ -153,18 +149,23 @@ void Scene::initDefaultScene()
 {
     m_camera->setPosition(0.0f, 0.0f, -5.0f);
 
-    if (core::ResourceManager::get().loadMesh(m_device, "DamagedHelmet.glb"))
+    auto ro = core::ResourceManager::get().loadGltfMeshes(m_device, "DamagedHelmet.glb");
+    if (ro.has_value())
     {
-        auto ro  = m_renderObjects.emplace_back(std::make_shared<RenderObject>());
-        ro->mesh = core::ResourceManager::get().getMesh("mesh_helmet_LP_13930damagedHelmet");
-        ro->transform->setScale(1.0f, 1.0f, 1.0f);
-        ro->transform->setRotation(90.0f, 0.0f, 180.0f);
-        LOG_INFO("Added new render object");
+        m_renderObjects.assign(ro.value().begin(), ro.value().end());
+        std::for_each(m_renderObjects.begin(), m_renderObjects.end(), [](std::shared_ptr<RenderObject> renderObject) {
+            renderObject->transform->setRotation(90.0f, 180.0f, 0.0f);
+            renderObject->transform->setScale(2.0f, 2.0f, 2.0f);
+        });
     }
 
     auto &light = m_lights.emplace_back();
-    XMStoreFloat4(&light.position, dx::FXMVECTOR{0.0f, 3.0f, -3.0f, 1.0f});
+    XMStoreFloat4(&light.position, dx::FXMVECTOR{-3.0f, 3.0f, -3.0f, 1.0f});
     XMStoreFloat4(&light.strength, dx::FXMVECTOR{1.0f, 1.0f, 1.0f, 1.0f});
+
+    auto &light2 = m_lights.emplace_back();
+    XMStoreFloat4(&light2.position, dx::FXMVECTOR{3.0f, 3.0f, -3.0f, 1.0f});
+    XMStoreFloat4(&light2.strength, dx::FXMVECTOR{1.0f, 1.0f, 1.0f, 1.0f});
 
     m_skybox = std::make_unique<Skybox>(m_device, "Skybox\\cubemap.dds");
 }

@@ -22,7 +22,9 @@
 #include "Graphics/DescriptorHeap.hpp"
 #include "Graphics/Device.hpp"
 #include "Graphics/FrameResource.hpp"
+#include "Graphics/GpuResources.hpp"
 #include "Graphics/GraphicsCommandList.hpp"
+#include "Graphics/GraphicsPipeline.hpp"
 #include "Graphics/PipelineState.hpp"
 #include "Graphics/ResourceUpload.hpp"
 #include "Graphics/Resources.hpp"
@@ -35,6 +37,7 @@
 
 #include "Renderer/FinalRenderPass.hpp"
 #include "Renderer/ForwardRenderer.hpp"
+#include "Renderer/LightDebugRenderPass.hpp"
 #include "Renderer/RenderLayer.hpp"
 #include "Renderer/SkyboxRenderPass.hpp"
 
@@ -46,4 +49,5 @@
 #include "Scene/RenderObject.hpp"
 #include "Scene/Scene.hpp"
 #include "Scene/ScreenQuad.hpp"
+#include "Scene/Skybox.hpp"
 #include "Scene/Vertex.hpp"

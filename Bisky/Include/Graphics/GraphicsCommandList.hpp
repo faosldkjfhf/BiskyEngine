@@ -107,6 +107,13 @@ class GraphicsCommandList : public CommandList
     void setPipelineState(gfx::PipelineState *const pipelineState);
 
     /*
+     * Sets the pipeline state to the given state.
+     *
+     * @param pipelineState The state to set.
+     */
+    void setPipelineState(ID3D12PipelineState *const pipelineState);
+
+    /*
      * Sets the root signature.
      *
      * @param rootSignature The root signature to set.
@@ -114,12 +121,11 @@ class GraphicsCommandList : public CommandList
     void setRootSignature(gfx::RootSignature *const rootSignature);
 
     /*
-     * Sets the vertex buffers.
-     * This doesn't need to be used if using a bindless model.
+     * Sets the root signature.
      *
-     * @param vertexBufferView The vertex buffer view details.
+     * @param rootSignature The root signature to set.
      */
-    void setVertexBuffers(const VertexBufferView &vertexBufferView);
+    void setRootSignature(ID3D12RootSignature *const rootSignature);
 
     /*
      * Sets the index buffer.

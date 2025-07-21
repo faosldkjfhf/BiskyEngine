@@ -1,13 +1,5 @@
 #include "Common.hlsli"
 
-struct Vertex
-{
-    float3 position : POSITION;
-    float3 normal : NORMAL;
-    float2 texCoord : TEXCOORD;
-    float4 tangent : TANGENT;
-};
-
 struct VsOutput
 {
     float4 position : SV_Position;

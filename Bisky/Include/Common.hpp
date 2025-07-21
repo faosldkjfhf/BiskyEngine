@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <future>
 #include <memory>
+#include <ranges>
+#include <set>
 #include <span>
 #include <string>
 #include <string_view>

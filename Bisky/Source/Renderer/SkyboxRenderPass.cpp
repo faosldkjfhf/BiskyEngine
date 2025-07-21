@@ -17,12 +17,12 @@ SkyboxRenderPass::SkyboxRenderPass(gfx::Device *const device) : m_device(device)
     m_cube->name = "skybox";
     m_cube->mesh = core::ResourceManager::get().getMesh("Cube");
 
-    initRootSignature();
-    initPipelineState();
+    initGraphicsPipeline();
 }
 
 SkyboxRenderPass::~SkyboxRenderPass()
 {
+    m_graphicsPipeline.reset();
     m_cube.reset();
 }
 
@@ -35,16 +35,13 @@ void SkyboxRenderPass::draw(
     auto *camera  = scene->getArcballCamera();
     if (skybox)
     {
-        cmdList->setPipelineState(m_device->getPipelineState("skyboxRenderPass"));
-        cmdList->setRootSignature(m_device->getRootSignature("skyboxRenderPass"));
+        cmdList->setPipelineState(m_graphicsPipeline->getPipelineState());
+        cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());
 
-        gfx::Allocation renderResourceAlloc =
-            frameResource->resourceAllocator->allocate(sizeof(SkyboxRenderPass::RenderResource));
-        SkyboxRenderPass::RenderResource *renderResource =
-            (SkyboxRenderPass::RenderResource *)renderResourceAlloc.cpuBase;
-        renderResource->vertexBufferIndex = gfx::Buffer::GetSrvIndex(m_cube->mesh->vertexBuffer.get());
-        renderResource->textureIndex      = gfx::Texture::GetSrvIndex(skybox->getTexture());
-        cmdList->set32BitConstants(0u, 2u, renderResource);
+        SkyboxRenderPass::RenderResource renderResource{};
+        renderResource.vertexBufferIndex = gfx::Buffer::GetSrvIndex(m_cube->mesh->vertexBuffer.get());
+        renderResource.textureIndex      = gfx::Texture::GetSrvIndex(skybox->getTexture());
+        cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 2u, &renderResource);
 
         cmdList->setIndexBuffer({
             .bufferLocation = m_cube->mesh->indexBuffer->resource->GetGPUVirtualAddress(),
@@ -60,7 +57,7 @@ void SkyboxRenderPass::draw(
         XMStoreFloat4x4(&sceneBuffer->projection, camera->getProjection());
         XMStoreFloat4x4(&sceneBuffer->viewProjection, camera->getView() * camera->getProjection());
         XMStoreFloat4(&sceneBuffer->viewPosition, camera->getPosition());
-        cmdList->setConstantBufferView(1u, sceneBufferAlloc.gpuBase);
+        cmdList->setConstantBufferView(m_graphicsPipeline->getRootParameter("sceneBuffer"), sceneBufferAlloc.gpuBase);
 
         for (auto &submesh : m_cube->mesh->submeshes)
         {
@@ -69,44 +66,23 @@ void SkyboxRenderPass::draw(
     }
 }
 
-void SkyboxRenderPass::initRootSignature()
-{
-    gfx::RootParameters parameters{};
-    parameters.add32BitConstants(0u, 2);
-    parameters.addDescriptor(1u, D3D12_ROOT_PARAMETER_TYPE_CBV);
-    parameters.addStaticSampler({
-        .Filter           = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR,
-        .AddressU         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-        .AddressV         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-        .AddressW         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-        .MipLODBias       = 0.0f,
-        .ComparisonFunc   = D3D12_COMPARISON_FUNC_ALWAYS,
-        .MinLOD           = 0.0f,
-        .MaxLOD           = D3D12_FLOAT32_MAX,
-        .ShaderRegister   = 0,
-        .RegisterSpace    = 0,
-        .ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL,
-    });
-    m_device->addRootSignature("skyboxRenderPass", parameters);
-}
-
-void SkyboxRenderPass::initPipelineState()
+void SkyboxRenderPass::initGraphicsPipeline()
 {
     std::array<DXGI_FORMAT, 1> formats;
     formats[0] = m_device->getHdrRenderTargetFormat();
 
     gfx::GraphicsPipelineStateDesc pso = {
-        .rootSignature = m_device->getRootSignature("skyboxRenderPass")->getRootSignature(),
-        .vertexShader  = {.name = "RenderPass\\Skybox.hlsl", .entryPoint = L"VsMain"},
-        .pixelShader   = {.name = "RenderPass\\Skybox.hlsl", .entryPoint = L"PsMain"},
-        .rtvCount      = 1,
-        .rtvFormats    = formats,
-        .dsvFormat     = m_device->getDepthStencilFormat(),
-        .cullMode      = gfx::CullMode::None,
-        .frontFace     = gfx::FrontFace::Clockwise,
-        .depthFunc     = gfx::ComparisonFunc::LessEqual,
+        .vertexShader = {.name = "RenderPass\\Skybox.hlsl", .entryPoint = L"VsMain"},
+        .pixelShader  = {.name = "RenderPass\\Skybox.hlsl", .entryPoint = L"PsMain"},
+        .rtvCount     = 1,
+        .rtvFormats   = formats,
+        .dsvFormat    = m_device->getDepthStencilFormat(),
+        .cullMode     = gfx::CullMode::None,
+        .frontFace    = gfx::FrontFace::Clockwise,
+        .depthFunc    = gfx::ComparisonFunc::LessEqual,
     };
-    m_device->addGraphicsPipelineState("skyboxRenderPass", pso);
+
+    m_graphicsPipeline = std::make_unique<gfx::GraphicsPipeline>(m_device, pso);
 }
 
 } // namespace bisky::renderer

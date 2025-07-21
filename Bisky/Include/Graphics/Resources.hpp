@@ -20,6 +20,12 @@ enum class FrontFace
     CounterClockwise = true
 };
 
+struct FillMode
+{
+    static constexpr D3D12_FILL_MODE Solid     = D3D12_FILL_MODE_SOLID;
+    static constexpr D3D12_FILL_MODE Wireframe = D3D12_FILL_MODE_WIREFRAME;
+};
+
 enum class CullMode
 {
     None  = D3D12_CULL_MODE_NONE,
@@ -48,15 +54,9 @@ struct GraphicsPipelineStateDesc
     std::span<DXGI_FORMAT>     rtvFormats;
     DXGI_FORMAT                dsvFormat = DXGI_FORMAT_UNKNOWN;
     CullMode                   cullMode;
+    D3D12_FILL_MODE            fillMode = FillMode::Solid;
     FrontFace                  frontFace;
     ComparisonFunc             depthFunc = ComparisonFunc::Less;
-};
-
-struct VertexBufferView
-{
-    D3D12_GPU_VIRTUAL_ADDRESS bufferLocation;
-    uint32_t                  sizeInBytes   = 0u;
-    uint32_t                  strideInBytes = 0u;
 };
 
 struct IndexBufferView

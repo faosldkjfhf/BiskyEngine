@@ -14,14 +14,13 @@ namespace bisky::renderer
 
 ForwardRenderer::ForwardRenderer(gfx::Window *const window, gfx::Device *const backend) : m_backend(backend)
 {
-    initRootSignatures();
-    initPipelineStateObjects();
-
+    initPipeline();
     LOG_INFO("Forward Renderer initialized");
 }
 
 ForwardRenderer::~ForwardRenderer()
 {
+    m_graphicsPipeline.reset();
 }
 
 void ForwardRenderer::draw(
@@ -29,8 +28,8 @@ void ForwardRenderer::draw(
     core::FrameStats *const frameStats
 )
 {
-    frameStats->drawCount     = 0;
-    frameStats->triangleCount = 0;
+    frameStats->drawCount     = 0u;
+    frameStats->triangleCount = 0u;
     auto start                = std::chrono::system_clock::now();
 
     // -------------- grab the graphics command list --------------
@@ -50,16 +49,14 @@ void ForwardRenderer::draw(
     cmdList->setRenderTargets(renderTexture->rtvDescriptor.cpu, m_backend->getDepthStencilView());
 
     // -------------- bind the pipeline state --------------
-    // cmdList->setPipelineState(m_backend->getPipelineState("opaque"));
-    cmdList->getCommandList()->SetPipelineState(m_graphicsPipeline->getPipelineState());
+    cmdList->setPipelineState(m_graphicsPipeline->getPipelineState());
 
     // -------------- set descriptor heaps --------------
     std::array<const gfx::DescriptorHeap *const, 1> heaps = {m_backend->getCbvSrvUavHeap()};
     cmdList->setDescriptorHeaps(heaps);
 
     // -------------- bind root signature --------------
-    cmdList->getCommandList()->SetGraphicsRootSignature(m_graphicsPipeline->getRootSignature());
-    // cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());
+    cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());
 
     // -------------- allocate scene buffer --------------
     auto             *camera      = scene->getArcballCamera();
@@ -75,7 +72,7 @@ void ForwardRenderer::draw(
     auto             &lights      = scene->getLights();
     gfx::Allocation   alloc       = frameResource->resourceAllocator->allocate(sizeof(gfx::LightBuffer));
     gfx::LightBuffer *lightBuffer = reinterpret_cast<gfx::LightBuffer *>(alloc.cpuBase);
-    for (size_t i = 0; i < lights.size(); i++)
+    for (const UINT32 i : std::views::iota(0u, lights.size()))
     {
         lightBuffer->lights[i] = lights[i];
     }
@@ -84,7 +81,7 @@ void ForwardRenderer::draw(
 
     for (auto &object : scene->getRenderObjects())
     {
-        auto *mesh = object->mesh;
+        auto mesh = object->mesh;
 
         // -------------- input assembly --------------
         cmdList->setIndexBuffer({
@@ -110,9 +107,10 @@ void ForwardRenderer::draw(
         for (auto &submesh : mesh->submeshes)
         {
             // ------------- finish setting 32-bit constants -------------
-            rr->diffuseTextureIndex           = gfx::Texture::GetSrvIndex(submesh.material->diffuseTexture);
-            rr->metallicRoughnessTextureIndex = gfx::Texture::GetSrvIndex(submesh.material->metallicRoughnessTexture);
-            rr->normalTextureIndex            = gfx::Texture::GetSrvIndex(submesh.material->normalTexture);
+            rr->diffuseTextureIndex = gfx::Texture::GetSrvIndex(submesh.material->diffuseTexture.get());
+            rr->metallicRoughnessTextureIndex =
+                gfx::Texture::GetSrvIndex(submesh.material->metallicRoughnessTexture.get());
+            rr->normalTextureIndex = gfx::Texture::GetSrvIndex(submesh.material->normalTexture.get());
             cmdList->set32BitConstants(
                 m_graphicsPipeline->getRootParameter("renderResource"), 4u, reinterpret_cast<void *>(rr)
             );
@@ -130,39 +128,15 @@ void ForwardRenderer::draw(
     frameStats->meshDrawTime = elapsed.count() / 1000.0f;
 }
 
-void ForwardRenderer::initRootSignatures()
-{
-    /*gfx::RootParameters parameters{};
-    parameters.add32BitConstants(0u, 5u);
-    parameters.addDescriptor(1u, D3D12_ROOT_PARAMETER_TYPE_CBV);
-    parameters.addDescriptor(2u, D3D12_ROOT_PARAMETER_TYPE_CBV);
-    parameters.addDescriptor(3u, D3D12_ROOT_PARAMETER_TYPE_CBV);
-    parameters.addStaticSampler({
-        .Filter           = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR,
-        .AddressU         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-        .AddressV         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-        .AddressW         = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-        .MipLODBias       = 0.0f,
-        .ComparisonFunc   = D3D12_COMPARISON_FUNC_ALWAYS,
-        .MinLOD           = 0.0f,
-        .MaxLOD           = D3D12_FLOAT32_MAX,
-        .ShaderRegister   = 0u,
-        .RegisterSpace    = 0u,
-        .ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL,
-    });
-    m_backend->addRootSignature("opaque", parameters);*/
-}
-
-void ForwardRenderer::initPipelineStateObjects()
+void ForwardRenderer::initPipeline()
 {
     std::array<DXGI_FORMAT, 1> formats;
     formats[0] = m_backend->getHdrRenderTargetFormat();
 
     gfx::GraphicsPipelineStateDesc psoDesc = {
-        // .rootSignature = m_backend->getRootSignature("opaque")->getRootSignature(),
         .vertexShader = {.name = "Geometry\\Shader.hlsl", .entryPoint = L"VsMain"},
         .pixelShader  = {.name = "Geometry\\Shader.hlsl", .entryPoint = L"PsMain"},
-        .rtvCount     = 1,
+        .rtvCount     = 1u,
         .rtvFormats   = formats,
         .dsvFormat    = m_backend->getDepthStencilFormat(),
         .cullMode     = gfx::CullMode::Back,
@@ -171,8 +145,6 @@ void ForwardRenderer::initPipelineStateObjects()
     };
 
     m_graphicsPipeline = std::make_unique<gfx::GraphicsPipeline>(m_backend, psoDesc);
-
-    // m_backend->addGraphicsPipelineState("opaque", psoDesc);
 }
 
 } // namespace bisky::renderer
