@@ -21,48 +21,48 @@ void GraphicsCommandList::reset()
     m_commandList->Reset(m_commandAllocator.Get(), nullptr);
 }
 
-void GraphicsCommandList::clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, float color[4])
+void GraphicsCommandList::clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, float color[4]) const
 {
     m_commandList->ClearRenderTargetView(renderTargetView, color, 0, nullptr);
 }
 
 void GraphicsCommandList::clearDepthStencilView(
     D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, float depth, uint32_t stencil
-)
+) const
 {
     m_commandList->ClearDepthStencilView(
         depthStencilView, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depth, stencil, 0, nullptr
     );
 }
 
-void GraphicsCommandList::setViewport(const D3D12_VIEWPORT &viewport)
+void GraphicsCommandList::setViewport(const D3D12_VIEWPORT &viewport) const
 {
     m_commandList->RSSetViewports(1, &viewport);
 }
 
-void GraphicsCommandList::setScissorRect(const D3D12_RECT &scissor)
+void GraphicsCommandList::setScissorRect(const D3D12_RECT &scissor) const
 {
     m_commandList->RSSetScissorRects(1, &scissor);
 }
 
-void GraphicsCommandList::setRenderTargets(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTarget)
+void GraphicsCommandList::setRenderTargets(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTarget) const
 {
     m_commandList->OMSetRenderTargets(1, &renderTarget, false, nullptr);
 }
 
 void GraphicsCommandList::setRenderTargets(
     const D3D12_CPU_DESCRIPTOR_HANDLE &renderTarget, const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilView
-)
+) const
 {
     m_commandList->OMSetRenderTargets(1, &renderTarget, false, &depthStencilView);
 }
 
-void GraphicsCommandList::copyBufferRegion(Buffer *const src, Buffer *const dst, size_t bufferSize)
+void GraphicsCommandList::copyBufferRegion(Buffer *const src, Buffer *const dst, size_t bufferSize) const
 {
     m_commandList->CopyBufferRegion(dst->resource.Get(), 0, src->resource.Get(), 0, bufferSize);
 }
 
-void GraphicsCommandList::copyTextureRegion(Buffer *const src, Texture *const dst, const ImageData &imageData)
+void GraphicsCommandList::copyTextureRegion(Buffer *const src, Texture *const dst, const ImageData &imageData) const
 {
     D3D12_TEXTURE_COPY_LOCATION copySrc = {
         .pResource = src->resource.Get(),
@@ -99,7 +99,7 @@ void GraphicsCommandList::copyTextureRegion(Buffer *const src, Texture *const ds
     m_commandList->CopyTextureRegion(&copyDst, 0, 0, 0, &copySrc, &box);
 }
 
-void GraphicsCommandList::setDescriptorHeaps(const std::span<const DescriptorHeap *const> &descriptorHeaps)
+void GraphicsCommandList::setDescriptorHeaps(const std::span<const DescriptorHeap *const> &descriptorHeaps) const
 {
     std::vector<ID3D12DescriptorHeap *> heaps(descriptorHeaps.size());
     for (size_t i = 0; i < descriptorHeaps.size(); i++)
@@ -110,7 +110,7 @@ void GraphicsCommandList::setDescriptorHeaps(const std::span<const DescriptorHea
     m_commandList->SetDescriptorHeaps(static_cast<UINT>(heaps.size()), heaps.data());
 }
 
-void GraphicsCommandList::setPipelineState(gfx::PipelineState *const pipelineState)
+void GraphicsCommandList::setPipelineState(gfx::PipelineState *const pipelineState) const
 {
     if (pipelineState)
     {
@@ -118,12 +118,12 @@ void GraphicsCommandList::setPipelineState(gfx::PipelineState *const pipelineSta
     }
 }
 
-void GraphicsCommandList::setPipelineState(ID3D12PipelineState *const pipelineState)
+void GraphicsCommandList::setPipelineState(ID3D12PipelineState *const pipelineState) const
 {
     m_commandList->SetPipelineState(pipelineState);
 }
 
-void GraphicsCommandList::setRootSignature(gfx::RootSignature *const rootSignature)
+void GraphicsCommandList::setRootSignature(gfx::RootSignature *const rootSignature) const
 {
     if (rootSignature)
     {
@@ -131,12 +131,12 @@ void GraphicsCommandList::setRootSignature(gfx::RootSignature *const rootSignatu
     }
 }
 
-void GraphicsCommandList::setRootSignature(ID3D12RootSignature *const rootSignature)
+void GraphicsCommandList::setRootSignature(ID3D12RootSignature *const rootSignature) const
 {
     m_commandList->SetGraphicsRootSignature(rootSignature);
 }
 
-void GraphicsCommandList::setIndexBuffer(const IndexBufferView &indexBufferView)
+void GraphicsCommandList::setIndexBuffer(const IndexBufferView &indexBufferView) const
 {
     D3D12_INDEX_BUFFER_VIEW ibv{};
     ibv.BufferLocation = indexBufferView.bufferLocation;
@@ -145,26 +145,31 @@ void GraphicsCommandList::setIndexBuffer(const IndexBufferView &indexBufferView)
     m_commandList->IASetIndexBuffer(&ibv);
 }
 
-void GraphicsCommandList::setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY topology)
+void GraphicsCommandList::setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY topology) const
 {
     m_commandList->IASetPrimitiveTopology(topology);
 }
 
-void GraphicsCommandList::drawIndexedInstanced(const scene::Submesh &submesh)
+void GraphicsCommandList::drawIndexedInstanced(const scene::Submesh &submesh) const
 {
     m_commandList->DrawIndexedInstanced(
         submesh.indexCount, 1, submesh.startIndexLocation, submesh.baseVertexLocation, 0
     );
 }
 
-void GraphicsCommandList::setConstantBufferView(uint32_t index, D3D12_GPU_VIRTUAL_ADDRESS handle)
+void GraphicsCommandList::setConstantBufferView(uint32_t index, D3D12_GPU_VIRTUAL_ADDRESS handle) const
 {
     m_commandList->SetGraphicsRootConstantBufferView(index, handle);
 }
 
-void GraphicsCommandList::set32BitConstants(uint32_t index, uint32_t numValues, void *data)
+void GraphicsCommandList::set32BitConstants(uint32_t index, uint32_t numValues, void *data) const
 {
     m_commandList->SetGraphicsRoot32BitConstants(index, numValues, data, 0u);
+}
+
+void GraphicsCommandList::dispatch(UINT x, UINT y, UINT z) const
+{
+    m_commandList->Dispatch(x, y, z);
 }
 
 } // namespace bisky::gfx

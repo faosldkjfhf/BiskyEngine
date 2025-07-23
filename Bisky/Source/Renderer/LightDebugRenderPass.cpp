@@ -32,13 +32,16 @@ void LightDebugRenderPass::draw(
     cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());
 
     // ----- set scene buffer -----
-    auto  sceneAlloc  = frameResource->resourceAllocator->allocate(sizeof(gfx::SceneBuffer));
-    auto *sceneBuffer = reinterpret_cast<gfx::SceneBuffer *>(sceneAlloc.cpuBase);
-    XMStoreFloat4x4(&sceneBuffer->view, camera->getView());
-    XMStoreFloat4x4(&sceneBuffer->projection, camera->getProjection());
-    XMStoreFloat4x4(&sceneBuffer->viewProjection, camera->getView() * camera->getProjection());
-    XMStoreFloat4(&sceneBuffer->viewPosition, camera->getPosition());
-    cmdList->setConstantBufferView(m_graphicsPipeline->getRootParameter("sceneBuffer"), sceneAlloc.gpuBase);
+    // auto  sceneAlloc  = frameResource->resourceAllocator->allocate(sizeof(gfx::SceneBuffer));
+    // auto *sceneBuffer = reinterpret_cast<gfx::SceneBuffer *>(sceneAlloc.cpuBase);
+    // XMStoreFloat4x4(&sceneBuffer->view, camera->getView());
+    // XMStoreFloat4x4(&sceneBuffer->projection, camera->getProjection());
+    // XMStoreFloat4x4(&sceneBuffer->viewProjection, camera->getView() * camera->getProjection());
+    // XMStoreFloat4(&sceneBuffer->viewPosition, camera->getPosition());
+    cmdList->setConstantBufferView(
+        m_graphicsPipeline->getRootParameter("sceneBuffer"),
+        frameResource->sceneBuffer->resource->GetGPUVirtualAddress()
+    );
 
     // ----- allocate render resource -----
     auto renderResourceAlloc = frameResource->resourceAllocator->allocate(sizeof(LightDebugRenderPass::RenderResource));

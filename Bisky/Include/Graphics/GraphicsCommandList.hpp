@@ -41,23 +41,23 @@ class GraphicsCommandList : public CommandList
      * @param renderTargetView The handle to the render target.
      * @param color An array of 4 float color values.
      */
-    void clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, float color[4]);
+    void clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, float color[4]) const;
 
-    void clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, float depth, uint32_t stencil);
+    void clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, float depth, uint32_t stencil) const;
 
     /*
      * Sets the viewport to the given viewport.
      *
      * @param viewport The viewport to use.
      */
-    void setViewport(const D3D12_VIEWPORT &viewport);
+    void setViewport(const D3D12_VIEWPORT &viewport) const;
 
     /*
      * Sets the scissor rect to the given scissor.
      *
      * @param scissor The scissor rect to use.
      */
-    void setScissorRect(const D3D12_RECT &scissor);
+    void setScissorRect(const D3D12_RECT &scissor) const;
 
     /*
      * Sets the render target for the output merger.
@@ -65,7 +65,7 @@ class GraphicsCommandList : public CommandList
      *
      * @param renderTarget The render target to use.
      */
-    void setRenderTargets(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTarget);
+    void setRenderTargets(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTarget) const;
 
     /*
      * Sets the render target and depth stencil for the output merger.
@@ -76,7 +76,7 @@ class GraphicsCommandList : public CommandList
      */
     void setRenderTargets(
         const D3D12_CPU_DESCRIPTOR_HANDLE &renderTarget, const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilView
-    );
+    ) const;
 
     /*
      * Copies the buffer region at offset 0 from src to dst.
@@ -86,9 +86,9 @@ class GraphicsCommandList : public CommandList
      * @param dst The buffer to copy into
      * @param bufferSize The size of the data to copy
      */
-    void copyBufferRegion(Buffer *const src, Buffer *const dst, size_t bufferSize);
+    void copyBufferRegion(Buffer *const src, Buffer *const dst, size_t bufferSize) const;
 
-    void copyTextureRegion(Buffer *const src, Texture *const dst, const ImageData &imageData);
+    void copyTextureRegion(Buffer *const src, Texture *const dst, const ImageData &imageData) const;
 
     /*
      * Sets the descriptor heaps.
@@ -97,42 +97,42 @@ class GraphicsCommandList : public CommandList
      *
      * @param descriptorHeaps A span of descriptor heaps to include
      */
-    void setDescriptorHeaps(const std::span<const DescriptorHeap *const> &descriptorHeaps);
+    void setDescriptorHeaps(const std::span<const DescriptorHeap *const> &descriptorHeaps) const;
 
     /*
      * Sets the pipeline state to the given state.
      *
      * @param pipelineState The state to set.
      */
-    void setPipelineState(gfx::PipelineState *const pipelineState);
+    void setPipelineState(gfx::PipelineState *const pipelineState) const;
 
     /*
      * Sets the pipeline state to the given state.
      *
      * @param pipelineState The state to set.
      */
-    void setPipelineState(ID3D12PipelineState *const pipelineState);
+    void setPipelineState(ID3D12PipelineState *const pipelineState) const;
 
     /*
      * Sets the root signature.
      *
      * @param rootSignature The root signature to set.
      */
-    void setRootSignature(gfx::RootSignature *const rootSignature);
+    void setRootSignature(gfx::RootSignature *const rootSignature) const;
 
     /*
      * Sets the root signature.
      *
      * @param rootSignature The root signature to set.
      */
-    void setRootSignature(ID3D12RootSignature *const rootSignature);
+    void setRootSignature(ID3D12RootSignature *const rootSignature) const;
 
     /*
      * Sets the index buffer.
      *
      * @param indexBufferView The index buffer view details.
      */
-    void setIndexBuffer(const IndexBufferView &indexBufferView);
+    void setIndexBuffer(const IndexBufferView &indexBufferView) const;
 
     /*
      * Sets the primitive topology.
@@ -140,14 +140,14 @@ class GraphicsCommandList : public CommandList
      *
      * @param topology The topology to use.
      */
-    void setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY topology);
+    void setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY topology) const;
 
     /*
      * Issues a draw call using the submesh arguments.
      *
      * @param submesh The submesh to draw.
      */
-    void drawIndexedInstanced(const scene::Submesh &submesh);
+    void drawIndexedInstanced(const scene::Submesh &submesh) const;
 
     /*
      * Passes a constant buffer view to the shader.
@@ -155,7 +155,7 @@ class GraphicsCommandList : public CommandList
      * @param index The index of the root parameter.
      * @param handle The GPU address to set it at.
      */
-    void setConstantBufferView(uint32_t index, D3D12_GPU_VIRTUAL_ADDRESS handle);
+    void setConstantBufferView(uint32_t index, D3D12_GPU_VIRTUAL_ADDRESS handle) const;
 
     /*
      * Passes 32-bit constants to the shader.
@@ -164,7 +164,9 @@ class GraphicsCommandList : public CommandList
      * @param numValues The number of values to set.
      * @param data A pointer to the start of the data.
      */
-    void set32BitConstants(uint32_t index, uint32_t numValues, void *data);
+    void set32BitConstants(uint32_t index, uint32_t numValues, void *data) const;
+
+    void dispatch(UINT x, UINT y, UINT z) const;
 
   private:
     Device &m_device;

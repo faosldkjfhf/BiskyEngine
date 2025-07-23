@@ -24,9 +24,6 @@ Device::Device(Window *window, DXGI_FORMAT backBufferFormat, DXGI_FORMAT hdrRend
 
 Device::~Device()
 {
-    m_pipelineStates.clear();
-    m_rootSignatures.clear();
-
     for (uint32_t i = 0; i < FramesInFlight; i++)
     {
         m_renderTargetBuffers[i].reset();
@@ -145,21 +142,9 @@ void Device::getBuffers(uint32_t width, uint32_t height)
     m_device->CreateDepthStencilView(m_depthStencilBuffer->resource.Get(), &dsv, m_depthStencilHandle.cpu);
 }
 
-void Device::addGraphicsPipelineState(std::string_view name, const GraphicsPipelineStateDesc &gfxDesc)
-{
-    m_pipelineStates[name] = std::make_unique<PipelineState>(m_device.Get(), gfxDesc);
-    LOG_INFO("Pipeline state " + std::string(name) + " created");
-}
-
-void Device::addRootSignature(std::string_view name, const gfx::RootParameters &parameters)
-{
-    m_rootSignatures[name] = std::make_unique<RootSignature>(m_device.Get(), parameters);
-    LOG_INFO("Root signature " + std::string(name) + " created");
-}
-
 std::unique_ptr<Buffer> Device::createUploadBuffer(uint32_t size, void *data, uint32_t dataSize)
 {
-    std::unique_ptr<Buffer> buffer = std::make_unique<Buffer>();
+    auto buffer = std::make_unique<Buffer>();
 
     D3D12_HEAP_PROPERTIES heap = {
         .Type = D3D12_HEAP_TYPE_UPLOAD,
@@ -204,7 +189,7 @@ std::unique_ptr<Texture> Device::createTexture2D(
     uint32_t width, uint32_t height, DXGI_FORMAT format, D3D12_RESOURCE_FLAGS flags
 )
 {
-    std::unique_ptr<Texture> texture = std::make_unique<Texture>();
+    auto texture = std::make_unique<Texture>();
 
     D3D12_HEAP_PROPERTIES heap = {
         .Type = D3D12_HEAP_TYPE_DEFAULT,
@@ -234,9 +219,9 @@ std::unique_ptr<Texture> Device::createTexture2D(
     }
     else if (flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
     {
-        optClear.Color[0] = 0.15f;
-        optClear.Color[1] = 0.15f;
-        optClear.Color[2] = 0.15f;
+        optClear.Color[0] = 0.0f;
+        optClear.Color[1] = 0.0f;
+        optClear.Color[2] = 0.0f;
         optClear.Color[3] = 1.0f;
         m_device->CreateCommittedResource(
             &heap, D3D12_HEAP_FLAG_NONE, &resource, D3D12_RESOURCE_STATE_COMMON, &optClear,
@@ -398,30 +383,6 @@ DXGI_FORMAT Device::getHdrRenderTargetFormat() const
     return m_hdrRenderTargetFormat;
 }
 
-RootSignature *const Device::getRootSignature(std::string_view name) const
-{
-    auto it = m_rootSignatures.find(name);
-    if (it == m_rootSignatures.end())
-    {
-        LOG_WARNING("Failed to find root signature " + std::string(name));
-        return nullptr;
-    }
-
-    return it->second.get();
-}
-
-PipelineState *const Device::getPipelineState(std::string_view name) const
-{
-    auto it = m_pipelineStates.find(name);
-    if (it == m_pipelineStates.end())
-    {
-        LOG_WARNING("Failed to find pipeline state " + std::string(name));
-        return nullptr;
-    }
-
-    return it->second.get();
-}
-
 DescriptorHeap *const Device::getCbvSrvUavHeap() const
 {
     return m_cbvSrvUavHeap.get();
@@ -552,10 +513,7 @@ void Device::initFrameResources()
     auto sceneBufferSize = constantBufferByteSize(sizeof(SceneBuffer));
     for (uint32_t i = 0; i < FramesInFlight; i++)
     {
-        m_frameResources[i]                      = std::make_unique<FrameResource>();
-        m_frameResources[i]->graphicsCommandList = std::make_unique<GraphicsCommandList>(this);
-        m_frameResources[i]->resourceAllocator   = std::make_unique<Allocator>(this, 64u * 1024u);
-        m_frameResources[i]->fenceValue          = 0;
+        m_frameResources[i] = std::make_unique<FrameResource>(this);
     }
 
     LOG_VERBOSE("Frame resources created");

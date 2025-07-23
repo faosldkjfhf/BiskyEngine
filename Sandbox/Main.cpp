@@ -51,8 +51,9 @@ int main()
     auto geometryRenderPass   = std::make_unique<renderer::ForwardRenderer>(window.get(), device.get());
     auto lightDebugRenderPass = std::make_unique<renderer::LightDebugRenderPass>(device.get());
     auto skyboxRenderPass     = std::make_unique<renderer::SkyboxRenderPass>(device.get());
-    auto finalRenderPass      = std::make_unique<renderer::FinalRenderPass>(device.get());
-    auto scene                = std::make_unique<scene::Scene>(window.get(), device.get(), "test scene");
+    // auto bloomComputePass     = std::make_unique<renderer::BloomComputePass>(device.get());
+    auto finalRenderPass = std::make_unique<renderer::FinalRenderPass>(device.get());
+    auto scene           = std::make_unique<scene::Scene>(window.get(), device.get(), "test scene");
 
     // ----- initialize input -----
     input.window = window.get();
@@ -87,6 +88,21 @@ int main()
 
         // ----- wait for previous commands to finish -----
         auto *frame = device->nextFrameResource();
+
+        // ----- fill scene buffer -----
+        // FIXME: there's a better way to do this probably
+        gfx::SceneBuffer buffer{};
+        XMStoreFloat4x4(&buffer.view, scene->getArcballCamera()->getView());
+        XMStoreFloat4x4(&buffer.projection, scene->getArcballCamera()->getProjection());
+        XMStoreFloat4x4(
+            &buffer.viewProjection, scene->getArcballCamera()->getView() * scene->getArcballCamera()->getProjection()
+        );
+        XMStoreFloat4(&buffer.viewPosition, scene->getArcballCamera()->getPosition());
+
+        void *sceneBuffer;
+        frame->sceneBuffer->resource->Map(0, nullptr, &sceneBuffer);
+        memcpy(sceneBuffer, &buffer, (sizeof(buffer) + 255) & -256);
+        frame->sceneBuffer->resource->Unmap(0, nullptr);
 
         // ----- reset command list -----
         auto *cmdList = frame->graphicsCommandList.get();

@@ -34,9 +34,12 @@ VsOutput VsMain(uint vertexId : SV_VertexID)
     return output;
 }
 
-float4 PsMain(VsOutput input) : SV_Target
+float4 PsMain(VsOutput input) : SV_Target0
 {
     TextureCube skybox = ResourceDescriptorHeap[renderResource.textureIndex];
     
-    return skybox.Sample(linearWrapSampler, input.positionW);
+    float3 color = skybox.Sample(linearWrapSampler, input.positionW).xyz;
+    color = pow(color, 2.2);
+    
+    return float4(color, 1.0);
 }

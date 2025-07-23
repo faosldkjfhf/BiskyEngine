@@ -7,13 +7,18 @@
 namespace bisky::gfx
 {
 
+class Device;
+
 /*
  * Stores items that vary per frame.
  */
 struct FrameResource
 {
+    explicit FrameResource(Device *const device);
+
     std::unique_ptr<GraphicsCommandList> graphicsCommandList = nullptr;
     std::unique_ptr<Allocator>           resourceAllocator   = nullptr;
+    std::unique_ptr<Buffer>              sceneBuffer         = nullptr;
     uint64_t                             fenceValue          = 0u;
 };
 

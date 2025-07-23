@@ -16,6 +16,7 @@
 #include "Graphics/Buffer.hpp"
 #include "Graphics/CommandList.hpp"
 #include "Graphics/CommandQueue.hpp"
+#include "Graphics/ComputePipeline.hpp"
 #include "Graphics/Constants.hpp"
 #include "Graphics/DebugLayer.hpp"
 #include "Graphics/Descriptor.hpp"
@@ -35,6 +36,7 @@
 #include "Graphics/Utilities.hpp"
 #include "Graphics/Window.hpp"
 
+#include "Renderer/BloomComputePass.hpp"
 #include "Renderer/FinalRenderPass.hpp"
 #include "Renderer/ForwardRenderer.hpp"
 #include "Renderer/LightDebugRenderPass.hpp"

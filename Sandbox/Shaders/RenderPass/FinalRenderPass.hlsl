@@ -31,10 +31,17 @@ VsOutput VsMain(uint vertexId : SV_VertexID)
     return output;
 }
 
-float4 PsMain(VsOutput input) : SV_Target
+float4 PsMain(VsOutput input) : SV_Target0
 {
     Texture2D<float4> rtvTexture = ResourceDescriptorHeap[renderResource.textureIndex];
     
     float3 hdr = rtvTexture.SampleLevel(linearWrapSampler, input.texCoord, 0.0).xyz;
+    
+    // ----- Reinhard tone-mapping -----
+    hdr = hdr / (hdr + 1.0);
+    
+    // ----- Gamma correction -----
+    hdr = pow(hdr, 1.0 / 2.2);
+    
     return float4(hdr, 1.0);
 }

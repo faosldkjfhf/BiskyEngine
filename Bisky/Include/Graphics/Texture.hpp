@@ -32,6 +32,7 @@ struct ImageData
 struct Texture
 {
     static int32_t GetSrvIndex(const Texture *const texture);
+    static int32_t GetUavIndex(const Texture *const texture);
 
     Microsoft::WRL::ComPtr<ID3D12Resource> resource;
     gfx::Descriptor                        srvDescriptor = {};

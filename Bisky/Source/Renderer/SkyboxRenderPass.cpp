@@ -15,7 +15,7 @@ SkyboxRenderPass::SkyboxRenderPass(gfx::Device *const device) : m_device(device)
 
     m_cube       = std::make_unique<scene::RenderObject>();
     m_cube->name = "skybox";
-    m_cube->mesh = core::ResourceManager::get().getMesh("Cube");
+    m_cube->mesh = core::ResourceManager::get().getMesh("Cube.000");
 
     initGraphicsPipeline();
 }
@@ -35,14 +35,17 @@ void SkyboxRenderPass::draw(
     auto *camera  = scene->getArcballCamera();
     if (skybox)
     {
+        // ----- bind pipeline state and root signature -----
         cmdList->setPipelineState(m_graphicsPipeline->getPipelineState());
         cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());
 
+        // ----- set render resource -----
         SkyboxRenderPass::RenderResource renderResource{};
         renderResource.vertexBufferIndex = gfx::Buffer::GetSrvIndex(m_cube->mesh->vertexBuffer.get());
         renderResource.textureIndex      = gfx::Texture::GetSrvIndex(skybox->getTexture());
         cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 2u, &renderResource);
 
+        // ----- set index buffer and topology -----
         cmdList->setIndexBuffer({
             .bufferLocation = m_cube->mesh->indexBuffer->resource->GetGPUVirtualAddress(),
             .sizeInBytes    = m_cube->mesh->indexBufferByteSize,
@@ -50,15 +53,13 @@ void SkyboxRenderPass::draw(
         });
         cmdList->setPrimitiveTopology(m_cube->primitiveTopology);
 
-        // TODO: Figure out how to reuse these constants
-        gfx::Allocation   sceneBufferAlloc = frameResource->resourceAllocator->allocate(sizeof(gfx::SceneBuffer));
-        gfx::SceneBuffer *sceneBuffer      = (gfx::SceneBuffer *)sceneBufferAlloc.cpuBase;
-        XMStoreFloat4x4(&sceneBuffer->view, camera->getView());
-        XMStoreFloat4x4(&sceneBuffer->projection, camera->getProjection());
-        XMStoreFloat4x4(&sceneBuffer->viewProjection, camera->getView() * camera->getProjection());
-        XMStoreFloat4(&sceneBuffer->viewPosition, camera->getPosition());
-        cmdList->setConstantBufferView(m_graphicsPipeline->getRootParameter("sceneBuffer"), sceneBufferAlloc.gpuBase);
+        // ----- set constant buffer view -----
+        cmdList->setConstantBufferView(
+            m_graphicsPipeline->getRootParameter("sceneBuffer"),
+            frameResource->sceneBuffer->resource->GetGPUVirtualAddress()
+        );
 
+        // ----- draw submeshes -----
         for (auto &submesh : m_cube->mesh->submeshes)
         {
             cmdList->drawIndexedInstanced(submesh);

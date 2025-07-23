@@ -146,11 +146,5 @@ float4 PsMain(VOutput input) : SV_Target
     float3 ambient = float3(0.03, 0.03, 0.03) * albedo;
     Lo += ambient;
     
-    // ----- Reinhard tone-mapping -----
-    Lo = Lo / (Lo + 1.0);
-    
-    // ----- gamma correction -----
-    Lo = pow(Lo, 1.0 / gamma);
-    
     return float4(Lo, 1.0);
 }

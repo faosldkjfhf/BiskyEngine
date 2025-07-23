@@ -37,7 +37,7 @@ void ForwardRenderer::draw(
     auto renderTexture = m_backend->getHdrRenderTargetBuffer();
 
     // -------------- clear render target view --------------
-    float color[4] = {0.15f, 0.15f, 0.15f, 1.0f};
+    float color[4] = {0.0f, 0.0f, 0.0f, 1.0f};
     cmdList->clearRenderTargetView(renderTexture->rtvDescriptor.cpu, color);
     cmdList->clearDepthStencilView(m_backend->getDepthStencilView(), 1.0f, 0);
 
@@ -58,15 +58,11 @@ void ForwardRenderer::draw(
     // -------------- bind root signature --------------
     cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());
 
-    // -------------- allocate scene buffer --------------
-    auto             *camera      = scene->getArcballCamera();
-    gfx::Allocation   sceneAlloc  = frameResource->resourceAllocator->allocate(sizeof(gfx::SceneBuffer));
-    gfx::SceneBuffer *sceneBuffer = reinterpret_cast<gfx::SceneBuffer *>(sceneAlloc.cpuBase);
-    XMStoreFloat4x4(&sceneBuffer->view, camera->getView());
-    XMStoreFloat4x4(&sceneBuffer->projection, camera->getProjection());
-    XMStoreFloat4x4(&sceneBuffer->viewProjection, camera->getView() * camera->getProjection());
-    XMStoreFloat4(&sceneBuffer->viewPosition, camera->getPosition());
-    cmdList->setConstantBufferView(m_graphicsPipeline->getRootParameter("sceneBuffer"), sceneAlloc.gpuBase);
+    // -------------- bind scene buffer --------------
+    cmdList->setConstantBufferView(
+        m_graphicsPipeline->getRootParameter("sceneBuffer"),
+        frameResource->sceneBuffer->resource->GetGPUVirtualAddress()
+    );
 
     // -------------- allocate lights --------------
     auto             &lights      = scene->getLights();

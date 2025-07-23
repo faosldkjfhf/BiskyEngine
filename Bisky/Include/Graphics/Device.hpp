@@ -72,22 +72,6 @@ class Device
     void getBuffers(uint32_t width, uint32_t height);
 
     /*
-     * Adds a graphics pipeline state with the given description.
-     *
-     * @param name The name to set.
-     * @param gfxDesc The pipeline state description.
-     */
-    void addGraphicsPipelineState(std::string_view name, const GraphicsPipelineStateDesc &gfxDesc);
-
-    /*
-     * Adds a new root signature from the given root parameters.
-     *
-     * @param name The name to set.
-     * @param gfxDesc The root parameters to build the root signature.
-     */
-    void addRootSignature(std::string_view name, const gfx::RootParameters &parameters);
-
-    /*
      * Creates an upload buffer and returns it.
      * If data is passed in, also initializes it with the given data.
      * If dataSize is not passed in, the data is assumed to be the same
@@ -217,22 +201,6 @@ class Device
     DXGI_FORMAT getHdrRenderTargetFormat() const;
 
     /*
-     * Gets the root signature with the given name.
-     *
-     * @param name The name of the root signature to fetch.
-     * @return The root signature, or nullptr if not found.
-     */
-    RootSignature *const getRootSignature(std::string_view name) const;
-
-    /*
-     * Gets the pipeline state with the given name.
-     *
-     * @param name The name of the pipeline state to fetch.
-     * @return The pipeline state, or nullptr if not found.
-     */
-    PipelineState *const getPipelineState(std::string_view name) const;
-
-    /*
      * Gets a pointer to the cbv srv and uav heap.
      *
      * @return An unmodifiable pointer to the cbv srv and uav heap.
@@ -310,9 +278,6 @@ class Device
 
     // per-frame stuff
     std::array<std::unique_ptr<FrameResource>, FramesInFlight> m_frameResources;
-
-    std::unordered_map<std::string_view, std::unique_ptr<RootSignature>> m_rootSignatures;
-    std::unordered_map<std::string_view, std::unique_ptr<PipelineState>> m_pipelineStates;
 };
 
 } // namespace bisky::gfx

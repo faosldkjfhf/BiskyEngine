@@ -183,14 +183,9 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
 
         // -------------- create a mesh --------------
         std::unique_ptr<scene::Mesh> newMesh = std::make_unique<scene::Mesh>();
-        newMesh->name                        = mesh.name;
+        newMesh->name                        = name.string() + "." + std::format("{:03d}", i);
         newMesh->indexFormat                 = DXGI_FORMAT_R32_UINT;
         newMesh->vertexByteStride            = sizeof(scene::Vertex);
-
-        if (newMesh->name.empty())
-        {
-            newMesh->name = name.string() + "." + std::format("{:03d}", i);
-        }
 
         // -------------- if mesh exists, skip over it --------------
         auto it = m_meshes.find(newMesh->name);
@@ -468,8 +463,10 @@ std::optional<std::vector<std::shared_ptr<scene::RenderObject>>> ResourceManager
     std::vector<uint32_t>                             indices;
     std::vector<std::shared_ptr<scene::RenderObject>> renderObjects;
     bool                                              includesTangents = false;
-    for (auto &&mesh : asset->meshes)
+    for (const UINT32 i : std::views::iota(0u, asset->meshes.size()))
     {
+        auto mesh = asset->meshes.at(i);
+
         // -------------- reset vertices and indices --------------
         vertices.clear();
         indices.clear();
@@ -477,7 +474,7 @@ std::optional<std::vector<std::shared_ptr<scene::RenderObject>>> ResourceManager
 
         // -------------- create a mesh --------------
         std::unique_ptr<scene::Mesh> newMesh = std::make_unique<scene::Mesh>();
-        newMesh->name                        = mesh.name;
+        newMesh->name                        = name.string() + "." + std::format("{:03d}", i);
         newMesh->indexFormat                 = DXGI_FORMAT_R32_UINT;
         newMesh->vertexByteStride            = sizeof(scene::Vertex);
 
