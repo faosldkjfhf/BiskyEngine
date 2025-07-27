@@ -4,6 +4,7 @@
 #include "Graphics/ResourceUpload.hpp"
 #include "Graphics/Utilities.hpp"
 #include "Scene/Mesh.hpp"
+#include <DirectXMath.h>
 
 namespace bisky::scene
 {
@@ -12,8 +13,8 @@ struct ScreenQuad
 {
     struct Vertex
     {
-        dx::XMFLOAT3 Position;
-        dx::XMFLOAT2 TexCoord;
+        DirectX::XMFLOAT3 Position;
+        DirectX::XMFLOAT2 TexCoord;
     };
 
     inline static std::unique_ptr<Mesh> mesh(gfx::Device *const device)

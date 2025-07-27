@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Graphics/Material.hpp"
 #include "Graphics/Texture.hpp"
-#include "Scene/Material.hpp"
 #include "Scene/Mesh.hpp"
 #include <filesystem>
 #include <string>
@@ -136,7 +136,7 @@ class ResourceManager
 
     std::unordered_map<std::string_view, std::unique_ptr<scene::Mesh>> m_meshes;
     std::unordered_map<std::string, std::shared_ptr<gfx::Texture>>     m_textures;
-    std::unordered_map<std::string, std::shared_ptr<scene::Material>>  m_materials;
+    std::unordered_map<std::string, std::shared_ptr<gfx::Material>>    m_materials;
 
     std::filesystem::path m_currentWorkingDirectory;
     std::filesystem::path m_shaderDirectory;

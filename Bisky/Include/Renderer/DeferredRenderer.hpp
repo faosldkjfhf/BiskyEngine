@@ -5,6 +5,7 @@
 namespace bisky::gfx
 {
 class Device;
+class Window;
 struct Texture;
 } // namespace bisky::gfx
 
@@ -22,8 +23,13 @@ struct GBuffer
 class DeferredRenderer
 {
   public:
+    explicit DeferredRenderer(gfx::Device *const device, gfx::Window *const window);
+    ~DeferredRenderer();
+
+  public:
   private:
     gfx::Device *const m_device;
+    GBuffer            m_gBuffer;
 };
 
 } // namespace bisky::renderer

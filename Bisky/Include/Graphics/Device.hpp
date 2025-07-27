@@ -117,6 +117,16 @@ class Device
 
     FrameResource *const nextFrameResource();
 
+    void present(UINT32 interval = 1u);
+
+    void createShaderResourceView(
+        gfx::Texture *const texture, D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_TEXTURE2D
+    );
+
+    void createUnorderedAccessView(gfx::Texture *const texture);
+
+    void createRenderTargetView(gfx::Texture *const texture);
+
   public: // Getter methods
     /*
      * Gets a pointer to the inner device.

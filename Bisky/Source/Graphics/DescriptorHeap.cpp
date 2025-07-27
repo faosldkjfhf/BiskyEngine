@@ -5,8 +5,9 @@
 namespace bisky::gfx
 {
 
-DescriptorHeap::DescriptorHeap(ID3D12Device10 *device, DescriptorType type, uint32_t numDescriptors,
-                               DescriptorFlags flags)
+DescriptorHeap::DescriptorHeap(
+    ID3D12Device10 *device, DescriptorType type, uint32_t numDescriptors, DescriptorFlags flags
+)
     : m_capacity(numDescriptors)
 {
     D3D12_DESCRIPTOR_HEAP_DESC desc{};

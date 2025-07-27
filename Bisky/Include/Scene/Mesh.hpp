@@ -3,10 +3,13 @@
 #include "Graphics/Buffer.hpp"
 #include "Graphics/Descriptor.hpp"
 
+namespace bisky::gfx
+{
+struct Material;
+}
+
 namespace bisky::scene
 {
-
-struct Material;
 
 /*
  * A Submesh contains the draw calls for our mesh.
@@ -14,10 +17,10 @@ struct Material;
  */
 struct Submesh
 {
-    uint32_t                  baseVertexLocation;
-    uint32_t                  startIndexLocation;
-    uint32_t                  indexCount;
-    std::shared_ptr<Material> material;
+    UINT32                         baseVertexLocation;
+    UINT32                         startIndexLocation;
+    UINT32                         indexCount;
+    std::shared_ptr<gfx::Material> material;
 };
 
 /*

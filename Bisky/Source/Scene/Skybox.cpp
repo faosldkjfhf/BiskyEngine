@@ -15,22 +15,7 @@ Skybox::Skybox(gfx::Device *const device, const std::string_view name) : m_devic
         if (isCubemap)
         {
             m_skybox = core::ResourceManager::get().getTexture(name);
-
-            // create shader resource view
-            m_skybox->srvDescriptor = device->getCbvSrvUavHeap()->allocate();
-
-            D3D12_SHADER_RESOURCE_VIEW_DESC srv = {
-                .Format                  = m_skybox->resource->GetDesc().Format,
-                .ViewDimension           = D3D12_SRV_DIMENSION_TEXTURECUBE,
-                .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-                .TextureCube =
-                    {
-                        .MostDetailedMip     = 0,
-                        .MipLevels           = m_skybox->resource->GetDesc().MipLevels,
-                        .ResourceMinLODClamp = 0.0f,
-                    },
-            };
-            device->getDevice()->CreateShaderResourceView(m_skybox->resource.Get(), &srv, m_skybox->srvDescriptor.cpu);
+            m_device->createShaderResourceView(m_skybox.get(), D3D12_SRV_DIMENSION_TEXTURECUBE);
         }
     }
 }

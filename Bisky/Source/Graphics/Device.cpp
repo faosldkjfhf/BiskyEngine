@@ -276,20 +276,7 @@ std::shared_ptr<Texture> Device::createImageFromMemory(unsigned char *data, size
     stbi_image_free(loadedImage);
 
     // -------------- create a shader resource view for the texture --------------
-    texture->srvDescriptor              = m_cbvSrvUavHeap->allocate();
-    D3D12_SHADER_RESOURCE_VIEW_DESC srv = {
-        .Format                  = imageData.format,
-        .ViewDimension           = D3D12_SRV_DIMENSION_TEXTURE2D,
-        .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-        .Texture2D =
-            {
-                .MostDetailedMip     = 0u,
-                .MipLevels           = texture->resource->GetDesc().MipLevels,
-                .PlaneSlice          = 0u,
-                .ResourceMinLODClamp = 0.0f,
-            },
-    };
-    m_device->CreateShaderResourceView(texture->resource.Get(), &srv, texture->srvDescriptor.cpu);
+    createShaderResourceView(texture.get());
 
     return std::move(texture);
 }
@@ -311,6 +298,48 @@ FrameResource *const Device::nextFrameResource()
     m_directCommandQueue->waitForFence(frame->fenceValue);
     frame->resourceAllocator->reset();
     return frame;
+}
+
+void Device::present(UINT32 interval)
+{
+    m_swapChain->Present(interval, 0u);
+}
+
+void Device::createShaderResourceView(gfx::Texture *const texture, D3D12_SRV_DIMENSION dimension)
+{
+    texture->srvDescriptor = m_cbvSrvUavHeap->allocate();
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC desc = {
+        .Format                  = texture->resource->GetDesc().Format,
+        .ViewDimension           = dimension,
+        .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+        .Texture2D =
+            {
+                .MostDetailedMip     = 0u,
+                .MipLevels           = texture->resource->GetDesc().MipLevels,
+                .PlaneSlice          = 0u,
+                .ResourceMinLODClamp = 0.0f,
+            },
+    };
+
+    m_device->CreateShaderResourceView(texture->resource.Get(), &desc, texture->srvDescriptor.cpu);
+}
+
+void Device::createUnorderedAccessView(gfx::Texture *const texture)
+{
+}
+
+void Device::createRenderTargetView(gfx::Texture *const texture)
+{
+    texture->rtvDescriptor = m_rtvHeap->allocate();
+
+    D3D12_RENDER_TARGET_VIEW_DESC desc = {
+        .Format        = texture->resource->GetDesc().Format,
+        .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
+        .Texture2D     = {.MipSlice = 0u, .PlaneSlice = 0u},
+    };
+
+    m_device->CreateRenderTargetView(texture->resource.Get(), &desc, texture->rtvDescriptor.cpu);
 }
 
 ID3D12Device10 *const Device::getDevice() const
@@ -420,8 +449,14 @@ const D3D12_CPU_DESCRIPTOR_HANDLE &Device::getDepthStencilView() const
 
 void Device::initDevice()
 {
-    D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_device));
-    LOG_VERBOSE("Device created");
+    if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_device))))
+    {
+        LOG_ERROR("Failed to create device");
+    }
+    else
+    {
+        LOG_VERBOSE("Device created");
+    }
 }
 
 void Device::initDescriptorHeaps()

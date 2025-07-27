@@ -91,17 +91,16 @@ int main()
 
         // ----- fill scene buffer -----
         // FIXME: there's a better way to do this probably
+        auto             camera = scene->getArcballCamera();
         gfx::SceneBuffer buffer{};
-        XMStoreFloat4x4(&buffer.view, scene->getArcballCamera()->getView());
-        XMStoreFloat4x4(&buffer.projection, scene->getArcballCamera()->getProjection());
-        XMStoreFloat4x4(
-            &buffer.viewProjection, scene->getArcballCamera()->getView() * scene->getArcballCamera()->getProjection()
-        );
-        XMStoreFloat4(&buffer.viewPosition, scene->getArcballCamera()->getPosition());
+        XMStoreFloat4x4(&buffer.view, camera->getView());
+        XMStoreFloat4x4(&buffer.projection, camera->getProjection());
+        XMStoreFloat4x4(&buffer.viewProjection, camera->getView() * scene->getArcballCamera()->getProjection());
+        XMStoreFloat4(&buffer.viewPosition, camera->getPosition());
 
         void *sceneBuffer;
         frame->sceneBuffer->resource->Map(0, nullptr, &sceneBuffer);
-        memcpy(sceneBuffer, &buffer, (sizeof(buffer) + 255) & -256);
+        memcpy(sceneBuffer, &buffer, (sizeof(buffer) + 255) & ~255);
         frame->sceneBuffer->resource->Unmap(0, nullptr);
 
         // ----- reset command list -----
@@ -137,7 +136,7 @@ int main()
         device->getDirectCommandQueue()->executeCommandLists(cmdLists);
 
         // ----- present swapchain image -----
-        device->getSwapChain()->Present(1u, 0u);
+        device->present(1u);
 
         // ----- signal fence completed -----
         frame->fenceValue = device->getDirectCommandQueue()->signal();

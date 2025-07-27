@@ -1,21 +1,19 @@
 #pragma once
 
-#include "Graphics/Texture.hpp"
 #include <DirectXMath.h>
+#include <memory>
 
-namespace bisky::scene
+namespace bisky::gfx
 {
+
+struct Texture;
 
 struct Material
 {
-    DirectX::XMFLOAT3             diffuse;
-    float                         metallic;
-    float                         roughness;
-    float                         ambientOcclusion;
     std::shared_ptr<gfx::Texture> diffuseTexture;
     std::shared_ptr<gfx::Texture> normalTexture;
     std::shared_ptr<gfx::Texture> metallicRoughnessTexture;
     std::shared_ptr<gfx::Texture> ambientOccusionTexture;
 };
 
-} // namespace bisky::scene
+} // namespace bisky::gfx

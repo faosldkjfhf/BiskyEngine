@@ -3,10 +3,10 @@
 #include "Core/FrameStats.hpp"
 #include "Graphics/Constants.hpp"
 #include "Graphics/Device.hpp"
+#include "Graphics/Material.hpp"
 #include "Graphics/ShaderCompiler.hpp"
 #include "Graphics/Window.hpp"
 #include "Renderer/ForwardRenderer.hpp"
-#include "Scene/Material.hpp"
 #include "Scene/Scene.hpp"
 
 namespace bisky::renderer

@@ -2,7 +2,6 @@
 
 #include "Core/ResourceManager.hpp"
 #include "Graphics/Device.hpp"
-#include "Scene/Material.hpp"
 #include "Scene/RenderObject.hpp"
 #include "Scene/Vertex.hpp"
 #include <format>
@@ -132,10 +131,10 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
     }
 
     // -------------- create materials --------------
-    std::vector<std::shared_ptr<scene::Material>> materials;
+    std::vector<std::shared_ptr<gfx::Material>> materials;
     for (auto &&mat : asset->materials)
     {
-        auto newMat = std::make_shared<scene::Material>();
+        auto newMat = std::make_shared<gfx::Material>();
         if (mat.pbrData.baseColorTexture.has_value())
         {
             size_t image = asset->textures[mat.pbrData.baseColorTexture.value().textureIndex].imageIndex.value();
@@ -143,8 +142,6 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
             {
                 newMat->diffuseTexture = textures[image];
             }
-
-            XMStoreFloat3(&newMat->diffuse, dx::FXMVECTOR{1.0f, 0.0f, 0.0f});
         }
         if (mat.pbrData.metallicRoughnessTexture.has_value())
         {
@@ -422,10 +419,10 @@ std::optional<std::vector<std::shared_ptr<scene::RenderObject>>> ResourceManager
     }
 
     // -------------- create materials --------------
-    std::vector<std::shared_ptr<scene::Material>> materials;
+    std::vector<std::shared_ptr<gfx::Material>> materials;
     for (auto &&mat : asset->materials)
     {
-        std::shared_ptr<scene::Material> newMat = std::make_shared<scene::Material>();
+        auto newMat = std::make_shared<gfx::Material>();
         if (mat.pbrData.baseColorTexture.has_value())
         {
             size_t image = asset->textures[mat.pbrData.baseColorTexture.value().textureIndex].imageIndex.value();
@@ -433,8 +430,6 @@ std::optional<std::vector<std::shared_ptr<scene::RenderObject>>> ResourceManager
             {
                 newMat->diffuseTexture = textures[image];
             }
-
-            XMStoreFloat3(&newMat->diffuse, dx::FXMVECTOR{1.0f, 0.0f, 0.0f});
         }
         if (mat.pbrData.metallicRoughnessTexture.has_value())
         {
