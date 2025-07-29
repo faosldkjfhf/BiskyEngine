@@ -47,7 +47,7 @@ DeferredRenderer::DeferredRenderer(gfx::Device *const device, gfx::Window *const
         .rtvFormats   = formats,
         .dsvFormat    = m_device->getDepthStencilFormat(),
         .cullMode     = gfx::CullMode::Back,
-        .frontFace    = gfx::FrontFace::CounterClockwise,
+        .frontFace    = gfx::FrontFace::Clockwise,
     };
 
     m_graphicsPipeline = std::make_unique<gfx::GraphicsPipeline>(m_device, desc);
@@ -61,14 +61,17 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
 {
     auto *cmdList = frameResource->graphicsCommandList.get();
 
-    cmdList->setRenderTargets(
-        {
-            m_gBuffer.position->rtvDescriptor.cpu,
-            m_gBuffer.normal->rtvDescriptor.cpu,
-            m_gBuffer.albedo->rtvDescriptor.cpu,
-        },
-        m_device->getDepthStencilView()
-    );
+    const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetViews = {
+        m_gBuffer.position->rtvDescriptor.cpu,
+        m_gBuffer.normal->rtvDescriptor.cpu,
+        m_gBuffer.albedo->rtvDescriptor.cpu,
+    };
+
+    float color[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+    cmdList->clearRenderTargetViews(renderTargetViews, color);
+    cmdList->clearDepthStencilView(m_device->getDepthStencilView(), 1.0f, 0u);
+
+    cmdList->setRenderTargets(renderTargetViews, m_device->getDepthStencilView());
 
     cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());
     cmdList->setPipelineState(m_graphicsPipeline->getPipelineState());
@@ -117,6 +120,27 @@ auto DeferredRenderer::resize(gfx::Window *const window) -> void
     m_gBuffer.position.reset();
     m_gBuffer.normal.reset();
     m_gBuffer.albedo.reset();
+
+    // ----- position texture -----
+    m_gBuffer.position = m_device->createTexture2D(
+        window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
+    );
+    m_device->createRenderTargetView(m_gBuffer.position.get());
+    m_device->createShaderResourceView(m_gBuffer.position.get());
+
+    // ----- normal texture -----
+    m_gBuffer.normal = m_device->createTexture2D(
+        window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
+    );
+    m_device->createRenderTargetView(m_gBuffer.normal.get());
+    m_device->createShaderResourceView(m_gBuffer.normal.get());
+
+    // ----- albedo texture -----
+    m_gBuffer.albedo = m_device->createTexture2D(
+        window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
+    );
+    m_device->createRenderTargetView(m_gBuffer.albedo.get());
+    m_device->createShaderResourceView(m_gBuffer.albedo.get());
 }
 
 auto DeferredRenderer::getGBuffer() -> GBuffer *

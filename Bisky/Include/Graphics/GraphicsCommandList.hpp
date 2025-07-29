@@ -43,6 +43,9 @@ class GraphicsCommandList : public CommandList
      */
     void clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, float color[4]) const;
 
+    void clearRenderTargetViews(std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> const &renderTargetViews, float color[4])
+        const;
+
     void clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, float depth, uint32_t stencil) const;
 
     /*

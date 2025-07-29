@@ -26,6 +26,16 @@ void GraphicsCommandList::clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE rend
     m_commandList->ClearRenderTargetView(renderTargetView, color, 0, nullptr);
 }
 
+void GraphicsCommandList::clearRenderTargetViews(
+    std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> const &renderTargetViews, float color[4]
+) const
+{
+    for (auto const &rtv : renderTargetViews)
+    {
+        m_commandList->ClearRenderTargetView(rtv, color, 0, nullptr);
+    }
+}
+
 void GraphicsCommandList::clearDepthStencilView(
     D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, float depth, uint32_t stencil
 ) const

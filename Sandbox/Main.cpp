@@ -79,6 +79,7 @@ int main()
         {
             device->getDirectCommandQueue()->flush();
             window->resize(device.get());
+            deferredRenderer->resize(window.get());
             scene->getArcballCamera()->resize(window->getWidth(), window->getHeight());
         }
 
@@ -117,7 +118,7 @@ int main()
         geometryRenderPass->draw(renderer::RenderLayer::Opaque, frame, scene.get(), frameStats.get());
 
         // ----- geometry pass -----
-        deferredRenderer->geometryPass(scene.get(), frame);
+        // deferredRenderer->geometryPass(scene.get(), frame);
 
         // ----- draw light debug -----
         lightDebugRenderPass->draw(frame, scene.get(), frameStats.get());
@@ -127,6 +128,7 @@ int main()
 
         // ----- copy HDR render target to swapchain buffer image -----
         finalRenderPass->draw(device->getHdrRenderTargetBuffer(), frame, frameStats.get());
+        // finalRenderPass->draw(deferredRenderer->getGBuffer()->position.get(), frame, frameStats.get());
 
         // ----- draw editor UI -----
         editor->beginFrame();
