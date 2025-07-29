@@ -39,6 +39,7 @@ class DeferredRenderer
 
   public:
     auto geometryPass(scene::Scene *const scene, gfx::FrameResource *const frameResource) const -> void;
+    auto resize(gfx::Window *const window) -> void;
 
   public:
     auto getGBuffer() -> GBuffer *;

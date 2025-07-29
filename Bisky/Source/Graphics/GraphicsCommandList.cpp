@@ -51,6 +51,15 @@ void GraphicsCommandList::setRenderTargets(const D3D12_CPU_DESCRIPTOR_HANDLE &re
 }
 
 void GraphicsCommandList::setRenderTargets(
+    std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> const &renderTargets, D3D12_CPU_DESCRIPTOR_HANDLE const &depthStencilView
+) const
+{
+    m_commandList->OMSetRenderTargets(
+        static_cast<UINT>(renderTargets.size()), renderTargets.data(), FALSE, &depthStencilView
+    );
+}
+
+void GraphicsCommandList::setRenderTargets(
     const D3D12_CPU_DESCRIPTOR_HANDLE &renderTarget, const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilView
 ) const
 {

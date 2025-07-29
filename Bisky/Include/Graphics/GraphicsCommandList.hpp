@@ -67,6 +67,11 @@ class GraphicsCommandList : public CommandList
      */
     void setRenderTargets(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTarget) const;
 
+    void setRenderTargets(
+        std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> const &renderTargets,
+        D3D12_CPU_DESCRIPTOR_HANDLE const              &depthStencilView
+    ) const;
+
     /*
      * Sets the render target and depth stencil for the output merger.
      * This method assumes there is only one render target.

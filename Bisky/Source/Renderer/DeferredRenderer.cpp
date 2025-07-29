@@ -61,6 +61,15 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
 {
     auto *cmdList = frameResource->graphicsCommandList.get();
 
+    cmdList->setRenderTargets(
+        {
+            m_gBuffer.position->rtvDescriptor.cpu,
+            m_gBuffer.normal->rtvDescriptor.cpu,
+            m_gBuffer.albedo->rtvDescriptor.cpu,
+        },
+        m_device->getDepthStencilView()
+    );
+
     cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());
     cmdList->setPipelineState(m_graphicsPipeline->getPipelineState());
 
@@ -101,6 +110,13 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
             cmdList->drawIndexedInstanced(submesh);
         }
     }
+}
+
+auto DeferredRenderer::resize(gfx::Window *const window) -> void
+{
+    m_gBuffer.position.reset();
+    m_gBuffer.normal.reset();
+    m_gBuffer.albedo.reset();
 }
 
 auto DeferredRenderer::getGBuffer() -> GBuffer *
