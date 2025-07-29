@@ -60,15 +60,15 @@ void LightDebugRenderPass::draw(
         auto objectBuffer = reinterpret_cast<gfx::ObjectBuffer *>(objectAlloc.cpuBase);
         XMStoreFloat4x4(&objectBuffer->world, m_sphere->transform->getLocalToWorld());
         XMStoreFloat4x4(
-            &objectBuffer->inverseWorld, dx::XMMatrixInverse(nullptr, dx::XMLoadFloat4x4(&objectBuffer->world))
+            &objectBuffer->inverseWorld, XMMatrixInverse(nullptr, XMLoadFloat4x4(&objectBuffer->world))
         );
         XMStoreFloat4x4(
-            &objectBuffer->transposeInverseWorld, dx::XMMatrixTranspose(dx::XMLoadFloat4x4(&objectBuffer->inverseWorld))
+            &objectBuffer->transposeInverseWorld, XMMatrixTranspose(XMLoadFloat4x4(&objectBuffer->inverseWorld))
         );
         cmdList->setConstantBufferView(m_graphicsPipeline->getRootParameter("objectBuffer"), objectAlloc.gpuBase);
 
         // ----- set render resource -----
-        XMStoreFloat3(&renderResource->color, dx::XMLoadFloat4(&light.strength));
+        XMStoreFloat3(&renderResource->color, XMLoadFloat4(&light.strength));
         cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 4u, (void *)renderResource);
 
         // -------------- input assembly --------------

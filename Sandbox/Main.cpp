@@ -55,6 +55,9 @@ int main()
     auto finalRenderPass = std::make_unique<renderer::FinalRenderPass>(device.get());
     auto scene           = std::make_unique<scene::Scene>(window.get(), device.get(), "test scene");
 
+    // ----- initialize deferred renderer -----
+    auto deferredRenderer = std::make_unique<renderer::DeferredRenderer>(device.get(), window.get());
+
     // ----- initialize input -----
     input.window = window.get();
     input.scene  = scene.get();
@@ -113,6 +116,9 @@ int main()
         // ----- draw geometry -----
         geometryRenderPass->draw(renderer::RenderLayer::Opaque, frame, scene.get(), frameStats.get());
 
+        // ----- geometry pass -----
+        deferredRenderer->geometryPass(scene.get(), frame);
+
         // ----- draw light debug -----
         lightDebugRenderPass->draw(frame, scene.get(), frameStats.get());
 
@@ -120,7 +126,7 @@ int main()
         skyboxRenderPass->draw(frame, scene.get(), frameStats.get());
 
         // ----- copy HDR render target to swapchain buffer image -----
-        finalRenderPass->draw(frame, frameStats.get());
+        finalRenderPass->draw(device->getHdrRenderTargetBuffer(), frame, frameStats.get());
 
         // ----- draw editor UI -----
         editor->beginFrame();

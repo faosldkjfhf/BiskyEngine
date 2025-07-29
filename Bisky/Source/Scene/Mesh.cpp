@@ -1,6 +1,6 @@
 #include "Common.hpp"
 
-#include "Scene/Material.hpp"
+#include "Graphics/Material.hpp"
 #include "Scene/Mesh.hpp"
 
 namespace bisky::scene

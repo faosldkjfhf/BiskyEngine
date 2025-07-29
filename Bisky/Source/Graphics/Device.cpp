@@ -327,6 +327,15 @@ void Device::createShaderResourceView(gfx::Texture *const texture, D3D12_SRV_DIM
 
 void Device::createUnorderedAccessView(gfx::Texture *const texture)
 {
+    texture->uavDescriptor = m_cbvSrvUavHeap->allocate();
+
+    D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {
+        .Format        = texture->resource->GetDesc().Format,
+        .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
+        .Texture2D     = {.MipSlice = 0u, .PlaneSlice = 0u},
+    };
+
+    m_device->CreateUnorderedAccessView(texture->resource.Get(), nullptr, &desc, texture->uavDescriptor.cpu);
 }
 
 void Device::createRenderTargetView(gfx::Texture *const texture)

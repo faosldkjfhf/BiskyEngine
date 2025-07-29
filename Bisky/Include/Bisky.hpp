@@ -38,6 +38,7 @@
 #include "Graphics/Window.hpp"
 
 #include "Renderer/BloomComputePass.hpp"
+#include "Renderer/DeferredRenderer.hpp"
 #include "Renderer/FinalRenderPass.hpp"
 #include "Renderer/ForwardRenderer.hpp"
 #include "Renderer/LightDebugRenderPass.hpp"

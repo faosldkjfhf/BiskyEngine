@@ -27,7 +27,9 @@ FinalRenderPass::~FinalRenderPass()
     m_screenQuad.reset();
 }
 
-void FinalRenderPass::draw(gfx::FrameResource *const frameResource, core::FrameStats *const frameStats)
+void FinalRenderPass::draw(
+    gfx::Texture *const texture, gfx::FrameResource *const frameResource, core::FrameStats *const frameStats
+)
 {
     auto  start   = std::chrono::system_clock::now();
     auto *cmdList = frameResource->graphicsCommandList.get();
@@ -49,7 +51,7 @@ void FinalRenderPass::draw(gfx::FrameResource *const frameResource, core::FrameS
     // -------------- allocate constants --------------
     FinalRenderPass::RenderResource renderResource{};
     renderResource.vertexBufferIndex = gfx::Buffer::GetSrvIndex(m_screenQuad->mesh->vertexBuffer.get());
-    renderResource.textureIndex      = gfx::Texture::GetSrvIndex(m_device->getHdrRenderTargetBuffer());
+    renderResource.textureIndex      = gfx::Texture::GetSrvIndex(texture);
     cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 2u, (void *)&renderResource);
 
     // -------------- input assembly --------------

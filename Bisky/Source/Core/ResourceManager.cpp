@@ -221,9 +221,9 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
             {
                 auto &accessor = asset->accessors[p.findAttribute("POSITION")->accessorIndex];
                 vertices.resize(vertices.size() + accessor.count);
-                fastgltf::iterateAccessorWithIndex<dx::XMFLOAT3>(
+                fastgltf::iterateAccessorWithIndex<XMFLOAT3>(
                     asset.get(), accessor,
-                    [&](dx::XMFLOAT3 position, size_t index) {
+                    [&](XMFLOAT3 position, size_t index) {
                         scene::Vertex v;
                         v.position = position;
 
@@ -238,9 +238,9 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
                 if (normals != p.attributes.end())
                 {
                     auto &accessor = asset->accessors[normals->accessorIndex];
-                    fastgltf::iterateAccessorWithIndex<dx::XMFLOAT3>(
+                    fastgltf::iterateAccessorWithIndex<XMFLOAT3>(
                         asset.get(), accessor,
-                        [&](dx::XMFLOAT3 normal, size_t index) {
+                        [&](XMFLOAT3 normal, size_t index) {
                             vertices[submesh.baseVertexLocation + index].normal = normal;
                         }
                     );
@@ -253,9 +253,9 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
                 if (uvs != p.attributes.end())
                 {
                     auto &accessor = asset->accessors[uvs->accessorIndex];
-                    fastgltf::iterateAccessorWithIndex<dx::XMFLOAT2>(
+                    fastgltf::iterateAccessorWithIndex<XMFLOAT2>(
                         asset.get(), accessor,
-                        [&](dx::XMFLOAT2 texCoord, size_t index) {
+                        [&](XMFLOAT2 texCoord, size_t index) {
                             vertices[submesh.baseVertexLocation + index].texCoord = texCoord;
                         }
                     );
@@ -268,9 +268,9 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
                 if (tangents != p.attributes.end())
                 {
                     auto &accessor = asset->accessors[tangents->accessorIndex];
-                    fastgltf::iterateAccessorWithIndex<dx::XMFLOAT4>(
+                    fastgltf::iterateAccessorWithIndex<XMFLOAT4>(
                         asset.get(), accessor,
-                        [&](dx::XMFLOAT4 tangent, size_t index) {
+                        [&](XMFLOAT4 tangent, size_t index) {
                             vertices[submesh.baseVertexLocation + index].tangent = tangent;
                         }
                     );
@@ -510,9 +510,9 @@ std::optional<std::vector<std::shared_ptr<scene::RenderObject>>> ResourceManager
             {
                 auto &accessor = asset->accessors[p.findAttribute("POSITION")->accessorIndex];
                 vertices.resize(vertices.size() + accessor.count);
-                fastgltf::iterateAccessorWithIndex<dx::XMFLOAT3>(
+                fastgltf::iterateAccessorWithIndex<XMFLOAT3>(
                     asset.get(), accessor,
-                    [&](dx::XMFLOAT3 position, size_t index) {
+                    [&](XMFLOAT3 position, size_t index) {
                         scene::Vertex v;
                         v.position = position;
 
@@ -527,9 +527,9 @@ std::optional<std::vector<std::shared_ptr<scene::RenderObject>>> ResourceManager
                 if (normals != p.attributes.end())
                 {
                     auto &accessor = asset->accessors[normals->accessorIndex];
-                    fastgltf::iterateAccessorWithIndex<dx::XMFLOAT3>(
+                    fastgltf::iterateAccessorWithIndex<XMFLOAT3>(
                         asset.get(), accessor,
-                        [&](dx::XMFLOAT3 normal, size_t index) {
+                        [&](XMFLOAT3 normal, size_t index) {
                             vertices[submesh.baseVertexLocation + index].normal = normal;
                         }
                     );
@@ -542,9 +542,9 @@ std::optional<std::vector<std::shared_ptr<scene::RenderObject>>> ResourceManager
                 if (uvs != p.attributes.end())
                 {
                     auto &accessor = asset->accessors[uvs->accessorIndex];
-                    fastgltf::iterateAccessorWithIndex<dx::XMFLOAT2>(
+                    fastgltf::iterateAccessorWithIndex<XMFLOAT2>(
                         asset.get(), accessor,
-                        [&](dx::XMFLOAT2 texCoord, size_t index) {
+                        [&](XMFLOAT2 texCoord, size_t index) {
                             vertices[submesh.baseVertexLocation + index].texCoord = texCoord;
                         }
                     );
@@ -557,9 +557,9 @@ std::optional<std::vector<std::shared_ptr<scene::RenderObject>>> ResourceManager
                 if (tangents != p.attributes.end())
                 {
                     auto &accessor = asset->accessors[tangents->accessorIndex];
-                    fastgltf::iterateAccessorWithIndex<dx::XMFLOAT4>(
+                    fastgltf::iterateAccessorWithIndex<XMFLOAT4>(
                         asset.get(), accessor,
-                        [&](dx::XMFLOAT4 tangent, size_t index) {
+                        [&](XMFLOAT4 tangent, size_t index) {
                             vertices[submesh.baseVertexLocation + index].tangent = tangent;
                         }
                     );
@@ -631,12 +631,12 @@ bool ResourceManager::loadDDS(gfx::Device *const device, const std::filesystem::
 {
     const std::filesystem::path path = m_textureDirectory / filename;
 
-    dx::ResourceUploadBatch upload(device->getDevice());
+    ResourceUploadBatch upload(device->getDevice());
     upload.Begin();
 
     std::shared_ptr<gfx::Texture> texture = std::make_shared<gfx::Texture>();
     HRESULT                       hr;
-    hr = dx::CreateDDSTextureFromFile(
+    hr = CreateDDSTextureFromFile(
         device->getDevice(), upload, path.c_str(), &texture->resource, false, 0u, nullptr, isCubemap
     );
 

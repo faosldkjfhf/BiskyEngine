@@ -46,7 +46,7 @@
 #include <wrl.h>
 
 namespace wrl = Microsoft::WRL;
-namespace dx  = DirectX;
+using namespace DirectX;
 
 #include "Core/Logger.hpp"
 #include "Core/StringHelpers.hpp"

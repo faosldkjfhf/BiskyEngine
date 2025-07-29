@@ -36,13 +36,13 @@ class FinalRenderPass
     const FinalRenderPass &&operator=(const FinalRenderPass &&) = delete;
 
   public:
-    void draw(gfx::FrameResource *const frameResource, core::FrameStats *const frameStats);
+    void draw(gfx::Texture *const texture, gfx::FrameResource *const frameResource, core::FrameStats *const frameStats);
 
   private:
     void initGraphicsPipeline();
 
-    gfx::Device *const                   m_device;
-    std::unique_ptr<scene::RenderObject> m_screenQuad;
+    gfx::Device *const                     m_device;
+    std::unique_ptr<scene::RenderObject>   m_screenQuad;
     std::unique_ptr<gfx::GraphicsPipeline> m_graphicsPipeline;
 };
 

@@ -39,7 +39,7 @@ void Scene::update(const core::GameTimer *const timer)
 
 void Scene::draw()
 {
-    dx::XMFLOAT3 position;
+    XMFLOAT3 position;
     XMStoreFloat3(&position, m_arcballCamera->getPosition());
     auto &renderObjects = getRenderObjects();
     auto &lights        = getLights();
@@ -70,7 +70,7 @@ void Scene::draw()
             /*
              * Display as row-major.
              */
-            dx::XMFLOAT4X4 view;
+            XMFLOAT4X4 view;
             XMStoreFloat4x4(&view, m_arcballCamera->getView());
 
             ImGui::Text("%f %f %f %f", view._11, view._12, view._13, view._14);
@@ -160,12 +160,12 @@ void Scene::initDefaultScene()
     }
 
     auto &light = m_lights.emplace_back();
-    XMStoreFloat4(&light.position, dx::FXMVECTOR{-3.0f, 3.0f, -3.0f, 1.0f});
-    XMStoreFloat4(&light.strength, dx::FXMVECTOR{1.0f, 1.0f, 1.0f, 1.0f});
+    XMStoreFloat4(&light.position, FXMVECTOR{-3.0f, 3.0f, -3.0f, 1.0f});
+    XMStoreFloat4(&light.strength, FXMVECTOR{1.0f, 1.0f, 1.0f, 1.0f});
 
     auto &light2 = m_lights.emplace_back();
-    XMStoreFloat4(&light2.position, dx::FXMVECTOR{3.0f, 3.0f, -3.0f, 1.0f});
-    XMStoreFloat4(&light2.strength, dx::FXMVECTOR{1.0f, 1.0f, 1.0f, 1.0f});
+    XMStoreFloat4(&light2.position, FXMVECTOR{3.0f, 3.0f, -3.0f, 1.0f});
+    XMStoreFloat4(&light2.strength, FXMVECTOR{1.0f, 1.0f, 1.0f, 1.0f});
 
     m_skybox = std::make_unique<Skybox>(m_device, "Skybox\\cubemap.dds");
 }

@@ -25,6 +25,7 @@
     <FxCompile Include="Shaders\RenderPass\Skybox.hlsl" />
     <FxCompile Include="Shaders\RenderPass\Bloom.hlsl" />
     <FxCompile Include="Shaders\Debug\Lights.hlsl" />
+    <FxCompile Include="Shaders\Geometry\Deferred.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="imgui.ini" />
