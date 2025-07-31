@@ -34,11 +34,20 @@ class DeferredRenderer
         int diffuseMapIndex;
     };
 
+    struct LightPassRenderResource
+    {
+        int vertexBufferIndex;
+        int positionMapIndex;
+        int normalMapIndex;
+        int albedoMapIndex;
+    };
+
     explicit DeferredRenderer(gfx::Device *const device, gfx::Window *const window);
     ~DeferredRenderer();
 
   public:
     auto geometryPass(scene::Scene *const scene, gfx::FrameResource *const frameResource) const -> void;
+    auto lightPass(scene::Scene *const scene, gfx::FrameResource *const frameResource) const -> void;
     auto resize(gfx::Window *const window) -> void;
 
   public:
@@ -46,6 +55,8 @@ class DeferredRenderer
 
   private:
     std::unique_ptr<gfx::GraphicsPipeline> m_graphicsPipeline;
+    std::unique_ptr<gfx::GraphicsPipeline> m_lightPassPipeline;
+    std::unique_ptr<scene::RenderObject>   m_quad;
     gfx::Device *const                     m_device;
     GBuffer                                m_gBuffer;
 };

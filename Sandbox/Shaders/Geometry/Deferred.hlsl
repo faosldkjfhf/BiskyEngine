@@ -42,9 +42,12 @@ PsOutput PsMain(VsOutput input)
 {
     Texture2D<float4> diffuseMap = ResourceDescriptorHeap[renderResource.diffuseMapIndex];
     
+    float3 albedo = diffuseMap.Sample(linearWrapSampler, input.texCoord).xyz;
+    albedo = pow(albedo, 2.2);
+    
     PsOutput output;
     output.position = float4(input.positionW, 1.0);
     output.normal = float4(normalize(input.normal), 1.0);
-    output.albedo = diffuseMap.Sample(linearWrapSampler, input.texCoord);
+    output.albedo = float4(albedo, 1.0);
     return output;
 }

@@ -115,20 +115,23 @@ int main()
         device->beginFrame(cmdList);
 
         // ----- draw geometry -----
-        geometryRenderPass->draw(renderer::RenderLayer::Opaque, frame, scene.get(), frameStats.get());
+        // geometryRenderPass->draw(renderer::RenderLayer::Opaque, frame, scene.get(), frameStats.get());
 
         // ----- geometry pass -----
-        // deferredRenderer->geometryPass(scene.get(), frame);
+        deferredRenderer->geometryPass(scene.get(), frame);
+
+        // ----- light pass -----
+        deferredRenderer->lightPass(scene.get(), frame);
 
         // ----- draw light debug -----
-        lightDebugRenderPass->draw(frame, scene.get(), frameStats.get());
+        // lightDebugRenderPass->draw(frame, scene.get(), frameStats.get());
 
         // ----- draw skybox -----
-        skyboxRenderPass->draw(frame, scene.get(), frameStats.get());
+        // skyboxRenderPass->draw(frame, scene.get(), frameStats.get());
 
         // ----- copy HDR render target to swapchain buffer image -----
         finalRenderPass->draw(device->getHdrRenderTargetBuffer(), frame, frameStats.get());
-        // finalRenderPass->draw(deferredRenderer->getGBuffer()->position.get(), frame, frameStats.get());
+        // finalRenderPass->draw(deferredRenderer->getGBuffer()->normal.get(), frame, frameStats.get());
 
         // ----- draw editor UI -----
         editor->beginFrame();
