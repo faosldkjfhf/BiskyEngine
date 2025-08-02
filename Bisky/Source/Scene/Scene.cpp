@@ -161,11 +161,11 @@ void Scene::initDefaultScene()
 
     auto &light = m_lights.emplace_back();
     XMStoreFloat4(&light.position, FXMVECTOR{-3.0f, 3.0f, -3.0f, 1.0f});
-    XMStoreFloat4(&light.strength, FXMVECTOR{1.0f, 1.0f, 1.0f, 1.0f});
+    XMStoreFloat4(&light.strength, FXMVECTOR{1.0f, 0.0f, 0.0f, 1.0f});
 
     auto &light2 = m_lights.emplace_back();
     XMStoreFloat4(&light2.position, FXMVECTOR{3.0f, 3.0f, -3.0f, 1.0f});
-    XMStoreFloat4(&light2.strength, FXMVECTOR{1.0f, 1.0f, 1.0f, 1.0f});
+    XMStoreFloat4(&light2.strength, FXMVECTOR{0.0f, 0.0f, 1.0f, 1.0f});
 
     m_skybox = std::make_unique<Skybox>(m_device, "Skybox\\cubemap.dds");
 }

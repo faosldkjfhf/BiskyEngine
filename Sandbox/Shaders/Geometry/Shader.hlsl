@@ -75,9 +75,9 @@ float4 PsMain(VOutput input) : SV_Target
     for (uint i = 0; i < lightBuffer.numLights; i++)
     {
         Light light = lightBuffer.lights[i];
-        Lo += BlinnPhong(light, N, input.positionW, sceneBuffer.viewPosition.xyz) * albedo;
+        // Lo += BlinnPhong(light, N, input.positionW, sceneBuffer.viewPosition.xyz) * albedo;
        
-        /*
+        
         // ----- Light direction and Halfway direction -----
         float3 L = normalize(light.position.xyz - input.positionW);
         float3 H = normalize(L + V);
@@ -103,14 +103,14 @@ float4 PsMain(VOutput input) : SV_Target
         // ----- Accumulate outgoing light -----
         float NoL = max(dot(N, L), 0.0);
         Lo += (kD * Fd + Fs) * NoL * light.strength.xyz;
-        */
+        
     }
     
-    /*
+    
     // ----- Calculate ambient -----
     float3 ambient = float3(0.03, 0.03, 0.03) * albedo;
     Lo += ambient; 
-    */
+    
     
     return float4(Lo, 1.0);
 }

@@ -50,9 +50,9 @@ PsOutput PsMain(VsOutput input)
     
     PsOutput output;
     output.position = float4(input.positionW, 1.0);
-    output.normalRoughness.xyz = normalize(input.normal);
-    output.normalRoughness.w = metallicRoughnessMap.Sample(linearWrapSampler, input.texCoord).g;
-    output.albedoMetallic.xyz = albedo;
-    output.albedoMetallic.w = metallicRoughnessMap.Sample(linearWrapSampler, input.texCoord).b;
+    output.normalRoughness.rgb = normalize(input.normal);
+    output.normalRoughness.a = metallicRoughnessMap.Sample(linearWrapSampler, input.texCoord).g;
+    output.albedoMetallic.rgb = albedo;
+    output.albedoMetallic.a = metallicRoughnessMap.Sample(linearWrapSampler, input.texCoord).b;
     return output;
 }

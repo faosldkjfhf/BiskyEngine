@@ -14,8 +14,8 @@ struct PsOutput
 
 struct RawVertex
 {
-    float3 position;
-    float2 texCoord;
+    float3 position : POSITION0;
+    float2 texCoord : TEXCOORD0;
 };
 
 struct RenderResource
@@ -33,10 +33,11 @@ ConstantBuffer<LightBuffer> lightBuffer : register(b2);
 VsOutput VsMain(uint vertexId : SV_VertexID)
 {
     StructuredBuffer<RawVertex> vertices = ResourceDescriptorHeap[renderResource.vertexBufferIndex];
+    RawVertex vertex = vertices[vertexId];
     
     VsOutput output;
-    output.position = float4(vertices[vertexId].position, 1.0);
-    output.texCoord = vertices[vertexId].texCoord;
+    output.position = float4(vertex.position, 1.0);
+    output.texCoord = vertex.texCoord;
     return output;
 }
 
@@ -69,9 +70,8 @@ PsOutput PsMain(VsOutput input)
     {
         Light light = lightBuffer.lights[i];
         
-        Lo += BlinnPhong(light, normal, position, sceneBuffer.viewPosition.xyz) * albedo;
+        // Lo += BlinnPhong(light, normal, position, sceneBuffer.viewPosition.xyz) * albedo;
        
-        /*
         // ----- Light direction and Halfway direction -----
         float3 L = normalize(light.position.xyz - position);
         float3 H = normalize(L + V);
@@ -97,15 +97,13 @@ PsOutput PsMain(VsOutput input)
         // ----- Accumulate outgoing light -----
         float NoL = max(dot(N, L), 0.0);
         Lo += (kD * Fd + Fs) * NoL * light.strength.xyz;
-        */
+        
     }
     
-    /*
     // ----- Calculate ambient -----
     float3 ambient = albedo * 0.03;
     Lo += ambient;
-    */
-    
+   
     PsOutput output;
     output.color = float4(Lo, 1.0);
     return output;

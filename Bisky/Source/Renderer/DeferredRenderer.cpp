@@ -155,7 +155,7 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
             renderResource.diffuseMapIndex = gfx::Texture::GetSrvIndex(submesh.material->diffuseTexture.get());
             renderResource.metallicRoughnessMapIndex =
                 gfx::Texture::GetSrvIndex(submesh.material->metallicRoughnessTexture.get());
-            cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 2u, &renderResource);
+            cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 3u, &renderResource);
 
             // ----- bind index buffer -----
             cmdList->setIndexBuffer({
