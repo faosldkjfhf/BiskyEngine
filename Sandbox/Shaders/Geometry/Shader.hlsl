@@ -1,4 +1,4 @@
-#include "Common.hlsli"
+#include "Lighting/PBR.hlsli"
 #include "Lighting/BlinnPhong.hlsli"
 
 struct VOutput
@@ -22,45 +22,6 @@ ConstantBuffer<RenderResource> renderResource : register(b0);
 ConstantBuffer<SceneBuffer> sceneBuffer : register(b1);
 ConstantBuffer<LightBuffer> lightBuffer : register(b2);
 ConstantBuffer<ObjectBuffer> objectBuffer : register(b3);
-
-float3 F_FresnelSchlick(float u, float3 f0)
-{
-    return f0 + (1.0 - f0) * pow(saturate(1.0 - u), 5.0);
-}
-
-float D_GGX(float3 N, float3 H, float roughness)
-{
-    float a = roughness * roughness;
-    float a2 = a * a;
-    float NoH = max(dot(N, H), 0.0);
-    float NoH2 = NoH * NoH;
-    
-    float num = a2;
-    float denom = (NoH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
-    
-    return num / denom;
-}
-
-float G_SchlickGGX(float NoV, float roughness)
-{
-    float r = roughness + 1.0;
-    float k = (r * r) / 8.0;
-    
-    float num = NoV;
-    float denom = NoV * (1.0 - k) + k;
-    
-    return num / denom;
-}
-
-float G_Smith(float3 N, float3 V, float3 L, float roughness)
-{
-    float NoV = max(dot(N, V), 0.0);
-    float NoL = max(dot(N, L), 0.0);
-    float ggx1 = G_SchlickGGX(NoV, roughness);
-    float ggx2 = G_SchlickGGX(NoL, roughness);
-    return ggx1 * ggx2;
-}
 
 VOutput VsMain(uint vertexId : SV_VertexID)
 {
@@ -114,7 +75,9 @@ float4 PsMain(VOutput input) : SV_Target
     for (uint i = 0; i < lightBuffer.numLights; i++)
     {
         Light light = lightBuffer.lights[i];
+        Lo += BlinnPhong(light, N, input.positionW, sceneBuffer.viewPosition.xyz) * albedo;
        
+        /*
         // ----- Light direction and Halfway direction -----
         float3 L = normalize(light.position.xyz - input.positionW);
         float3 H = normalize(L + V);
@@ -140,11 +103,14 @@ float4 PsMain(VOutput input) : SV_Target
         // ----- Accumulate outgoing light -----
         float NoL = max(dot(N, L), 0.0);
         Lo += (kD * Fd + Fs) * NoL * light.strength.xyz;
+        */
     }
     
+    /*
     // ----- Calculate ambient -----
     float3 ambient = float3(0.03, 0.03, 0.03) * albedo;
-    Lo += ambient;
+    Lo += ambient; 
+    */
     
     return float4(Lo, 1.0);
 }

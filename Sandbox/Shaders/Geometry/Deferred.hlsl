@@ -11,14 +11,15 @@ struct VsOutput
 struct PsOutput
 {
     float4 position : SV_Target0;
-    float4 normal : SV_Target1;
-    float4 albedo : SV_Target2;
+    float4 normalRoughness : SV_Target1;
+    float4 albedoMetallic : SV_Target2;
 };
 
 struct RenderResource
 {
     int vertexBufferIndex;
     int diffuseMapIndex;
+    int metallicRoughnessMapIndex;
 };
 
 ConstantBuffer<RenderResource> renderResource : register(b0);
@@ -41,13 +42,17 @@ VsOutput VsMain(uint vertexId : SV_VertexID)
 PsOutput PsMain(VsOutput input)
 {
     Texture2D<float4> diffuseMap = ResourceDescriptorHeap[renderResource.diffuseMapIndex];
+    Texture2D<float4> metallicRoughnessMap = ResourceDescriptorHeap[renderResource.metallicRoughnessMapIndex];
     
+    // ----- gamma correct diffuse texture -----
     float3 albedo = diffuseMap.Sample(linearWrapSampler, input.texCoord).xyz;
     albedo = pow(albedo, 2.2);
     
     PsOutput output;
     output.position = float4(input.positionW, 1.0);
-    output.normal = float4(normalize(input.normal), 1.0);
-    output.albedo = float4(albedo, 1.0);
+    output.normalRoughness.xyz = normalize(input.normal);
+    output.normalRoughness.w = metallicRoughnessMap.Sample(linearWrapSampler, input.texCoord).g;
+    output.albedoMetallic.xyz = albedo;
+    output.albedoMetallic.w = metallicRoughnessMap.Sample(linearWrapSampler, input.texCoord).b;
     return output;
 }

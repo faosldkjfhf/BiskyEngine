@@ -126,7 +126,7 @@ void ForwardRenderer::draw(
 
 void ForwardRenderer::initPipeline()
 {
-    std::array<DXGI_FORMAT, 1> formats;
+    std::array<DXGI_FORMAT, 1> formats{};
     formats[0] = m_backend->getHdrRenderTargetFormat();
 
     gfx::GraphicsPipelineStateDesc psoDesc = {

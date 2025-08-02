@@ -22,24 +22,24 @@ DeferredRenderer::DeferredRenderer(gfx::Device *const device, gfx::Window *const
     device->createShaderResourceView(m_gBuffer.position.get());
 
     // ----- normal texture -----
-    m_gBuffer.normal = device->createTexture2D(
+    m_gBuffer.normalRoughness = device->createTexture2D(
         window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
     );
-    device->createRenderTargetView(m_gBuffer.normal.get());
-    device->createShaderResourceView(m_gBuffer.normal.get());
+    device->createRenderTargetView(m_gBuffer.normalRoughness.get());
+    device->createShaderResourceView(m_gBuffer.normalRoughness.get());
 
     // ----- albedo texture -----
-    m_gBuffer.albedo = device->createTexture2D(
+    m_gBuffer.albedoMetallic = device->createTexture2D(
         window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
     );
-    device->createRenderTargetView(m_gBuffer.albedo.get());
-    device->createShaderResourceView(m_gBuffer.albedo.get());
+    device->createRenderTargetView(m_gBuffer.albedoMetallic.get());
+    device->createShaderResourceView(m_gBuffer.albedoMetallic.get());
 
     // ----- create graphics pipeline -----
     std::array<DXGI_FORMAT, 3> formats = {
         m_gBuffer.position->resource->GetDesc().Format,
-        m_gBuffer.normal->resource->GetDesc().Format,
-        m_gBuffer.albedo->resource->GetDesc().Format,
+        m_gBuffer.normalRoughness->resource->GetDesc().Format,
+        m_gBuffer.albedoMetallic->resource->GetDesc().Format,
     };
 
     {
@@ -84,15 +84,20 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
 {
     auto *cmdList = frameResource->graphicsCommandList.get();
 
+    // ----- transition gbuffer to render target -----
     cmdList->addBarrier(m_gBuffer.position.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    cmdList->addBarrier(m_gBuffer.normal.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    cmdList->addBarrier(m_gBuffer.albedo.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    cmdList->addBarrier(
+        m_gBuffer.normalRoughness.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
+    cmdList->addBarrier(
+        m_gBuffer.albedoMetallic.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
     cmdList->dispatchBarriers();
 
     const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetViews = {
         m_gBuffer.position->rtvDescriptor.cpu,
-        m_gBuffer.normal->rtvDescriptor.cpu,
-        m_gBuffer.albedo->rtvDescriptor.cpu,
+        m_gBuffer.normalRoughness->rtvDescriptor.cpu,
+        m_gBuffer.albedoMetallic->rtvDescriptor.cpu,
     };
 
     // ----- clear render targets -----
@@ -148,6 +153,8 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
         {
             // ----- bind render resource -----
             renderResource.diffuseMapIndex = gfx::Texture::GetSrvIndex(submesh.material->diffuseTexture.get());
+            renderResource.metallicRoughnessMapIndex =
+                gfx::Texture::GetSrvIndex(submesh.material->metallicRoughnessTexture.get());
             cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 2u, &renderResource);
 
             // ----- bind index buffer -----
@@ -163,10 +170,14 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
         }
     }
 
-    // ----- set gbuffer as render target -----
+    // ----- set gbuffer as common -----
     cmdList->addBarrier(m_gBuffer.position.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
-    cmdList->addBarrier(m_gBuffer.normal.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
-    cmdList->addBarrier(m_gBuffer.albedo.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
+    cmdList->addBarrier(
+        m_gBuffer.normalRoughness.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON
+    );
+    cmdList->addBarrier(
+        m_gBuffer.albedoMetallic.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON
+    );
     cmdList->dispatchBarriers();
 }
 
@@ -216,8 +227,8 @@ auto DeferredRenderer::lightPass(scene::Scene *const scene, gfx::FrameResource *
     LightPassRenderResource renderResource{};
     renderResource.vertexBufferIndex = gfx::Buffer::GetSrvIndex(m_quad->mesh->vertexBuffer.get());
     renderResource.positionMapIndex  = gfx::Texture::GetSrvIndex(m_gBuffer.position.get());
-    renderResource.normalMapIndex    = gfx::Texture::GetSrvIndex(m_gBuffer.normal.get());
-    renderResource.albedoMapIndex    = gfx::Texture::GetSrvIndex(m_gBuffer.albedo.get());
+    renderResource.normalMapIndex    = gfx::Texture::GetSrvIndex(m_gBuffer.normalRoughness.get());
+    renderResource.albedoMapIndex    = gfx::Texture::GetSrvIndex(m_gBuffer.albedoMetallic.get());
     cmdList->set32BitConstants(m_lightPassPipeline->getRootParameter("renderResource"), 4u, &renderResource);
 
     // ----- draw submesh -----
@@ -230,8 +241,8 @@ auto DeferredRenderer::lightPass(scene::Scene *const scene, gfx::FrameResource *
 auto DeferredRenderer::resize(gfx::Window *const window) -> void
 {
     m_gBuffer.position.reset();
-    m_gBuffer.normal.reset();
-    m_gBuffer.albedo.reset();
+    m_gBuffer.normalRoughness.reset();
+    m_gBuffer.albedoMetallic.reset();
 
     // ----- position texture -----
     m_gBuffer.position = m_device->createTexture2D(
@@ -241,18 +252,18 @@ auto DeferredRenderer::resize(gfx::Window *const window) -> void
     m_device->createShaderResourceView(m_gBuffer.position.get());
 
     // ----- normal texture -----
-    m_gBuffer.normal = m_device->createTexture2D(
+    m_gBuffer.normalRoughness = m_device->createTexture2D(
         window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
     );
-    m_device->createRenderTargetView(m_gBuffer.normal.get());
-    m_device->createShaderResourceView(m_gBuffer.normal.get());
+    m_device->createRenderTargetView(m_gBuffer.normalRoughness.get());
+    m_device->createShaderResourceView(m_gBuffer.normalRoughness.get());
 
     // ----- albedo texture -----
-    m_gBuffer.albedo = m_device->createTexture2D(
+    m_gBuffer.albedoMetallic = m_device->createTexture2D(
         window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
     );
-    m_device->createRenderTargetView(m_gBuffer.albedo.get());
-    m_device->createShaderResourceView(m_gBuffer.albedo.get());
+    m_device->createRenderTargetView(m_gBuffer.albedoMetallic.get());
+    m_device->createShaderResourceView(m_gBuffer.albedoMetallic.get());
 }
 
 auto DeferredRenderer::getGBuffer() -> GBuffer *

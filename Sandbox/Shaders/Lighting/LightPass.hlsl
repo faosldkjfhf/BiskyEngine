@@ -1,4 +1,5 @@
-#include "Common.hlsli"
+#include "Lighting/PBR.hlsli"
+#include "Lighting/BlinnPhong.hlsli"
 
 struct VsOutput
 {
@@ -21,8 +22,8 @@ struct RenderResource
 {
     int vertexBufferIndex;
     int positionTextureIndex;
-    int normalTextureIndex;
-    int albedoTextureIndex;
+    int normalRoughnessTextureIndex;
+    int albedoMetallicTextureIndex;
 };
 
 ConstantBuffer<RenderResource> renderResource : register(b0);
@@ -42,35 +43,70 @@ VsOutput VsMain(uint vertexId : SV_VertexID)
 PsOutput PsMain(VsOutput input)
 {
     Texture2D<float4> positionMap = ResourceDescriptorHeap[renderResource.positionTextureIndex];
-    Texture2D<float4> normalMap = ResourceDescriptorHeap[renderResource.normalTextureIndex];
-    Texture2D<float4> albedoMap = ResourceDescriptorHeap[renderResource.albedoTextureIndex];
+    Texture2D<float4> normalRoughnessMap = ResourceDescriptorHeap[renderResource.normalRoughnessTextureIndex];
+    Texture2D<float4> albedoMetallicMap = ResourceDescriptorHeap[renderResource.albedoMetallicTextureIndex];
     
-    float3 position = positionMap.Sample(linearWrapSampler, input.texCoord).xyz;
-    float3 normal = normalMap.Sample(linearWrapSampler, input.texCoord).xyz;
-    float3 albedo = albedoMap.Sample(linearWrapSampler, input.texCoord).xyz;
+    float4 normalRoughness = normalRoughnessMap.Sample(linearWrapSampler, input.texCoord);
+    float4 albedoMetallic = albedoMetallicMap.Sample(linearWrapSampler, input.texCoord);
     
+    float3 position = positionMap.Sample(linearWrapSampler, input.texCoord).xyz;   
+    float3 normal = normalRoughness.xyz;
+    float roughness = normalRoughness.w;
+    float3 albedo = albedoMetallic.xyz;
+    float metalness = albedoMetallic.w;
+    
+       // ----- Normal vector and View direction -----
+    float3 N = normalize(normal);
+    float3 V = normalize(sceneBuffer.viewPosition.xyz - position);
+    
+    // ----- Calculate f0 -----
+    float3 f0 = float3(0.04, 0.04, 0.04);
+    f0 = lerp(f0, albedo, metalness);
+    
+    // ----- Accumulate lighting -----
     float3 Lo = float3(0.0, 0.0, 0.0);
-    for (int i = 0; i < lightBuffer.numLights; i++)
+    for (uint i = 0; i < lightBuffer.numLights; i++)
     {
         Light light = lightBuffer.lights[i];
         
-        float ambientStrength = 0.3;
-        float3 ambient = ambientStrength * light.strength.xyz;
-        
-        float3 N = normalize(normal);
+        Lo += BlinnPhong(light, normal, position, sceneBuffer.viewPosition.xyz) * albedo;
+       
+        /*
+        // ----- Light direction and Halfway direction -----
         float3 L = normalize(light.position.xyz - position);
-        float3 NoL = max(dot(N, L), 0.0);
-        float3 diffuse = NoL * light.strength.xyz;
-        
-        float3 V = normalize(sceneBuffer.viewPosition.xyz - position);
         float3 H = normalize(L + V);
-        float spec = pow(max(dot(N, H), 0.0), 16.0);
-        float3 specular = spec * light.strength.xyz;
         
-        Lo += ambient + diffuse + specular;
+        // ----- Calculate DGF -----
+        float D = D_GGX(N, H, roughness);
+        float G = G_Smith(N, V, L, roughness);
+        float3 F = F_FresnelSchlick(max(dot(L, H), 0.0), f0);
+        
+        // ----- Calculate the diffuse contribution -----
+        float3 kS = F;
+        float3 kD = 1.0 - kS;
+        kD *= 1.0 - metalness;
+        
+        // ----- Specular component -----
+        float3 num = D * G * F;
+        float3 denom = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 1e-5;
+        float3 Fs = num / denom;
+        
+        // ----- Diffuse component (Lambertian) -----
+        float3 Fd = albedo / PI;
+        
+        // ----- Accumulate outgoing light -----
+        float NoL = max(dot(N, L), 0.0);
+        Lo += (kD * Fd + Fs) * NoL * light.strength.xyz;
+        */
     }
     
+    /*
+    // ----- Calculate ambient -----
+    float3 ambient = albedo * 0.03;
+    Lo += ambient;
+    */
+    
     PsOutput output;
-    output.color = float4(Lo * albedo, 1.0);
+    output.color = float4(Lo, 1.0);
     return output;
 }

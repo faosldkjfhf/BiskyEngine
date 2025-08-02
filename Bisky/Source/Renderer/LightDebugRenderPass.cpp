@@ -27,6 +27,9 @@ void LightDebugRenderPass::draw(
     auto *cmdList = frameResource->graphicsCommandList.get();
     auto  camera  = scene->getArcballCamera();
 
+    // ----- bind depth stencil -----
+    cmdList->setRenderTargets(m_device->getHdrRenderTargetView(), m_device->getDepthStencilView());
+
     // ----- bind pipeline state and root signature -----
     cmdList->setPipelineState(m_graphicsPipeline->getPipelineState());
     cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());
@@ -59,9 +62,7 @@ void LightDebugRenderPass::draw(
         auto objectAlloc  = frameResource->resourceAllocator->allocate(sizeof(gfx::ObjectBuffer));
         auto objectBuffer = reinterpret_cast<gfx::ObjectBuffer *>(objectAlloc.cpuBase);
         XMStoreFloat4x4(&objectBuffer->world, m_sphere->transform->getLocalToWorld());
-        XMStoreFloat4x4(
-            &objectBuffer->inverseWorld, XMMatrixInverse(nullptr, XMLoadFloat4x4(&objectBuffer->world))
-        );
+        XMStoreFloat4x4(&objectBuffer->inverseWorld, XMMatrixInverse(nullptr, XMLoadFloat4x4(&objectBuffer->world)));
         XMStoreFloat4x4(
             &objectBuffer->transposeInverseWorld, XMMatrixTranspose(XMLoadFloat4x4(&objectBuffer->inverseWorld))
         );
