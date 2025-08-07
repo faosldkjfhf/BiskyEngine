@@ -13,7 +13,7 @@ struct Light
 struct PointLight
 {
     DirectX::XMFLOAT4 position;
-    DirectX::XMFLOAT4 strength;
+    DirectX::XMFLOAT4 intensity;
 };
 
 struct DirectionalLight : public Light

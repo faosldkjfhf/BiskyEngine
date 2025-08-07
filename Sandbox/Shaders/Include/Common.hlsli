@@ -25,7 +25,7 @@ struct Light
 
 struct LightBuffer
 {
-    Light lights[10];
+    Light lights[32];
     int numLights;
 };
 

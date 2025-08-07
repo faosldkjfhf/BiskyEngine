@@ -35,7 +35,7 @@ struct ObjectBuffer
 
 struct LightBuffer
 {
-    scene::PointLight lights[10];
+    scene::PointLight lights[32];
     uint32_t          numLights;
 };
 

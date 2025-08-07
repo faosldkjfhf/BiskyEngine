@@ -10,7 +10,7 @@ namespace bisky::gfx
 
 FrameResource::FrameResource(Device *const device)
 {
-    UINT32 size = (sizeof(gfx::SceneBuffer) + 255) & -256;
+    constexpr UINT32 size = (sizeof(gfx::SceneBuffer) + 255) & ~255;
 
     // ----- initialize resources -----
     graphicsCommandList = std::make_unique<gfx::GraphicsCommandList>(device);

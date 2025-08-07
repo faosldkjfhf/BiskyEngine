@@ -9,6 +9,7 @@
 #include "Scene/Lights.hpp"
 #include "Scene/RenderObject.hpp"
 #include "Scene/Skybox.hpp"
+#include <random>
 
 namespace bisky::core
 {
@@ -63,6 +64,7 @@ class Scene : public editor::IRenderable
     std::unique_ptr<Camera>                    m_camera; // every scene has a camera - later hold more cameras
     std::unique_ptr<ArcballCamera>             m_arcballCamera;
     std::vector<PointLight>                    m_lights;
+    std::mt19937_64                            m_rng;
 };
 
 } // namespace bisky::scene

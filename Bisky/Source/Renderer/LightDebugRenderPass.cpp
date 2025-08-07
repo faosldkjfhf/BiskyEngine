@@ -69,7 +69,7 @@ void LightDebugRenderPass::draw(
         cmdList->setConstantBufferView(m_graphicsPipeline->getRootParameter("objectBuffer"), objectAlloc.gpuBase);
 
         // ----- set render resource -----
-        XMStoreFloat3(&renderResource->color, XMLoadFloat4(&light.strength));
+        XMStoreFloat3(&renderResource->color, XMLoadFloat4(&light.intensity));
         cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 4u, (void *)renderResource);
 
         // -------------- input assembly --------------

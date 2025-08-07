@@ -20,7 +20,7 @@ namespace bisky::renderer
 
 struct GBuffer
 {
-    std::unique_ptr<gfx::Texture> position;
+    std::unique_ptr<gfx::Texture> positionAmbientOcclusion;
     std::unique_ptr<gfx::Texture> normalRoughness;
     std::unique_ptr<gfx::Texture> albedoMetallic;
 };
@@ -33,6 +33,7 @@ class DeferredRenderer
         int vertexBufferIndex;
         int diffuseMapIndex;
         int metallicRoughnessMapIndex;
+        int ambientOcclusionMapIndex;
     };
 
     struct LightPassRenderResource

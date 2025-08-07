@@ -15,11 +15,11 @@ namespace bisky::renderer
 DeferredRenderer::DeferredRenderer(gfx::Device *const device, gfx::Window *const window) : m_device(device)
 {
     // ----- position texture -----
-    m_gBuffer.position = device->createTexture2D(
+    m_gBuffer.positionAmbientOcclusion = device->createTexture2D(
         window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
     );
-    device->createRenderTargetView(m_gBuffer.position.get());
-    device->createShaderResourceView(m_gBuffer.position.get());
+    device->createRenderTargetView(m_gBuffer.positionAmbientOcclusion.get());
+    device->createShaderResourceView(m_gBuffer.positionAmbientOcclusion.get());
 
     // ----- normal texture -----
     m_gBuffer.normalRoughness = device->createTexture2D(
@@ -37,7 +37,7 @@ DeferredRenderer::DeferredRenderer(gfx::Device *const device, gfx::Window *const
 
     // ----- create graphics pipeline -----
     std::array<DXGI_FORMAT, 3> formats = {
-        m_gBuffer.position->resource->GetDesc().Format,
+        m_gBuffer.positionAmbientOcclusion->resource->GetDesc().Format,
         m_gBuffer.normalRoughness->resource->GetDesc().Format,
         m_gBuffer.albedoMetallic->resource->GetDesc().Format,
     };
@@ -85,7 +85,9 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
     auto *cmdList = frameResource->graphicsCommandList.get();
 
     // ----- transition gbuffer to render target -----
-    cmdList->addBarrier(m_gBuffer.position.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    cmdList->addBarrier(
+        m_gBuffer.positionAmbientOcclusion.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
     cmdList->addBarrier(
         m_gBuffer.normalRoughness.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET
     );
@@ -95,7 +97,7 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
     cmdList->dispatchBarriers();
 
     const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetViews = {
-        m_gBuffer.position->rtvDescriptor.cpu,
+        m_gBuffer.positionAmbientOcclusion->rtvDescriptor.cpu,
         m_gBuffer.normalRoughness->rtvDescriptor.cpu,
         m_gBuffer.albedoMetallic->rtvDescriptor.cpu,
     };
@@ -155,7 +157,9 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
             renderResource.diffuseMapIndex = gfx::Texture::GetSrvIndex(submesh.material->diffuseTexture.get());
             renderResource.metallicRoughnessMapIndex =
                 gfx::Texture::GetSrvIndex(submesh.material->metallicRoughnessTexture.get());
-            cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 3u, &renderResource);
+            renderResource.ambientOcclusionMapIndex =
+                gfx::Texture::GetSrvIndex(submesh.material->ambientOccusionTexture.get());
+            cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 4u, &renderResource);
 
             // ----- bind index buffer -----
             cmdList->setIndexBuffer({
@@ -171,7 +175,9 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
     }
 
     // ----- set gbuffer as common -----
-    cmdList->addBarrier(m_gBuffer.position.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
+    cmdList->addBarrier(
+        m_gBuffer.positionAmbientOcclusion.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON
+    );
     cmdList->addBarrier(
         m_gBuffer.normalRoughness.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON
     );
@@ -226,7 +232,7 @@ auto DeferredRenderer::lightPass(scene::Scene *const scene, gfx::FrameResource *
     // ----- bind render resource -----
     LightPassRenderResource renderResource{};
     renderResource.vertexBufferIndex = gfx::Buffer::GetSrvIndex(m_quad->mesh->vertexBuffer.get());
-    renderResource.positionMapIndex  = gfx::Texture::GetSrvIndex(m_gBuffer.position.get());
+    renderResource.positionMapIndex  = gfx::Texture::GetSrvIndex(m_gBuffer.positionAmbientOcclusion.get());
     renderResource.normalMapIndex    = gfx::Texture::GetSrvIndex(m_gBuffer.normalRoughness.get());
     renderResource.albedoMapIndex    = gfx::Texture::GetSrvIndex(m_gBuffer.albedoMetallic.get());
     cmdList->set32BitConstants(m_lightPassPipeline->getRootParameter("renderResource"), 4u, &renderResource);
@@ -240,16 +246,16 @@ auto DeferredRenderer::lightPass(scene::Scene *const scene, gfx::FrameResource *
 
 auto DeferredRenderer::resize(gfx::Window *const window) -> void
 {
-    m_gBuffer.position.reset();
+    m_gBuffer.positionAmbientOcclusion.reset();
     m_gBuffer.normalRoughness.reset();
     m_gBuffer.albedoMetallic.reset();
 
     // ----- position texture -----
-    m_gBuffer.position = m_device->createTexture2D(
+    m_gBuffer.positionAmbientOcclusion = m_device->createTexture2D(
         window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
     );
-    m_device->createRenderTargetView(m_gBuffer.position.get());
-    m_device->createShaderResourceView(m_gBuffer.position.get());
+    m_device->createRenderTargetView(m_gBuffer.positionAmbientOcclusion.get());
+    m_device->createShaderResourceView(m_gBuffer.positionAmbientOcclusion.get());
 
     // ----- normal texture -----
     m_gBuffer.normalRoughness = m_device->createTexture2D(

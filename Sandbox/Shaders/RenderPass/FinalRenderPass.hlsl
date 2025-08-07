@@ -35,7 +35,7 @@ float4 PsMain(VsOutput input) : SV_Target0
 {
     Texture2D<float4> rtvTexture = ResourceDescriptorHeap[renderResource.textureIndex];
     
-    float3 hdr = rtvTexture.SampleLevel(linearWrapSampler, input.texCoord, 0.0).xyz;
+    float3 hdr = rtvTexture.SampleLevel(linearWrapSampler, input.texCoord, 0.0).rgb;
     
     // ----- Reinhard tone-mapping -----
     hdr = hdr / (hdr + 1.0);

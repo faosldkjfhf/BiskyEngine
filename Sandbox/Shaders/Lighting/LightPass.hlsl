@@ -21,7 +21,7 @@ struct RawVertex
 struct RenderResource
 {
     int vertexBufferIndex;
-    int positionTextureIndex;
+    int positionAmbientOcclusionTextureIndex;
     int normalRoughnessTextureIndex;
     int albedoMetallicTextureIndex;
 };
@@ -43,14 +43,16 @@ VsOutput VsMain(uint vertexId : SV_VertexID)
 
 PsOutput PsMain(VsOutput input)
 {
-    Texture2D<float4> positionMap = ResourceDescriptorHeap[renderResource.positionTextureIndex];
+    Texture2D<float4> positionAmbientOcclusionMap = ResourceDescriptorHeap[renderResource.positionAmbientOcclusionTextureIndex];
     Texture2D<float4> normalRoughnessMap = ResourceDescriptorHeap[renderResource.normalRoughnessTextureIndex];
     Texture2D<float4> albedoMetallicMap = ResourceDescriptorHeap[renderResource.albedoMetallicTextureIndex];
     
     float4 normalRoughness = normalRoughnessMap.Sample(linearWrapSampler, input.texCoord);
     float4 albedoMetallic = albedoMetallicMap.Sample(linearWrapSampler, input.texCoord);
+    float4 positionAmbientOcclusion = positionAmbientOcclusionMap.Sample(linearWrapSampler, input.texCoord);
     
-    float3 position = positionMap.Sample(linearWrapSampler, input.texCoord).xyz;   
+    float3 position = positionAmbientOcclusion.xyz;
+    float ambientOcclusion = positionAmbientOcclusion.w;
     float3 normal = normalRoughness.xyz;
     float roughness = normalRoughness.w;
     float3 albedo = albedoMetallic.xyz;
@@ -69,12 +71,15 @@ PsOutput PsMain(VsOutput input)
     for (uint i = 0; i < lightBuffer.numLights; i++)
     {
         Light light = lightBuffer.lights[i];
-        
-        // Lo += BlinnPhong(light, normal, position, sceneBuffer.viewPosition.xyz) * albedo;
        
         // ----- Light direction and Halfway direction -----
         float3 L = normalize(light.position.xyz - position);
         float3 H = normalize(L + V);
+        
+        // ----- Attenuation -----
+        float distance = length(light.position.xyz - position);
+        float attenuation = 1.0 / (distance * distance);
+        float3 radiance = light.strength.xyz * attenuation;
         
         // ----- Calculate DGF -----
         float D = D_GGX(N, H, roughness);
@@ -96,12 +101,12 @@ PsOutput PsMain(VsOutput input)
         
         // ----- Accumulate outgoing light -----
         float NoL = max(dot(N, L), 0.0);
-        Lo += (kD * Fd + Fs) * NoL * light.strength.xyz;
+        Lo += (kD * Fd + Fs) * NoL * radiance;
         
     }
     
     // ----- Calculate ambient -----
-    float3 ambient = albedo * 0.03;
+    float3 ambient = ambientOcclusion * albedo * 0.03;
     Lo += ambient;
    
     PsOutput output;

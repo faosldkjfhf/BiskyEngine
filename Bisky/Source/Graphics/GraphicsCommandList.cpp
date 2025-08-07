@@ -139,7 +139,10 @@ void GraphicsCommandList::setPipelineState(gfx::PipelineState *const pipelineSta
 
 void GraphicsCommandList::setPipelineState(ID3D12PipelineState *const pipelineState) const
 {
-    m_commandList->SetPipelineState(pipelineState);
+    if (pipelineState)
+    {
+        m_commandList->SetPipelineState(pipelineState);
+    }
 }
 
 void GraphicsCommandList::setRootSignature(gfx::RootSignature *const rootSignature) const

@@ -9,12 +9,14 @@
 #include "Graphics/Window.hpp"
 #include "Scene/Scene.hpp"
 #include "Scene/ScreenQuad.hpp"
+#include <random>
 
 namespace bisky::scene
 {
 
 Scene::Scene(gfx::Window *const window, gfx::Device *const device, std::string_view name)
-    : m_name(name), m_device(device), m_window(window)
+    : m_name(name), m_device(device), m_window(window),
+      m_rng(std::chrono::steady_clock::now().time_since_epoch().count())
 {
     m_camera        = std::make_unique<Camera>(window->getAspectRatio(), 0.1f, 100.0f);
     m_arcballCamera = std::make_unique<ArcballCamera>(window->getWidth(), window->getHeight());
@@ -111,7 +113,7 @@ void Scene::draw()
             {
                 ImGui::Unindent();
                 ImGui::SliderFloat3("Position", (float *)&lights[i].position, -10.0f, 10.0f);
-                ImGui::ColorEdit3("Strength", (float *)&lights[i].strength);
+                ImGui::ColorEdit3("Strength", (float *)&lights[i].intensity);
                 ImGui::Indent();
                 ImGui::TreePop();
             }
@@ -159,13 +161,14 @@ void Scene::initDefaultScene()
         });
     }
 
-    auto &light = m_lights.emplace_back();
-    XMStoreFloat4(&light.position, FXMVECTOR{-3.0f, 3.0f, -3.0f, 1.0f});
-    XMStoreFloat4(&light.strength, FXMVECTOR{1.0f, 0.0f, 0.0f, 1.0f});
-
-    auto &light2 = m_lights.emplace_back();
-    XMStoreFloat4(&light2.position, FXMVECTOR{3.0f, 3.0f, -3.0f, 1.0f});
-    XMStoreFloat4(&light2.strength, FXMVECTOR{0.0f, 0.0f, 1.0f, 1.0f});
+    std::uniform_real_distribution dist(0.0f, 1.0f);
+    std::uniform_real_distribution posDist(-5.0f, 5.0f);
+    for (UINT32 i = 0u; i < 32u; i++)
+    {
+        auto &light = m_lights.emplace_back();
+        XMStoreFloat4(&light.position, FXMVECTOR{posDist(m_rng), posDist(m_rng), posDist(m_rng), 1.0f});
+        XMStoreFloat4(&light.intensity, FXMVECTOR{dist(m_rng), dist(m_rng), dist(m_rng), 1.0f});
+    }
 
     m_skybox = std::make_unique<Skybox>(m_device, "Skybox\\cubemap.dds");
 }
