@@ -17,7 +17,7 @@ LightDebugRenderPass::LightDebugRenderPass(gfx::Device *const device) : m_device
     core::ResourceManager::get().loadMesh(device, "Sphere\\sphere.gltf");
     m_sphere       = std::make_unique<scene::RenderObject>();
     m_sphere->mesh = core::ResourceManager::get().getMesh("sphere.000");
-    m_sphere->transform->setScale(0.3f, 0.3f, 0.3f);
+    m_sphere->transform->setScale(0.15f, 0.15f, 0.15f);
 }
 
 void LightDebugRenderPass::draw(
@@ -34,13 +34,7 @@ void LightDebugRenderPass::draw(
     cmdList->setPipelineState(m_graphicsPipeline->getPipelineState());
     cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());
 
-    // ----- set scene buffer -----
-    // auto  sceneAlloc  = frameResource->resourceAllocator->allocate(sizeof(gfx::SceneBuffer));
-    // auto *sceneBuffer = reinterpret_cast<gfx::SceneBuffer *>(sceneAlloc.cpuBase);
-    // XMStoreFloat4x4(&sceneBuffer->view, camera->getView());
-    // XMStoreFloat4x4(&sceneBuffer->projection, camera->getProjection());
-    // XMStoreFloat4x4(&sceneBuffer->viewProjection, camera->getView() * camera->getProjection());
-    // XMStoreFloat4(&sceneBuffer->viewPosition, camera->getPosition());
+    // ----- bind scene buffer -----
     cmdList->setConstantBufferView(
         m_graphicsPipeline->getRootParameter("sceneBuffer"),
         frameResource->sceneBuffer->resource->GetGPUVirtualAddress()
