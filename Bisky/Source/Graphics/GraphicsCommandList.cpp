@@ -179,6 +179,10 @@ void GraphicsCommandList::drawIndexedInstanced(const scene::Submesh &submesh) co
     );
 }
 
+void GraphicsCommandList::drawIndexedInstanced(const UINT32 indexCount, const UINT32 instanceCount) const
+{
+}
+
 void GraphicsCommandList::setConstantBufferView(uint32_t index, D3D12_GPU_VIRTUAL_ADDRESS handle) const
 {
     m_commandList->SetGraphicsRootConstantBufferView(index, handle);

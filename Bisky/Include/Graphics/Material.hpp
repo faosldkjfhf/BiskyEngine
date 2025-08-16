@@ -14,6 +14,7 @@ struct Material
     std::shared_ptr<gfx::Texture> normalTexture;
     std::shared_ptr<gfx::Texture> metallicRoughnessTexture;
     std::shared_ptr<gfx::Texture> ambientOccusionTexture;
+    std::shared_ptr<gfx::Texture> emissiveTexture;
 };
 
 } // namespace bisky::gfx

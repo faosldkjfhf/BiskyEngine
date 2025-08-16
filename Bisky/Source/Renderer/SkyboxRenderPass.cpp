@@ -35,6 +35,9 @@ void SkyboxRenderPass::draw(
     auto *camera  = scene->getArcballCamera();
     if (skybox)
     {
+        // ----- bind depth stencil -----
+        cmdList->setRenderTargets(m_device->getHdrRenderTargetView(), m_device->getDepthStencilView());
+
         // ----- bind pipeline state and root signature -----
         cmdList->setPipelineState(m_graphicsPipeline->getPipelineState());
         cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());

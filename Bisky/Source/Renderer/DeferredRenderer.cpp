@@ -1,5 +1,6 @@
 #include "Common.hpp"
 
+#include "Core/FrameStats.hpp"
 #include "Core/ResourceManager.hpp"
 #include "Graphics/Device.hpp"
 #include "Graphics/FrameResource.hpp"
@@ -14,32 +15,15 @@ namespace bisky::renderer
 
 DeferredRenderer::DeferredRenderer(gfx::Device *const device, gfx::Window *const window) : m_device(device)
 {
-    // ----- position texture -----
-    m_gBuffer.positionAmbientOcclusion = device->createTexture2D(
-        window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
-    );
-    device->createRenderTargetView(m_gBuffer.positionAmbientOcclusion.get());
-    device->createShaderResourceView(m_gBuffer.positionAmbientOcclusion.get());
-
-    // ----- normal texture -----
-    m_gBuffer.normalRoughness = device->createTexture2D(
-        window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
-    );
-    device->createRenderTargetView(m_gBuffer.normalRoughness.get());
-    device->createShaderResourceView(m_gBuffer.normalRoughness.get());
-
-    // ----- albedo texture -----
-    m_gBuffer.albedoMetallic = device->createTexture2D(
-        window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
-    );
-    device->createRenderTargetView(m_gBuffer.albedoMetallic.get());
-    device->createShaderResourceView(m_gBuffer.albedoMetallic.get());
+    // ----- create geometry buffer -----
+    initGBuffer(window);
 
     // ----- create graphics pipeline -----
-    std::array<DXGI_FORMAT, 3> formats = {
+    std::array<DXGI_FORMAT, 4> formats = {
         m_gBuffer.positionAmbientOcclusion->resource->GetDesc().Format,
         m_gBuffer.normalRoughness->resource->GetDesc().Format,
         m_gBuffer.albedoMetallic->resource->GetDesc().Format,
+        m_gBuffer.emissive->resource->GetDesc().Format,
     };
 
     {
@@ -80,9 +64,18 @@ DeferredRenderer::~DeferredRenderer()
 {
 }
 
-auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResource *const frameResource) const -> void
+auto DeferredRenderer::geometryPass(
+    scene::Scene *const scene, gfx::FrameResource *const frameResource, core::FrameStats *const frameStats
+) const -> void
 {
     auto *cmdList = frameResource->graphicsCommandList.get();
+
+    const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetViews = {
+        m_gBuffer.positionAmbientOcclusion->rtvDescriptor.cpu,
+        m_gBuffer.normalRoughness->rtvDescriptor.cpu,
+        m_gBuffer.albedoMetallic->rtvDescriptor.cpu,
+        m_gBuffer.emissive->rtvDescriptor.cpu,
+    };
 
     // ----- transition gbuffer to render target -----
     cmdList->addBarrier(
@@ -94,13 +87,8 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
     cmdList->addBarrier(
         m_gBuffer.albedoMetallic.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET
     );
+    cmdList->addBarrier(m_gBuffer.emissive.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
     cmdList->dispatchBarriers();
-
-    const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargetViews = {
-        m_gBuffer.positionAmbientOcclusion->rtvDescriptor.cpu,
-        m_gBuffer.normalRoughness->rtvDescriptor.cpu,
-        m_gBuffer.albedoMetallic->rtvDescriptor.cpu,
-    };
 
     // ----- clear render targets -----
     float color[4] = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -159,7 +147,8 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
                 gfx::Texture::GetSrvIndex(submesh.material->metallicRoughnessTexture.get());
             renderResource.ambientOcclusionMapIndex =
                 gfx::Texture::GetSrvIndex(submesh.material->ambientOccusionTexture.get());
-            cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 4u, &renderResource);
+            renderResource.emissiveMapIndex = gfx::Texture::GetSrvIndex(submesh.material->emissiveTexture.get());
+            cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 5u, &renderResource);
 
             // ----- bind index buffer -----
             cmdList->setIndexBuffer({
@@ -171,6 +160,10 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
 
             // ----- draw submesh -----
             cmdList->drawIndexedInstanced(submesh);
+
+            // ----- update frame stats -----
+            frameStats->drawCount++;
+            frameStats->triangleCount += submesh.indexCount / 3u;
         }
     }
 
@@ -184,10 +177,13 @@ auto DeferredRenderer::geometryPass(scene::Scene *const scene, gfx::FrameResourc
     cmdList->addBarrier(
         m_gBuffer.albedoMetallic.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON
     );
+    cmdList->addBarrier(m_gBuffer.emissive.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
     cmdList->dispatchBarriers();
 }
 
-auto DeferredRenderer::lightPass(scene::Scene *const scene, gfx::FrameResource *const frameResource) const -> void
+auto DeferredRenderer::lightPass(
+    scene::Scene *const scene, gfx::FrameResource *const frameResource, core::FrameStats *const frameStats
+) const -> void
 {
     auto *cmdList = frameResource->graphicsCommandList.get();
 
@@ -235,7 +231,8 @@ auto DeferredRenderer::lightPass(scene::Scene *const scene, gfx::FrameResource *
     renderResource.positionMapIndex  = gfx::Texture::GetSrvIndex(m_gBuffer.positionAmbientOcclusion.get());
     renderResource.normalMapIndex    = gfx::Texture::GetSrvIndex(m_gBuffer.normalRoughness.get());
     renderResource.albedoMapIndex    = gfx::Texture::GetSrvIndex(m_gBuffer.albedoMetallic.get());
-    cmdList->set32BitConstants(m_lightPassPipeline->getRootParameter("renderResource"), 4u, &renderResource);
+    renderResource.emissiveMapIndex  = gfx::Texture::GetSrvIndex(m_gBuffer.emissive.get());
+    cmdList->set32BitConstants(m_lightPassPipeline->getRootParameter("renderResource"), 5u, &renderResource);
 
     // ----- draw submesh -----
     for (const auto &submesh : m_quad->mesh->submeshes)
@@ -249,7 +246,18 @@ auto DeferredRenderer::resize(gfx::Window *const window) -> void
     m_gBuffer.positionAmbientOcclusion.reset();
     m_gBuffer.normalRoughness.reset();
     m_gBuffer.albedoMetallic.reset();
+    m_gBuffer.emissive.reset();
 
+    initGBuffer(window);
+}
+
+auto DeferredRenderer::getGBuffer() -> GBuffer *
+{
+    return &m_gBuffer;
+}
+
+auto DeferredRenderer::initGBuffer(gfx::Window *const window) -> void
+{
     // ----- position texture -----
     m_gBuffer.positionAmbientOcclusion = m_device->createTexture2D(
         window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
@@ -270,11 +278,13 @@ auto DeferredRenderer::resize(gfx::Window *const window) -> void
     );
     m_device->createRenderTargetView(m_gBuffer.albedoMetallic.get());
     m_device->createShaderResourceView(m_gBuffer.albedoMetallic.get());
-}
 
-auto DeferredRenderer::getGBuffer() -> GBuffer *
-{
-    return &m_gBuffer;
+    // ----- emissive texture -----
+    m_gBuffer.emissive = m_device->createTexture2D(
+        window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
+    );
+    m_device->createRenderTargetView(m_gBuffer.emissive.get());
+    m_device->createShaderResourceView(m_gBuffer.emissive.get());
 }
 
 } // namespace bisky::renderer

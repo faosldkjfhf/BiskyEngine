@@ -157,6 +157,8 @@ class GraphicsCommandList : public CommandList
      */
     void drawIndexedInstanced(const scene::Submesh &submesh) const;
 
+    void drawIndexedInstanced(const UINT32 indexCount, const UINT32 instanceCount) const;
+
     /*
      * Passes a constant buffer view to the shader.
      *

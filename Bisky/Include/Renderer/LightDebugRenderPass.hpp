@@ -26,10 +26,17 @@ namespace bisky::renderer
 class LightDebugRenderPass
 {
   public:
+    // -- render resources
     struct RenderResource
     {
         int32_t           vertexBufferIndex;
         DirectX::XMFLOAT3 color;
+    };
+
+    // -- instance look up table
+    struct InstanceLUT
+    {
+        DirectX::XMFLOAT4X4 world;
     };
 
     explicit LightDebugRenderPass(gfx::Device *const device);

@@ -24,6 +24,7 @@ struct RenderResource
     int positionAmbientOcclusionTextureIndex;
     int normalRoughnessTextureIndex;
     int albedoMetallicTextureIndex;
+    int emissiveTextureIndex;
 };
 
 ConstantBuffer<RenderResource> renderResource : register(b0);
@@ -43,9 +44,10 @@ VsOutput VsMain(uint vertexId : SV_VertexID)
 
 PsOutput PsMain(VsOutput input)
 {
-    Texture2D<float4> positionAmbientOcclusionMap = ResourceDescriptorHeap[renderResource.positionAmbientOcclusionTextureIndex];
-    Texture2D<float4> normalRoughnessMap = ResourceDescriptorHeap[renderResource.normalRoughnessTextureIndex];
-    Texture2D<float4> albedoMetallicMap = ResourceDescriptorHeap[renderResource.albedoMetallicTextureIndex];
+    Texture2D<float4> positionAmbientOcclusionMap = ResourceDescriptorHeap[NonUniformResourceIndex(renderResource.positionAmbientOcclusionTextureIndex)];
+    Texture2D<float4> normalRoughnessMap = ResourceDescriptorHeap[NonUniformResourceIndex(renderResource.normalRoughnessTextureIndex)];
+    Texture2D<float4> albedoMetallicMap = ResourceDescriptorHeap[NonUniformResourceIndex(renderResource.albedoMetallicTextureIndex)];
+    Texture2D<float4> emissiveMap = ResourceDescriptorHeap[NonUniformResourceIndex(renderResource.emissiveTextureIndex)];
     
     float4 normalRoughness = normalRoughnessMap.Sample(linearWrapSampler, input.texCoord);
     float4 albedoMetallic = albedoMetallicMap.Sample(linearWrapSampler, input.texCoord);
@@ -107,7 +109,7 @@ PsOutput PsMain(VsOutput input)
     
     // ----- Calculate ambient -----
     float3 ambient = ambientOcclusion * albedo * 0.03;
-    Lo += ambient;
+    Lo += ambient + emissiveMap.Sample(linearWrapSampler, input.texCoord).rgb;
    
     PsOutput output;
     output.color = float4(Lo, 1.0);

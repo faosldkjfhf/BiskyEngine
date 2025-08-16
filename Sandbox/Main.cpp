@@ -48,7 +48,6 @@ int main()
     auto  device     = std::make_unique<gfx::Device>(window.get());
 
     // ----- initializer renderer and scene -----
-    auto geometryRenderPass   = std::make_unique<renderer::ForwardRenderer>(window.get(), device.get());
     auto lightDebugRenderPass = std::make_unique<renderer::LightDebugRenderPass>(device.get());
     auto skyboxRenderPass     = std::make_unique<renderer::SkyboxRenderPass>(device.get());
     // auto bloomComputePass     = std::make_unique<renderer::BloomComputePass>(device.get());
@@ -83,6 +82,10 @@ int main()
             scene->getArcballCamera()->resize(window->getWidth(), window->getHeight());
         }
 
+        // ----- reset draw statistics -----
+        frameStats->drawCount     = 0u;
+        frameStats->triangleCount = 0u;
+
         // ----- update scene -----
         auto sceneStart = std::chrono::steady_clock::now();
         scene->update(nullptr);
@@ -114,15 +117,12 @@ int main()
         // ----- begin frame -----
         device->beginFrame(cmdList);
 
-        // ----- draw geometry -----
-        // geometryRenderPass->draw(renderer::RenderLayer::Opaque, frame, scene.get(), frameStats.get());
-
         // ----- deferred rendering pass -----
-        deferredRenderer->geometryPass(scene.get(), frame);
-        deferredRenderer->lightPass(scene.get(), frame);
+        deferredRenderer->geometryPass(scene.get(), frame, frameStats.get());
+        deferredRenderer->lightPass(scene.get(), frame, frameStats.get());
 
         // ----- draw light debug -----
-        lightDebugRenderPass->draw(frame, scene.get(), frameStats.get());
+        // lightDebugRenderPass->draw(frame, scene.get(), frameStats.get());
 
         // ----- draw skybox -----
         skyboxRenderPass->draw(frame, scene.get(), frameStats.get());

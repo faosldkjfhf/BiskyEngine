@@ -160,6 +160,14 @@ bool ResourceManager::loadMesh(gfx::Device *const device, const std::filesystem:
                 newMat->normalTexture = textures[image];
             }
         }
+        if (mat.emissiveTexture.has_value())
+        {
+            size_t image = asset->textures[mat.emissiveTexture.value().textureIndex].imageIndex.value();
+            if (image < textures.size())
+            {
+                newMat->emissiveTexture = textures[image];
+            }
+        }
 
         materials.push_back(newMat);
         m_materials[mat.name.data()] = newMat;
@@ -446,6 +454,14 @@ std::optional<std::vector<std::shared_ptr<scene::RenderObject>>> ResourceManager
             if (image < textures.size())
             {
                 newMat->normalTexture = textures[image];
+            }
+        }
+        if (mat.emissiveTexture.has_value())
+        {
+            size_t image = asset->textures[mat.emissiveTexture.value().textureIndex].imageIndex.value();
+            if (image < textures.size())
+            {
+                newMat->emissiveTexture = textures[image];
             }
         }
 
