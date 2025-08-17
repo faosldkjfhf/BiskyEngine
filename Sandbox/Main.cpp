@@ -66,7 +66,7 @@ int main()
     auto frameStats = std::make_unique<core::FrameStats>();
 
     // ----- run loop -----
-    window->setFullscreenState(TRUE);
+    // window->setFullscreenState(TRUE);
     while (!window->shouldClose())
     {
         // ----- begin timer -----

@@ -530,26 +530,19 @@ void Device::initSwapChain(Window *window)
 
     LOG_VERBOSE("Swap Chain created");
 
-    RECT cr;
-    if (GetClientRect(window->getHandle(), &cr))
-    {
-        auto width  = cr.right - cr.left;
-        auto height = cr.bottom - cr.top;
+    m_viewport          = {};
+    m_viewport.TopLeftX = 0.0f;
+    m_viewport.TopLeftY = 0.0f;
+    m_viewport.Width    = static_cast<float>(window->getWidth());
+    m_viewport.Height   = static_cast<float>(window->getHeight());
+    m_viewport.MinDepth = 0.0f;
+    m_viewport.MaxDepth = 1.0f;
 
-        m_viewport          = {};
-        m_viewport.TopLeftX = 0.0f;
-        m_viewport.TopLeftY = 0.0f;
-        m_viewport.Width    = static_cast<float>(width);
-        m_viewport.Height   = static_cast<float>(height);
-        m_viewport.MinDepth = 0.0f;
-        m_viewport.MaxDepth = 1.0f;
-
-        m_scissor        = {};
-        m_scissor.left   = 0;
-        m_scissor.top    = 0;
-        m_scissor.right  = width;
-        m_scissor.bottom = height;
-    }
+    m_scissor        = {};
+    m_scissor.left   = 0;
+    m_scissor.top    = 0;
+    m_scissor.right  = window->getWidth();
+    m_scissor.bottom = window->getHeight();
 }
 
 void Device::initFrameResources()

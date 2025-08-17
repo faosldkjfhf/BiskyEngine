@@ -89,8 +89,7 @@ PsOutput PsMain(VsOutput input)
         float3 F = F_FresnelSchlick(max(dot(L, H), 0.0), f0);
         
         // ----- Calculate the diffuse contribution -----
-        float3 kS = F;
-        float3 kD = 1.0 - kS;
+        float3 kD = 1.0 - F;
         kD *= 1.0 - metalness;
         
         // ----- Specular component -----
@@ -103,7 +102,7 @@ PsOutput PsMain(VsOutput input)
         
         // ----- Accumulate outgoing light -----
         float NoL = max(dot(N, L), 0.0);
-        Lo += (kD * Fd + Fs) * NoL * radiance;
+        Lo += (kD * Fd + (1.0 - kD) * Fs) * NoL * radiance;
         
     }
     
