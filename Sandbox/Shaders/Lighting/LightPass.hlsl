@@ -77,12 +77,21 @@ PsOutput PsMain(VsOutput input)
        
         // ----- Light direction and Halfway direction -----
         float3 L = normalize(light.position.xyz - position);
+        if (light.type == 1)
+        {
+            L = normalize(-light.direction);
+        }
+        
         float3 H = normalize(L + V);
         
         // ----- Attenuation -----
         float distance = length(light.position.xyz - position);
         float attenuation = 1.0 / (distance * distance);
         float3 radiance = light.strength.xyz * attenuation;
+        if (light.type == 1)
+        {
+            radiance = light.strength.xyz;
+        }
         
         // ----- Calculate DGF -----
         float D = D_GGX(N, H, roughness);
@@ -109,7 +118,8 @@ PsOutput PsMain(VsOutput input)
     
     // ----- Calculate ambient -----
     float3 ambient = ambientOcclusion * albedo * 0.03;
-    Lo += ambient + emissiveMap.Sample(linearWrapSampler, input.texCoord).rgb;
+    float3 emissive = emissiveMap.Sample(linearWrapSampler, input.texCoord).rgb;
+    Lo += ambient + emissive;
    
     PsOutput output;
     output.color = float4(Lo, 1.0);

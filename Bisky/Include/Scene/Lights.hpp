@@ -14,11 +14,8 @@ struct PointLight
 {
     DirectX::XMFLOAT4 position;
     DirectX::XMFLOAT4 intensity;
-};
-
-struct DirectionalLight : public Light
-{
-    DirectX::XMFLOAT4 direction;
+    DirectX::XMFLOAT3 direction;
+    int               type;
 };
 
 } // namespace bisky::scene

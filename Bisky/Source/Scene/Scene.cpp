@@ -153,6 +153,16 @@ void Scene::initDefaultScene()
 {
     m_camera->setPosition(0.0f, 0.0f, -5.0f);
 
+    // auto ro = core::ResourceManager::get().loadGltfMeshes(m_device, "sponza.glb");
+    // if (ro.has_value())
+    //{
+    //     m_renderObjects.assign(ro.value().begin(), ro.value().end());
+    //     std::for_each(m_renderObjects.begin(), m_renderObjects.end(), [](std::shared_ptr<RenderObject> renderObject)
+    //     {
+    //         renderObject->transform.setScale(0.5f, 0.5f, 0.5f);
+    //     });
+    // }
+
     auto ro = core::ResourceManager::get().loadGltfMeshes(m_device, "DamagedHelmet.glb");
     if (ro.has_value())
     {
@@ -165,12 +175,19 @@ void Scene::initDefaultScene()
 
     std::uniform_real_distribution dist(0.0f, 1.0f);
     std::uniform_real_distribution posDist(-5.0f, 5.0f);
-    for (UINT32 i = 0u; i < 32u; i++)
+    for (UINT32 i = 0u; i < 31u; i++)
     {
         auto &light = m_lights.emplace_back();
         XMStoreFloat4(&light.position, FXMVECTOR{posDist(m_rng), posDist(m_rng), posDist(m_rng), 1.0f});
         XMStoreFloat4(&light.intensity, FXMVECTOR{dist(m_rng), dist(m_rng), dist(m_rng), 1.0f});
+        light.type = 0;
     }
+
+    // -- directional light
+    auto &light = m_lights.emplace_back();
+    XMStoreFloat4(&light.intensity, FXMVECTOR{1.0f, 1.0f, 1.0f, 1.0f});
+    XMStoreFloat3(&light.direction, FXMVECTOR{0.0f, -1.0f, 0.0f, 0.0f});
+    light.type = 1;
 
     m_skybox = std::make_unique<Skybox>(m_device, "Skybox\\cubemap.dds");
 }

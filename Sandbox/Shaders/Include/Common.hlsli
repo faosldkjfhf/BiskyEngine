@@ -21,6 +21,8 @@ struct Light
 {
     float4 position;
     float4 strength;
+    float3 direction;
+    int type;
 };
 
 struct LightBuffer

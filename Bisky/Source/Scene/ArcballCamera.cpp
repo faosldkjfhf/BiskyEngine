@@ -6,7 +6,7 @@ namespace bisky::scene
 {
 
 ArcballCamera::ArcballCamera(uint32_t width, uint32_t height)
-    : m_width(width), m_height(height), m_fov(90.0f), m_near(0.1f), m_far(100.0f), m_zoom(1.0f), m_distance(5.0f),
+    : m_width(width), m_height(height), m_fov(90.0f), m_near(0.1f), m_far(1000.0f), m_zoom(1.0f), m_distance(5.0f),
       m_drag(false)
 {
     resize(width, height);

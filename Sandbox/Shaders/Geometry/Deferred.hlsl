@@ -63,9 +63,16 @@ PsOutput PsMain(VsOutput input)
     // ----- gamma correct emissive texture -----
     emissive = pow(emissive, 2.2);
     
+    // -- if no ambient occlusion, use 1.0
+    float ao = 1.0;
+    if (renderResource.ambientOcclusionMapIndex > 0)
+    {
+        ao = ambientOcclusionMap.Sample(linearWrapSampler, input.texCoord).r;
+    }
+    
     PsOutput output;
     output.positionAmbientOcclusion.xyz = input.positionW;
-    output.positionAmbientOcclusion.w = ambientOcclusionMap.Sample(linearWrapSampler, input.texCoord).r;
+    output.positionAmbientOcclusion.w = ao;
     output.normalRoughness.rgb = normalize(input.normal);
     output.normalRoughness.a = metallicRoughnessMap.Sample(linearWrapSampler, input.texCoord).g;
     output.albedoMetallic.rgb = albedo;

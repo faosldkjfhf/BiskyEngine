@@ -464,6 +464,14 @@ std::optional<std::vector<std::shared_ptr<scene::RenderObject>>> ResourceManager
                 newMat->emissiveTexture = textures[image];
             }
         }
+        if (mat.occlusionTexture.has_value())
+        {
+            size_t image = asset->textures[mat.occlusionTexture.value().textureIndex].imageIndex.value();
+            if (image < textures.size())
+            {
+                newMat->ambientOccusionTexture = textures[image];
+            }
+        }
 
         materials.push_back(newMat);
         // m_materials[mat.name.data()] = newMat;
