@@ -18,15 +18,6 @@ DeferredRenderer::DeferredRenderer(gfx::Device *const device, gfx::Window *const
     // -- create geometry buffer
     initGBuffer(window);
 
-    // -- create bloom texture
-    m_bloomTexture = device->createTexture2D(
-        window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT,
-        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
-    );
-    device->createRenderTargetView(m_bloomTexture.get());
-    device->createUnorderedAccessView(m_bloomTexture.get());
-    device->createShaderResourceView(m_bloomTexture.get());
-
     // -- create graphics pipeline
     std::array<DXGI_FORMAT, 4> formats = {
         m_gBuffer.positionAmbientOcclusion->resource->GetDesc().Format,
@@ -191,11 +182,13 @@ auto DeferredRenderer::lightPass(
     auto *cmdList = frameResource->graphicsCommandList.get();
 
     // -- transition to render target
-    cmdList->addBarrier(m_bloomTexture.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    cmdList->addBarrier(
+        frameResource->bloomTexture.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
     cmdList->dispatchBarriers();
 
     const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargets = {
-        m_device->getHdrRenderTargetView(), m_bloomTexture->rtvDescriptor.cpu
+        m_device->getHdrRenderTargetView(), frameResource->bloomTexture->rtvDescriptor.cpu
     };
 
     // ----- set render target view -----
@@ -249,7 +242,7 @@ auto DeferredRenderer::lightPass(
 
     // -- transition to unordered access
     cmdList->addBarrier(
-        m_bloomTexture.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+        frameResource->bloomTexture.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
     );
     cmdList->dispatchBarriers();
 }
@@ -260,27 +253,13 @@ auto DeferredRenderer::resize(gfx::Window *const window) -> void
     m_gBuffer.normalRoughness.reset();
     m_gBuffer.albedoMetallic.reset();
     m_gBuffer.emissive.reset();
-    m_bloomTexture.reset();
 
     initGBuffer(window);
-
-    m_bloomTexture = m_device->createTexture2D(
-        window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT,
-        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
-    );
-    m_device->createRenderTargetView(m_bloomTexture.get());
-    m_device->createUnorderedAccessView(m_bloomTexture.get());
-    m_device->createShaderResourceView(m_bloomTexture.get());
 }
 
 auto DeferredRenderer::getGBuffer() -> GBuffer *
 {
     return &m_gBuffer;
-}
-
-auto DeferredRenderer::getBloomTexture() -> gfx::Texture *const
-{
-    return m_bloomTexture.get();
 }
 
 auto DeferredRenderer::initGBuffer(gfx::Window *const window) -> void

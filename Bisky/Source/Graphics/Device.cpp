@@ -17,7 +17,7 @@ Device::Device(Window *window, DXGI_FORMAT backBufferFormat, DXGI_FORMAT hdrRend
     initCommandQueue();
     initSwapChain(window);
     getBuffers(window->getWidth(), window->getHeight());
-    initFrameResources();
+    initFrameResources(window);
 
     LOG_INFO("D3D12 initialized");
 }
@@ -55,17 +55,22 @@ void Device::endFrame(GraphicsCommandList *const cmdList)
     cmdList->dispatchBarriers();
 }
 
-void Device::resize(uint32_t width, uint32_t height)
+void Device::resize(Window *const window)
 {
     m_swapChain->ResizeBuffers(
-        FramesInFlight, width, height, DXGI_FORMAT_UNKNOWN,
+        FramesInFlight, window->getWidth(), window->getHeight(), DXGI_FORMAT_UNKNOWN,
         DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
     );
 
-    m_viewport.Width  = static_cast<float>(width);
-    m_viewport.Height = static_cast<float>(height);
-    m_scissor.right   = width;
-    m_scissor.bottom  = height;
+    m_viewport.Width  = static_cast<float>(window->getWidth());
+    m_viewport.Height = static_cast<float>(window->getHeight());
+    m_scissor.right   = window->getWidth();
+    m_scissor.bottom  = window->getHeight();
+
+    for (auto const &frame : m_frameResources)
+    {
+        frame->resize(this, window);
+    }
 }
 
 void Device::releaseBuffers()
@@ -577,12 +582,12 @@ void Device::initSwapChain(Window *window)
     m_scissor.bottom = window->getHeight();
 }
 
-void Device::initFrameResources()
+void Device::initFrameResources(Window *const window)
 {
     auto sceneBufferSize = constantBufferByteSize(sizeof(SceneBuffer));
     for (uint32_t i = 0; i < FramesInFlight; i++)
     {
-        m_frameResources[i] = std::make_unique<FrameResource>(this);
+        m_frameResources[i] = std::make_unique<FrameResource>(this, window);
     }
 
     LOG_VERBOSE("Frame resources created");

@@ -66,7 +66,6 @@ class DeferredRenderer
 
   public:
     auto getGBuffer() -> GBuffer *;
-    auto getBloomTexture() -> gfx::Texture *const;
 
   private:
     auto initGBuffer(gfx::Window *const window) -> void;
@@ -77,7 +76,6 @@ class DeferredRenderer
     std::unique_ptr<scene::RenderObject>   m_quad;
     gfx::Device *const                     m_device;
     GBuffer                                m_gBuffer;
-    std::unique_ptr<gfx::Texture>          m_bloomTexture;
 };
 
 } // namespace bisky::renderer

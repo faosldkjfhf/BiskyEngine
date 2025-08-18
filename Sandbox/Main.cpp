@@ -210,7 +210,7 @@ int main()
             int outputImageIndex;
             int horizontal;
         } renderResource = {
-            .outputImageIndex = gfx::Texture::GetUavIndex(deferredRenderer->getBloomTexture()),
+            .outputImageIndex = gfx::Texture::GetUavIndex(frame->bloomTexture.get()),
             .horizontal       = 1u,
         };
 
@@ -232,14 +232,12 @@ int main()
 
         // -- transition bloom texture to common
         cmdList->addBarrier(
-            deferredRenderer->getBloomTexture(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON
+            frame->bloomTexture.get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON
         );
         cmdList->dispatchBarriers();
 
         // -- copy HDR render target to swapchain buffer image
-        finalRenderPass->draw(
-            device->getHdrRenderTargetBuffer(), deferredRenderer->getBloomTexture(), frame, frameStats.get()
-        );
+        finalRenderPass->draw(device->getHdrRenderTargetBuffer(), frame->bloomTexture.get(), frame, frameStats.get());
 
         // -- draw editor UI
         editor->beginFrame();

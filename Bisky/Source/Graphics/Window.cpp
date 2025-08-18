@@ -96,7 +96,7 @@ void Window::resize(Device *const device)
         m_width  = cr.right - cr.left;
         m_height = cr.bottom - cr.top;
 
-        device->resize(m_width, m_height);
+        device->resize(this);
         LOG_INFO("Window resized to (" + std::to_string(m_width) + ", " + std::to_string(m_height) + ")");
         m_shouldResize = false;
     }

@@ -55,7 +55,7 @@ class Device
      * @param width The width to resize to.
      * @param height The height to resize to.
      */
-    void resize(uint32_t width, uint32_t height);
+    void resize(Window *const window);
 
     /*
      * Releases the back buffers.
@@ -253,7 +253,7 @@ class Device
     void initFactory();
     void initCommandQueue();
     void initSwapChain(Window *window);
-    void initFrameResources();
+    void initFrameResources(Window *const window);
 
   private: // Private variables
     wrl::ComPtr<ID3D12Device10>  m_device;
