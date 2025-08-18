@@ -5,7 +5,6 @@
 #include "Graphics/FrameResource.hpp"
 #include "Graphics/PipelineState.hpp"
 #include "Graphics/Resources.hpp"
-#include "Graphics/RootSignature.hpp"
 #include "Graphics/Texture.hpp"
 
 namespace bisky::gfx
@@ -149,6 +148,10 @@ class Device
      */
     CommandQueue *const getDirectCommandQueue() const;
 
+    CommandQueue *const getComputeCommandQueue() const;
+
+    CommandQueue *const getCopyCommandQueue() const;
+
     /*
      * Gets the swap chain.
      *
@@ -262,6 +265,8 @@ class Device
 
     // command queues
     std::unique_ptr<CommandQueue> m_directCommandQueue;
+    std::unique_ptr<CommandQueue> m_computeCommandQueue;
+    std::unique_ptr<CommandQueue> m_copyCommandQueue;
 
     // heaps
     std::unique_ptr<DescriptorHeap> m_rtvHeap;
@@ -279,12 +284,13 @@ class Device
     std::array<std::unique_ptr<Texture>, FramesInFlight> m_hdrRenderTargetBuffers;
     std::array<Descriptor, FramesInFlight>               m_hdrRenderTargetSrvHandles;
     std::array<Descriptor, FramesInFlight>               m_hdrRenderTargetRtvHandles;
+    std::array<Descriptor, FramesInFlight>               m_hdrRenderTargetUavHandles;
     DXGI_FORMAT                                          m_hdrRenderTargetFormat;
 
     // depth stencil stuff
     std::unique_ptr<Texture> m_depthStencilBuffer;
     Descriptor               m_depthStencilHandle = {};
-    DXGI_FORMAT              m_depthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    DXGI_FORMAT              m_depthStencilFormat = DXGI_FORMAT_D32_FLOAT;
 
     // per-frame stuff
     std::array<std::unique_ptr<FrameResource>, FramesInFlight> m_frameResources;

@@ -28,7 +28,8 @@ FinalRenderPass::~FinalRenderPass()
 }
 
 void FinalRenderPass::draw(
-    gfx::Texture *const texture, gfx::FrameResource *const frameResource, core::FrameStats *const frameStats
+    gfx::Texture *const hdrTexture, gfx::Texture *const bloomTexture, gfx::FrameResource *const frameResource,
+    core::FrameStats *const frameStats
 )
 {
     auto  start   = std::chrono::system_clock::now();
@@ -51,8 +52,9 @@ void FinalRenderPass::draw(
     // -------------- allocate constants --------------
     FinalRenderPass::RenderResource renderResource{};
     renderResource.vertexBufferIndex = gfx::Buffer::GetSrvIndex(m_screenQuad->mesh->vertexBuffer.get());
-    renderResource.textureIndex      = gfx::Texture::GetSrvIndex(texture);
-    cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 2u, (void *)&renderResource);
+    renderResource.hdrTextureIndex   = gfx::Texture::GetSrvIndex(hdrTexture);
+    renderResource.bloomTextureIndex = gfx::Texture::GetSrvIndex(bloomTexture);
+    cmdList->set32BitConstants(m_graphicsPipeline->getRootParameter("renderResource"), 3u, (void *)&renderResource);
 
     // -------------- input assembly --------------
     cmdList->setIndexBuffer({

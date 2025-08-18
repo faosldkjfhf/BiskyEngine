@@ -15,10 +15,19 @@ namespace bisky::renderer
 
 DeferredRenderer::DeferredRenderer(gfx::Device *const device, gfx::Window *const window) : m_device(device)
 {
-    // ----- create geometry buffer -----
+    // -- create geometry buffer
     initGBuffer(window);
 
-    // ----- create graphics pipeline -----
+    // -- create bloom texture
+    m_bloomTexture = device->createTexture2D(
+        window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT,
+        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+    );
+    device->createRenderTargetView(m_bloomTexture.get());
+    device->createUnorderedAccessView(m_bloomTexture.get());
+    device->createShaderResourceView(m_bloomTexture.get());
+
+    // -- create graphics pipeline
     std::array<DXGI_FORMAT, 4> formats = {
         m_gBuffer.positionAmbientOcclusion->resource->GetDesc().Format,
         m_gBuffer.normalRoughness->resource->GetDesc().Format,
@@ -41,7 +50,9 @@ DeferredRenderer::DeferredRenderer(gfx::Device *const device, gfx::Window *const
     }
 
     {
-        std::array<DXGI_FORMAT, 1> renderFormats = {m_device->getHdrRenderTargetFormat()};
+        std::array<DXGI_FORMAT, 2> renderFormats = {
+            m_device->getHdrRenderTargetFormat(), DXGI_FORMAT_R16G16B16A16_FLOAT
+        };
 
         gfx::GraphicsPipelineStateDesc desc = {
             .vertexShader = {.name = "Lighting\\LightPass.hlsl", .entryPoint = L"VsMain"},
@@ -55,7 +66,7 @@ DeferredRenderer::DeferredRenderer(gfx::Device *const device, gfx::Window *const
         m_lightPassPipeline = std::make_unique<gfx::GraphicsPipeline>(m_device, desc);
     }
 
-    // ----- screen quad render object -----
+    // -- screen quad render object
     m_quad       = std::make_unique<scene::RenderObject>();
     m_quad->mesh = core::ResourceManager::get().getMesh("ScreenQuad");
 }
@@ -95,19 +106,11 @@ auto DeferredRenderer::geometryPass(
     cmdList->clearRenderTargetViews(renderTargetViews, color);
     cmdList->clearDepthStencilView(m_device->getDepthStencilView(), 1.0f, 0u);
 
-    // ----- set viewport and scissor -----
-    cmdList->setViewport(m_device->getViewport());
-    cmdList->setScissorRect(m_device->getScissor());
-
     // ----- set render targets -----
     cmdList->setRenderTargets(renderTargetViews, m_device->getDepthStencilView());
 
     // ----- bind pipeline state -----
     cmdList->setPipelineState(m_graphicsPipeline->getPipelineState());
-
-    // ----- set descriptor heaps -----
-    std::array<const gfx::DescriptorHeap *const, 1> heaps = {m_device->getCbvSrvUavHeap()};
-    cmdList->setDescriptorHeaps(heaps);
 
     // ----- bind root signature -----
     cmdList->setRootSignature(m_graphicsPipeline->getRootSignature());
@@ -127,7 +130,7 @@ auto DeferredRenderer::geometryPass(
         // ----- bind object buffer -----
         auto objectAlloc  = frameResource->resourceAllocator->allocate(sizeof(gfx::ObjectBuffer));
         auto objectBuffer = reinterpret_cast<gfx::ObjectBuffer *>(objectAlloc.cpuBase);
-        XMStoreFloat4x4(&objectBuffer->world, ro->transform->getLocalToWorld());
+        XMStoreFloat4x4(&objectBuffer->world, ro->transform.getLocalToWorld());
         XMStoreFloat4x4(&objectBuffer->inverseWorld, XMMatrixInverse(nullptr, XMLoadFloat4x4(&objectBuffer->world)));
         XMStoreFloat4x4(
             &objectBuffer->transposeInverseWorld, XMMatrixTranspose(XMLoadFloat4x4(&objectBuffer->inverseWorld))
@@ -187,12 +190,16 @@ auto DeferredRenderer::lightPass(
 {
     auto *cmdList = frameResource->graphicsCommandList.get();
 
-    // ----- clear HDR render target -----
-    float clearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-    cmdList->clearRenderTargetView(m_device->getHdrRenderTargetView(), clearColor);
+    // -- transition to render target
+    cmdList->addBarrier(m_bloomTexture.get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    cmdList->dispatchBarriers();
+
+    const std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> renderTargets = {
+        m_device->getHdrRenderTargetView(), m_bloomTexture->rtvDescriptor.cpu
+    };
 
     // ----- set render target view -----
-    cmdList->setRenderTargets(m_device->getHdrRenderTargetView());
+    cmdList->setRenderTargets(renderTargets);
 
     // ----- set pipeline state and root signature -----
     cmdList->setPipelineState(m_lightPassPipeline->getPipelineState());
@@ -239,6 +246,12 @@ auto DeferredRenderer::lightPass(
     {
         cmdList->drawIndexedInstanced(submesh);
     }
+
+    // -- transition to unordered access
+    cmdList->addBarrier(
+        m_bloomTexture.get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+    );
+    cmdList->dispatchBarriers();
 }
 
 auto DeferredRenderer::resize(gfx::Window *const window) -> void
@@ -247,13 +260,27 @@ auto DeferredRenderer::resize(gfx::Window *const window) -> void
     m_gBuffer.normalRoughness.reset();
     m_gBuffer.albedoMetallic.reset();
     m_gBuffer.emissive.reset();
+    m_bloomTexture.reset();
 
     initGBuffer(window);
+
+    m_bloomTexture = m_device->createTexture2D(
+        window->getWidth(), window->getHeight(), DXGI_FORMAT_R16G16B16A16_FLOAT,
+        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+    );
+    m_device->createRenderTargetView(m_bloomTexture.get());
+    m_device->createUnorderedAccessView(m_bloomTexture.get());
+    m_device->createShaderResourceView(m_bloomTexture.get());
 }
 
 auto DeferredRenderer::getGBuffer() -> GBuffer *
 {
     return &m_gBuffer;
+}
+
+auto DeferredRenderer::getBloomTexture() -> gfx::Texture *const
+{
+    return m_bloomTexture.get();
 }
 
 auto DeferredRenderer::initGBuffer(gfx::Window *const window) -> void

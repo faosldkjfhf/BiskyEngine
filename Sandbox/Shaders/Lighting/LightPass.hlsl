@@ -10,6 +10,7 @@ struct VsOutput
 struct PsOutput
 {
     float4 color : SV_Target0;
+    float4 bloomColor : SV_Target1;
 };
 
 struct RawVertex
@@ -112,5 +113,18 @@ PsOutput PsMain(VsOutput input)
    
     PsOutput output;
     output.color = float4(Lo, 1.0);
+    
+    // -- if brightness is greater than a certain threshold
+    // -- output the color to the bloom texture
+    float brightness = dot(Lo, float3(0.2126, 0.7152, 0.07722));
+    if (brightness > 1.0)
+    {
+        output.bloomColor = float4(Lo, 1.0);
+    }
+    else
+    {
+        output.bloomColor = float4(0.0, 0.0, 0.0, 1.0);
+    }
+    
     return output;
 }

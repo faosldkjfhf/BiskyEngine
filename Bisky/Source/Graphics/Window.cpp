@@ -33,11 +33,13 @@ Window::Window(core::Input *const input, uint32_t width, uint32_t height, const 
     }
     LOG_VERBOSE("Window class registered");
 
+    // -- create window
     std::string  fullTitle = title + " | Bisky 0.1.0";
     std::wstring stemp     = std::wstring(fullTitle.begin(), fullTitle.end());
     m_window               = CreateWindowExW(
         WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW, (LPCWSTR)m_windowClass, stemp.c_str(),
-        WS_OVERLAPPEDWINDOW | WS_VISIBLE, 50, 50, m_width, m_height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr
+        WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, m_width, m_height, nullptr, nullptr,
+        GetModuleHandle(nullptr), nullptr
     );
     if (m_window == nullptr)
     {
@@ -47,6 +49,18 @@ Window::Window(core::Input *const input, uint32_t width, uint32_t height, const 
 
     SetWindowLongPtrW(m_window, GWLP_USERDATA, (LONG_PTR)this);
     LOG_INFO("Window initialized");
+
+    // -- resize
+    RECT cr;
+    if (GetClientRect(m_window, &cr))
+    {
+        m_width  = cr.right - cr.left;
+        m_height = cr.bottom - cr.top;
+    }
+
+    // -- log
+    LOG_INFO("Width: " + std::to_string(m_width));
+    LOG_INFO("Height: " + std::to_string(m_height));
 }
 
 Window::~Window()

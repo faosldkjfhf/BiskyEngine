@@ -32,17 +32,17 @@ Allocator::~Allocator()
 Allocation Allocator::allocate(uint32_t size, uint32_t align)
 {
     uint32_t alignedSize = (size + (align - 1)) & (-(int32_t)align);
-    uint32_t aligned     = (at + (align - 1)) & (-(int32_t)align);
+    // uint32_t aligned     = (at + (align - 1)) & (-(int32_t)align);
 
     Allocation allocation = {
         .resource = buffer->resource.Get(),
-        .cpuBase  = cpuBase + aligned,
-        .gpuBase  = gpuBase + aligned,
-        .offset   = aligned,
+        .cpuBase  = cpuBase + at + alignedSize,
+        .gpuBase  = gpuBase + at + alignedSize,
+        .offset   = at + alignedSize,
         .size     = alignedSize,
     };
 
-    at = aligned + size;
+    at = at + alignedSize;
 
     return allocation;
 }

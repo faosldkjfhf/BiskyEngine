@@ -85,25 +85,27 @@ void Scene::draw()
     {
         for (auto &object : renderObjects)
         {
-            auto scale       = object->transform->getScale3f();
-            auto rotation    = object->transform->getRotation3f();
-            auto translation = object->transform->getTranslation3f();
+            auto scale       = object->transform.getScale3f();
+            auto rotation    = object->transform.getRotation3f();
+            auto translation = object->transform.getTranslation3f();
 
             if (ImGui::TreeNode(object->name.c_str()))
             {
                 ImGui::Unindent();
                 if (ImGui::SliderFloat3("Position", (float *)&translation, -10.0f, 10.0f))
-                    object->transform->setTranslation(translation.x, translation.y, translation.z);
+                    object->transform.setTranslation(translation.x, translation.y, translation.z);
                 if (ImGui::SliderFloat3("Rotation", (float *)&rotation, -180.0f, 180.0f))
-                    object->transform->setRotation(rotation.x, rotation.y, rotation.z);
+                    object->transform.setRotation(rotation.x, rotation.y, rotation.z);
                 if (ImGui::SliderFloat3("Scale", (float *)&scale, 0.0f, 100.0f))
-                    object->transform->setScale(scale.x, scale.y, scale.z);
+                    object->transform.setScale(scale.x, scale.y, scale.z);
                 ImGui::Indent();
                 ImGui::TreePop();
             }
         }
     }
-    if (ImGui::CollapsingHeader("Lights", ImGuiTreeNodeFlags_DefaultOpen))
+
+    auto flags = ImGuiTreeNodeFlags_DefaultOpen;
+    if (ImGui::CollapsingHeader("Lights", 0))
     {
         ImGui::Text("Number of lights: %i", lights.size());
         for (const size_t i : std::views::iota(0u, lights.size()))
@@ -156,8 +158,8 @@ void Scene::initDefaultScene()
     {
         m_renderObjects.assign(ro.value().begin(), ro.value().end());
         std::for_each(m_renderObjects.begin(), m_renderObjects.end(), [](std::shared_ptr<RenderObject> renderObject) {
-            renderObject->transform->setRotation(90.0f, 180.0f, 0.0f);
-            renderObject->transform->setScale(2.0f, 2.0f, 2.0f);
+            renderObject->transform.setRotation(90.0f, 180.0f, 0.0f);
+            renderObject->transform.setScale(2.0f, 2.0f, 2.0f);
         });
     }
 

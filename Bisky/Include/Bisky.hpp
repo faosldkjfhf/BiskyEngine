@@ -30,7 +30,6 @@
 #include "Graphics/PipelineState.hpp"
 #include "Graphics/ResourceUpload.hpp"
 #include "Graphics/Resources.hpp"
-#include "Graphics/RootSignature.hpp"
 #include "Graphics/ShaderCompiler.hpp"
 #include "Graphics/Texture.hpp"
 #include "Graphics/Transform.hpp"

@@ -95,8 +95,8 @@ void ForwardRenderer::draw(
         // -------------- allocate object constants --------------
         gfx::Allocation    objectAlloc = frameResource->resourceAllocator->allocate(sizeof(gfx::ObjectBuffer));
         gfx::ObjectBuffer *ptr         = (gfx::ObjectBuffer *)objectAlloc.cpuBase;
-        XMStoreFloat4x4(&ptr->world, object->transform->getLocalToWorld());
-        XMStoreFloat4x4(&ptr->inverseWorld, XMMatrixInverse(nullptr, object->transform->getLocalToWorld()));
+        XMStoreFloat4x4(&ptr->world, object->transform.getLocalToWorld());
+        XMStoreFloat4x4(&ptr->inverseWorld, XMMatrixInverse(nullptr, object->transform.getLocalToWorld()));
         XMStoreFloat4x4(&ptr->transposeInverseWorld, XMMatrixTranspose(XMLoadFloat4x4(&ptr->inverseWorld)));
         cmdList->setConstantBufferView(m_graphicsPipeline->getRootParameter("objectBuffer"), objectAlloc.gpuBase);
 

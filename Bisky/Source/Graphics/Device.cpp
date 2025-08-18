@@ -98,10 +98,13 @@ void Device::getBuffers(uint32_t width, uint32_t height)
         m_device->CreateRenderTargetView(m_renderTargetBuffers[i]->resource.Get(), &rtv, m_renderTargetHandles[i].cpu);
 
         // -------------- create HDR render targets --------------
-        m_hdrRenderTargetBuffers[i] =
-            createTexture2D(width, height, m_hdrRenderTargetFormat, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        m_hdrRenderTargetBuffers[i] = createTexture2D(
+            width, height, m_hdrRenderTargetFormat,
+            D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+        );
         m_hdrRenderTargetBuffers[i]->rtvDescriptor = m_hdrRenderTargetRtvHandles[i];
         m_hdrRenderTargetBuffers[i]->srvDescriptor = m_hdrRenderTargetSrvHandles[i];
+        m_hdrRenderTargetBuffers[i]->uavDescriptor = m_hdrRenderTargetUavHandles[i];
 
         // -------------- create RTVs for HDR render targets --------------
         rtv = {
@@ -119,13 +122,29 @@ void Device::getBuffers(uint32_t width, uint32_t height)
             .ViewDimension           = D3D12_SRV_DIMENSION_TEXTURE2D,
             .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
             .Texture2D =
-                {.MostDetailedMip     = 0,
-                 .MipLevels           = m_hdrRenderTargetBuffers[i]->resource->GetDesc().MipLevels,
-                 .PlaneSlice          = 0,
-                 .ResourceMinLODClamp = 0.0f},
+                {
+                    .MostDetailedMip     = 0,
+                    .MipLevels           = m_hdrRenderTargetBuffers[i]->resource->GetDesc().MipLevels,
+                    .PlaneSlice          = 0,
+                    .ResourceMinLODClamp = 0.0f,
+                },
         };
         m_device->CreateShaderResourceView(
             m_hdrRenderTargetBuffers[i]->resource.Get(), &srv, m_hdrRenderTargetBuffers[i]->srvDescriptor.cpu
+        );
+
+        // -- create unordered access view
+        D3D12_UNORDERED_ACCESS_VIEW_DESC uav = {
+            .Format        = DXGI_FORMAT_R16G16B16A16_FLOAT,
+            .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
+            .Texture2D =
+                {
+                    .MipSlice   = 0u,
+                    .PlaneSlice = 0u,
+                },
+        };
+        m_device->CreateUnorderedAccessView(
+            m_hdrRenderTargetBuffers[i]->resource.Get(), nullptr, &uav, m_hdrRenderTargetBuffers[i]->uavDescriptor.cpu
         );
     }
 
@@ -366,6 +385,16 @@ CommandQueue *const Device::getDirectCommandQueue() const
     return m_directCommandQueue.get();
 }
 
+CommandQueue *const Device::getComputeCommandQueue() const
+{
+    return m_computeCommandQueue.get();
+}
+
+CommandQueue *const Device::getCopyCommandQueue() const
+{
+    return m_copyCommandQueue.get();
+}
+
 IDXGISwapChain4 *const Device::getSwapChain() const
 {
     return m_swapChain.Get();
@@ -473,7 +502,7 @@ void Device::initDescriptorHeaps()
     m_rtvHeap       = std::make_unique<DescriptorHeap>(m_device.Get(), DescriptorType::Rtv, 64);
     m_dsvHeap       = std::make_unique<DescriptorHeap>(m_device.Get(), DescriptorType::Dsv, 1);
     m_cbvSrvUavHeap = std::make_unique<DescriptorHeap>(
-        m_device.Get(), DescriptorType::CbvSrvUav, 4096, DescriptorFlags::ShaderVisible
+        m_device.Get(), DescriptorType::CbvSrvUav, 100'000, DescriptorFlags::ShaderVisible
     );
 
     for (uint32_t i = 0; i < FramesInFlight; i++)
@@ -487,6 +516,7 @@ void Device::initDescriptorHeaps()
     {
         m_hdrRenderTargetRtvHandles[i] = m_rtvHeap->allocate();
         m_hdrRenderTargetSrvHandles[i] = m_cbvSrvUavHeap->allocate();
+        m_hdrRenderTargetUavHandles[i] = m_cbvSrvUavHeap->allocate();
     }
 
     LOG_VERBOSE("Descriptor Heaps created");
@@ -500,7 +530,9 @@ void Device::initFactory()
 
 void Device::initCommandQueue()
 {
-    m_directCommandQueue = std::make_unique<CommandQueue>(m_device.Get());
+    m_directCommandQueue  = std::make_unique<CommandQueue>(m_device.Get());
+    m_computeCommandQueue = std::make_unique<CommandQueue>(m_device.Get(), D3D12_COMMAND_LIST_TYPE_COMPUTE);
+    m_copyCommandQueue    = std::make_unique<CommandQueue>(m_device.Get(), D3D12_COMMAND_LIST_TYPE_COPY);
 }
 
 void Device::initSwapChain(Window *window)

@@ -15,7 +15,8 @@ struct VsOutput
 struct RenderResource
 {
     int vertexBufferIndex;
-    int textureIndex;
+    int hdrTextureIndex;
+    int bloomTextureIndex;
 };
 
 
@@ -33,9 +34,12 @@ VsOutput VsMain(uint vertexId : SV_VertexID)
 
 float4 PsMain(VsOutput input) : SV_Target0
 {
-    Texture2D<float4> rtvTexture = ResourceDescriptorHeap[renderResource.textureIndex];
+    Texture2D<float4> hdrTexture = ResourceDescriptorHeap[NonUniformResourceIndex(renderResource.hdrTextureIndex)];
+    Texture2D<float4> bloomTexture = ResourceDescriptorHeap[NonUniformResourceIndex(renderResource.bloomTextureIndex)];
     
-    float3 hdr = rtvTexture.SampleLevel(linearWrapSampler, input.texCoord, 0.0).rgb;
+    // -- additive blend
+    float3 hdr = hdrTexture.SampleLevel(linearWrapSampler, input.texCoord, 0.0).rgb;
+    hdr += bloomTexture.SampleLevel(linearWrapSampler, input.texCoord, 0.0).rgb;
     
     // ----- Reinhard tone-mapping -----
     hdr = hdr / (hdr + 1.0);

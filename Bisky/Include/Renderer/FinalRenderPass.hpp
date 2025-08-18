@@ -24,7 +24,8 @@ class FinalRenderPass
     struct RenderResource
     {
         int vertexBufferIndex = -1;
-        int textureIndex      = -1;
+        int hdrTextureIndex   = -1;
+        int bloomTextureIndex = -1;
     };
 
     explicit FinalRenderPass(gfx::Device *const device);
@@ -36,7 +37,10 @@ class FinalRenderPass
     const FinalRenderPass &&operator=(const FinalRenderPass &&) = delete;
 
   public:
-    void draw(gfx::Texture *const texture, gfx::FrameResource *const frameResource, core::FrameStats *const frameStats);
+    void draw(
+        gfx::Texture *const hdrTexture, gfx::Texture *const bloomTexture, gfx::FrameResource *const frameResource,
+        core::FrameStats *const frameStats
+    );
 
   private:
     void initGraphicsPipeline();

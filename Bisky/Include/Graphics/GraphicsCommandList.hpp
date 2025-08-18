@@ -10,7 +10,6 @@ namespace bisky::gfx
 
 class Device;
 class PipelineState;
-class RootSignature;
 class DescriptorHeap;
 
 /*
@@ -75,6 +74,8 @@ class GraphicsCommandList : public CommandList
         D3D12_CPU_DESCRIPTOR_HANDLE const              &depthStencilView
     ) const;
 
+    void setRenderTargets(std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> const &renderTargets) const;
+
     /*
      * Sets the render target and depth stencil for the output merger.
      * This method assumes there is only one render target.
@@ -126,14 +127,9 @@ class GraphicsCommandList : public CommandList
      *
      * @param rootSignature The root signature to set.
      */
-    void setRootSignature(gfx::RootSignature *const rootSignature) const;
-
-    /*
-     * Sets the root signature.
-     *
-     * @param rootSignature The root signature to set.
-     */
     void setRootSignature(ID3D12RootSignature *const rootSignature) const;
+
+    void setComputeRootSignature(ID3D12RootSignature *const rootSignature) const;
 
     /*
      * Sets the index buffer.
@@ -175,6 +171,14 @@ class GraphicsCommandList : public CommandList
      * @param data A pointer to the start of the data.
      */
     void set32BitConstants(uint32_t index, uint32_t numValues, void *data) const;
+
+    template <typename T> inline void setCompute32BitConstants(UINT32 index, T const &data) const
+    {
+        auto count = sizeof(data) / 4u;
+        m_commandList->SetComputeRoot32BitConstants(
+            index, static_cast<UINT>(count), reinterpret_cast<const void *>(&data), 0u
+        );
+    }
 
     void dispatch(UINT x, UINT y, UINT z) const;
 

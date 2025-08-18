@@ -171,7 +171,6 @@
     <ClInclude Include="Include\Graphics\PipelineState.hpp" />
     <ClInclude Include="Include\Graphics\Resources.hpp" />
     <ClInclude Include="Include\Graphics\ResourceUpload.hpp" />
-    <ClInclude Include="Include\Graphics\RootSignature.hpp" />
     <ClInclude Include="Include\Graphics\ShaderCompiler.hpp" />
     <ClInclude Include="Include\Graphics\Texture.hpp" />
     <ClInclude Include="Include\Graphics\Transform.hpp" />
@@ -219,7 +218,6 @@
     <ClCompile Include="Source\Graphics\GraphicsPipeline.cpp" />
     <ClCompile Include="Source\Graphics\PipelineState.cpp" />
     <ClCompile Include="Source\Graphics\ResourceUpload.cpp" />
-    <ClCompile Include="Source\Graphics\RootSignature.cpp" />
     <ClCompile Include="Source\Graphics\ShaderCompiler.cpp" />
     <ClCompile Include="Source\Graphics\Texture.cpp" />
     <ClCompile Include="Source\Graphics\Transform.cpp" />

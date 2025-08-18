@@ -108,6 +108,8 @@ ComputePipeline::ComputePipeline(Device *const device, ComputePipelineStateDesc 
         {
             LOG_ERROR("Failed to create pipeline state");
         }
+
+        LOG_INFO("Created compute pipeline");
     }
 }
 

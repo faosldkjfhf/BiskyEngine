@@ -13,7 +13,7 @@ namespace bisky::gfx
 class Transform
 {
   public:
-    explicit Transform();
+    Transform();
     ~Transform() = default;
 
     Transform(const Transform &)                    = delete;
@@ -43,6 +43,7 @@ class Transform
     DirectX::XMFLOAT3 m_scale;
     DirectX::XMFLOAT3 m_rotation;
     DirectX::XMFLOAT3 m_translation;
+    DirectX::XMFLOAT4 m_rotationQuat;
 };
 
 } // namespace bisky::gfx

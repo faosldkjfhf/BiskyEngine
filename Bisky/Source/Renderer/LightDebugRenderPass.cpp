@@ -17,7 +17,7 @@ LightDebugRenderPass::LightDebugRenderPass(gfx::Device *const device) : m_device
     core::ResourceManager::get().loadMesh(device, "Sphere\\sphere.gltf");
     m_sphere       = std::make_unique<scene::RenderObject>();
     m_sphere->mesh = core::ResourceManager::get().getMesh("sphere.000");
-    m_sphere->transform->setScale(0.15f, 0.15f, 0.15f);
+    m_sphere->transform.setScale(0.15f, 0.15f, 0.15f);
 }
 
 void LightDebugRenderPass::draw(
@@ -50,12 +50,12 @@ void LightDebugRenderPass::draw(
     {
         // ----- move the light to the correct position -----
         auto light = scene->getLights()[i];
-        m_sphere->transform->setTranslation(light.position.x, light.position.y, light.position.z);
+        m_sphere->transform.setTranslation(light.position.x, light.position.y, light.position.z);
 
         // ----- allocate object buffer -----
         auto objectAlloc  = frameResource->resourceAllocator->allocate(sizeof(gfx::ObjectBuffer));
         auto objectBuffer = reinterpret_cast<gfx::ObjectBuffer *>(objectAlloc.cpuBase);
-        XMStoreFloat4x4(&objectBuffer->world, m_sphere->transform->getLocalToWorld());
+        XMStoreFloat4x4(&objectBuffer->world, m_sphere->transform.getLocalToWorld());
         XMStoreFloat4x4(&objectBuffer->inverseWorld, XMMatrixInverse(nullptr, XMLoadFloat4x4(&objectBuffer->world)));
         XMStoreFloat4x4(
             &objectBuffer->transposeInverseWorld, XMMatrixTranspose(XMLoadFloat4x4(&objectBuffer->inverseWorld))

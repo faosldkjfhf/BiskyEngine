@@ -69,6 +69,11 @@ void GraphicsCommandList::setRenderTargets(
     );
 }
 
+void GraphicsCommandList::setRenderTargets(std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> const &renderTargets) const
+{
+    m_commandList->OMSetRenderTargets(static_cast<UINT>(renderTargets.size()), renderTargets.data(), FALSE, nullptr);
+}
+
 void GraphicsCommandList::setRenderTargets(
     const D3D12_CPU_DESCRIPTOR_HANDLE &renderTarget, const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilView
 ) const
@@ -145,17 +150,18 @@ void GraphicsCommandList::setPipelineState(ID3D12PipelineState *const pipelineSt
     }
 }
 
-void GraphicsCommandList::setRootSignature(gfx::RootSignature *const rootSignature) const
-{
-    if (rootSignature)
-    {
-        m_commandList->SetGraphicsRootSignature(rootSignature->getRootSignature());
-    }
-}
-
 void GraphicsCommandList::setRootSignature(ID3D12RootSignature *const rootSignature) const
 {
+    if (rootSignature == nullptr)
+    {
+        LOG_ERROR("No root signature");
+    }
     m_commandList->SetGraphicsRootSignature(rootSignature);
+}
+
+void GraphicsCommandList::setComputeRootSignature(ID3D12RootSignature *const rootSignature) const
+{
+    m_commandList->SetComputeRootSignature(rootSignature);
 }
 
 void GraphicsCommandList::setIndexBuffer(const IndexBufferView &indexBufferView) const
